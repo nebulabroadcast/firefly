@@ -12,7 +12,7 @@ class FireflyMainWidget(QWidget):
         current_tab = self.main_window.app_state.get("current_module",0)
         self.tabs = QTabWidget(self)
 
-        self.browser = self.detail = self.rundown = self.scheduler = False
+        self.browser = self.detail = self.rundown = self.scheduler = self.jobs = False
 
         # MAM modules
 
