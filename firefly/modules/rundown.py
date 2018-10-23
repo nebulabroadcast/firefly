@@ -205,7 +205,6 @@ class RundownModule(BaseModule):
             self.do_find(text)
         else:
             self.last_search = ""
-
     def find_next(self):
         if self.last_search:
             self.do_find(self.last_search)

@@ -8,6 +8,7 @@ DEFAULT_HEADER_DATA = [
         "id",
         "title",
         "action",
+        "service",
         "ctime",
         "stime",
         "etime",
@@ -16,14 +17,17 @@ DEFAULT_HEADER_DATA = [
 
 def job_format(data, key):
     if key in ["ctime", "stime", "etime"]:
-        return format_time(data[key])
+        return format_time(data[key], never_placeholder="")
     elif key == "title":
         return asset_cache[data["id_asset"]]["title"]
     elif key == "action":
         return config["actions"][data["id_action"]]["title"]
     elif key == "service":
-        #TODO
- #       return config["action"][data["id_action"]]["title"]
+        if data["id_service"]:
+            id_service = data["id_service"]
+            service = config["services"].get(id_service, None)
+            if service:
+                return "{}@{}".format(service["title"], service["host"])
         return data["id_service"]
     elif key == "message":
         return data["message"]
@@ -58,23 +62,23 @@ header_format = {
 
 colw = {
         "id" : 50,
-        "title" : 300,
+        "title" : 200,
         "action" : 80,
-        "service" : 80,
+        "service" : 160,
         "ctime" : 150,
         "stime" : 150,
         "etime" : 150,
-        "progress" : 150,
+        "progress" : 100,
     }
 
 colors = {
-        PENDING     : QColor("#cccccc"),
-        IN_PROGRESS : QColor("#ffffff"),
-        COMPLETED   : QColor("#109410"),
-        FAILED      : QColor("#941010"),
-        ABORTED     : QColor("#646464"),
-        RESTART     : QColor("#cccccc"),
-        SKIPPED     : QColor("#646464"),
+        PENDING     : QColor(COLOR_TEXT_NORMAL),
+        IN_PROGRESS : QColor(COLOR_TEXT_HIGHLIGHT),
+        COMPLETED   : QColor(COLOR_TEXT_GREEN),
+        FAILED      : QColor(COLOR_TEXT_RED),
+        ABORTED     : QColor(COLOR_TEXT_RED),
+        RESTART     : QColor(COLOR_TEXT_NORMAL),
+        SKIPPED     : QColor(COLOR_TEXT_FADED),
     }
 
 
@@ -128,11 +132,65 @@ class JobsModel(FireflyViewModel):
 class FireflyJobsView(FireflyView):
     def __init__(self, parent):
         super(FireflyJobsView, self).__init__(parent)
-        self.setSortingEnabled(True)
         self.model = JobsModel(self)
         self.model.header_data = DEFAULT_HEADER_DATA
-        self.sort_model = FireflySortModel(self.model)
-        self.setModel(self.sort_model)
+        self.setModel(self.model)
         for i, h in enumerate(self.model.header_data):
             if h in colw :
                 self.horizontalHeader().resizeSection(i, colw[h])
+
+    def selectionChanged(self, selected, deselected):
+        super(FireflyView, self).selectionChanged(selected, deselected)
+        sel = self.selected_jobs
+        if len(sel) == 1:
+            self.parent().main_window.focus(asset_cache[sel[0]["id_asset"]])
+
+
+
+    @property
+    def selected_jobs(self):
+        used = []
+        result = []
+        for idx in self.selectionModel().selectedIndexes():
+            i = idx.row()
+            if not i in used:
+                used.append(i)
+                result.append(self.model.object_data[i])
+        return result
+
+    def contextMenuEvent(self, event):
+        jobs = [k["id"] for k in self.selected_jobs]
+        if not jobs:
+            return
+
+        menu = QMenu(self)
+
+        action_restart = QAction('Restart', self)
+        action_restart.setStatusTip('Restart selected jobs')
+        action_restart.triggered.connect(functools.partial(self.on_restart, jobs))
+        menu.addAction(action_restart)
+
+        action_abort = QAction('Abort', self)
+        action_abort.setStatusTip('Abort selected jobs')
+        action_abort.triggered.connect(functools.partial(self.on_abort, jobs))
+        menu.addAction(action_abort)
+
+        menu.exec_(event.globalPos())
+
+
+    def on_restart(self, jobs):
+        result = api.jobs(restart=jobs)
+        if result.is_error:
+            logging.error(result.message)
+        else:
+            logging.info(result.message)
+        self.model.load()
+
+
+    def on_abort(self, jobs):
+        result = api.jobs(abort=jobs)
+        if result.is_error:
+            logging.error(result.message)
+        else:
+            logging.info(result.message)
+        self.model.load()

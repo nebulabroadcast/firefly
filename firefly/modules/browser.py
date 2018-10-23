@@ -2,7 +2,7 @@ import math
 import functools
 
 from firefly import *
-from firefly.dialogs.send_to import send_to
+from firefly.dialogs.send_to import *
 
 from .browser_model import *
 
@@ -253,7 +253,7 @@ class BrowserModule(BaseModule):
 
 
     def on_send_to(self):
-        send_to(self, self.view.selected_objects)
+        send_to_dialog(self.view.selected_objects)
 
     def on_reset(self):
         objects = [obj.id for obj in self.view.selected_objects if obj["status"] not in [ARCHIVED, TRASHED, RESET]],
@@ -278,6 +278,8 @@ class BrowserModule(BaseModule):
                     objects=objects,
                     data={"status" : TRASHED}
                 )
+        else:
+            return
         if response.is_error:
             logging.error("Unable to trash:\n\n" + response.message)
 
@@ -306,6 +308,8 @@ class BrowserModule(BaseModule):
                     objects=objects,
                     data={"status" : ARCHIVED}
                 )
+        else:
+            return
         if response.is_error:
             logging.error("Unable to archive:\n\n" + response.message)
 

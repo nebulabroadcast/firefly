@@ -12,12 +12,14 @@ build
 # Settings
 
 settings.json
-firefly.appstate
+*.appstate
 cache*
 auth.key
+templates/
 
 # Other
 
 .vscode/
 _res/
 _old/
+templates/

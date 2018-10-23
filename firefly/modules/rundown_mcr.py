@@ -18,17 +18,16 @@ class MCRButton(QPushButton):
             bg_col = "#565656"
         self.setStyleSheet("""
             MCRButton {{
-                font-size:16px;
-                font-weight: bold;
+                font-size:14px;
                 color: #eeeeee;
-                border: 1px raised #323232;
                 width: 80px;
                 height:30px;
-                background: {}
+                border: 2px solid {};
+                text-transform: uppercase;
             }}
 
             MCRButton:pressed {{
-                border-style: inset;
+                border: 2px solid #00a5c3;
             }}""".format(bg_col))
 
         if on_click:
@@ -77,14 +76,12 @@ class MCR(QWidget):
         self.progress_bar.setValue(0)
         self.progress_bar.setMaximum(PROGRESS_BAR_RESOLUTION)
 
-        self.btn_take    = MCRButton(u"Take",   self, self.on_take)
-        self.btn_freeze  = MCRButton(u"Freeze", self, self.on_freeze)
-        self.btn_retake  = MCRButton(u"Retake", self, self.on_retake)
-        self.btn_abort   = MCRButton(u"Abort",  self, self.on_abort)
+        self.btn_take    = MCRButton("Take",   self, self.on_take)
+        self.btn_freeze  = MCRButton("Freeze", self, self.on_freeze)
+        self.btn_retake  = MCRButton("Retake", self, self.on_retake)
+        self.btn_abort   = MCRButton("Abort",  self, self.on_abort)
 
-        can_mcr = False # disable MCR by default
-        #TODO: ACL
-        can_mcr = True
+        can_mcr = True #TODO: ACL
         self.btn_take.setEnabled(can_mcr)
         self.btn_freeze.setEnabled(can_mcr)
         self.btn_retake.setEnabled(can_mcr)
@@ -126,7 +123,6 @@ class MCR(QWidget):
 
         layout = QVBoxLayout()
         layout.addLayout(info_layout,0)
-        layout.addStretch(1)
         layout.addWidget(self.progress_bar,0)
         layout.addLayout(btns_layout,0)
         self.setLayout(layout)

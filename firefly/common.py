@@ -59,6 +59,5 @@ def about_dialog(parent):
 pix_lib = PixLib()
 
 
-def has_right(*args):
-    #TODO
-    return True
+def has_right(*args, **kwargs):
+    return user.has_right(*args, **kwargs)

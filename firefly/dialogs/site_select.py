@@ -2,6 +2,8 @@ import functools
 
 from firefly import *
 
+__all__ = ["site_select_dialog"]
+
 class SiteSelectButton(QPushButton):
     pass
 
@@ -26,3 +28,13 @@ class SiteSelectDialog(QDialog):
     def on_select(self, id_site):
         self.close()
         self.setResult(id_site)
+
+
+def site_select_dialog():
+    """
+    Executes a simple dialog with selection of available sites.
+    Returns an index of the selected site configuration.
+    """
+    dlg = SiteSelectDialog(None, config["sites"])
+    return dlg.exec_()
+

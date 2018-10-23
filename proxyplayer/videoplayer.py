@@ -23,6 +23,13 @@ class TimecodeWindow(QLineEdit):
         self.setMinimumWidth(w)
         self.setMaximumWidth(w)
 
+    @property
+    def fps(self):
+        return self.parent().fps
+
+    def get_value(self):
+        return tc2s(self.text(), base=self.fps)
+
 
 class ToolBarStretcher(QWidget):
     def __init__(self, parent):
@@ -217,9 +224,11 @@ class VideoPlayer(QWidget):
 
         self.mark_in_display = TimecodeWindow(self)
         self.mark_in_display.setToolTip("Selection start")
+        self.mark_in_display.returnPressed.connect(functools.partial(self.on_mark_in, self.mark_in_display))
 
         self.mark_out_display = TimecodeWindow(self)
         self.mark_out_display.setToolTip("Selection end")
+        self.mark_out_display.returnPressed.connect(functools.partial(self.on_mark_out, self.mark_out_display))
 
         self.io_display = TimecodeWindow(self)
         self.io_display.setToolTip("Selection duration")
@@ -283,8 +292,8 @@ class VideoPlayer(QWidget):
     def load(self, path, mark_in=0, mark_out=0):
         self.player["pause"] = True
         self.player.play(path)
-        self.prev_mark_in  = 0
-        self.prev_mark_out = 0
+        self.prev_mark_in  = -1
+        self.prev_mark_out = -1
         self.mark_in = mark_in
         self.mark_out = mark_out
         self.update_marks()
@@ -327,12 +336,24 @@ class VideoPlayer(QWidget):
     def on_go_out(self):
         self.seek(self.mark_out or self.duration)
 
-    def on_mark_in(self):
-        self.mark_in = self.position
+    def on_mark_in(self, value=False):
+        if value:
+            if isinstance(value, TimecodeWindow):
+                value = value.get_value()
+            self.seek(min(max(value, 0), self.duration))
+            self.mark_in = value
+        else:
+            self.mark_in = self.position
         self.region_bar.update()
 
-    def on_mark_out(self):
-        self.mark_out = self.position
+    def on_mark_out(self, value=False):
+        if value:
+            if isinstance(value, TimecodeWindow):
+                value = value.get_value()
+            self.seek(min(max(value, 0), self.duration))
+            self.mark_out = value
+        else:
+            self.mark_out = self.position
         self.region_bar.update()
 
     def on_clear_in(self):
@@ -365,6 +386,8 @@ class VideoPlayer(QWidget):
             self.io_display.setText("<font color='red'>00:00:00:00</font>")
         self.prev_mark_in = self.mark_in
         self.prev_mark_out = self.mark_out
+
+        self.setFocus()
 
     def on_display_timer(self):
         if self.position != self.prev_position and self.position is not None:

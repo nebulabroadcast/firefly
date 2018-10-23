@@ -1,5 +1,7 @@
 from firefly import *
 
+__all__ = ["login_dialog"]
+
 class LoginDialog(QDialog):
     def __init__(self):
         QDialog.__init__(self)
@@ -32,3 +34,9 @@ class LoginDialog(QDialog):
             self.close()
         else:
             QMessageBox.critical(self, "Error", result.message)
+
+
+def login_dialog():
+    dlg = LoginDialog()
+    dlg.exec_()
+    return dlg.result

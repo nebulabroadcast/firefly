@@ -1,6 +1,9 @@
 import functools
 from firefly import *
 
+__all__ = ["send_to_dialog"]
+
+
 class SendToButton(QPushButton):
     pass
 
@@ -69,6 +72,7 @@ class SendToDialog(QDialog):
         QApplication.processEvents()
 
 
-def send_to(parent, objects):
-    dlg = SendToDialog(parent, objects)
+
+def send_to_dialog(objects):
+    dlg = SendToDialog(None, objects)
     dlg.exec_()

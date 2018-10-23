@@ -2,7 +2,7 @@ import datetime
 
 from firefly import *
 from firefly.modules.scheduler_utils import *
-from firefly.dialogs.event import EventDialog
+from firefly.dialogs.event import *
 
 __all__ = ["SchedulerCalendar"]
 
@@ -333,12 +333,11 @@ class SchedulerDayWidget(SchedulerVerticalBar):
                     self.calendar.dragging,
                     time.strftime("%Y-%m-%d %H:%M", time.localtime(self.cursor_time))
                     ))
-                dlg = EventDialog(self,
+                event_dialog(
                         asset=self.calendar.dragging,
                         id_channel=self.id_channel,
                         start=drop_ts
                     )
-                dlg.exec_()
             else:
                 QApplication.setOverrideCursor(Qt.WaitCursor)
                 result = api.schedule(
@@ -363,10 +362,10 @@ class SchedulerDayWidget(SchedulerVerticalBar):
             if event.id and abs(event["start"] - drop_ts) > 3600:
                 ret = QMessageBox.question(self,
                     "Move event",
-                    "Do you really want to move {}?\n\nFrom: {}\n To: {}".format(
-                        self.cursor_event,
-                        time.strftime("%Y-%m-%d %H:%M", time.localtime(event["start"])),
-                        time.strftime("%Y-%m-%d %H:%M", time.localtime(drop_ts))
+                    "Do you really want to move {}?\n\nFrom: {}\nTo: {}".format(
+                            self.cursor_event,
+                            format_time(event["start"]),
+                            format_time(drop_ts)
                         ),
                     QMessageBox.Yes | QMessageBox.No
                     )
@@ -380,12 +379,11 @@ class SchedulerDayWidget(SchedulerVerticalBar):
                 if not event.id:
                     logging.debug("Creating empty event")
                     # Create empty event. Event edit dialog is enforced.
-                    dlg = EventDialog(self,
+                    if event_dialog(
                             id_channel=self.id_channel,
                             start=drop_ts
-                        )
-                    dlg.exec_()
-                    do_reload = True
+                        ):
+                        do_reload = True
                 else:
                     # Just dragging events around. Instant save
                     QApplication.setOverrideCursor(Qt.WaitCursor)
@@ -435,8 +433,7 @@ class SchedulerDayWidget(SchedulerVerticalBar):
         self.calendar.open_rundown(self.start_time, self.cursor_event)
 
     def on_edit_event(self):
-        dlg = EventDialog(self, event=self.cursor_event)
-        if dlg.exec_() == QDialog.Accepted:
+        if event_dialog(event=self.cursor_event):
             self.calendar.load()
 
     def on_delete_event(self):
@@ -505,7 +502,7 @@ class SchedulerDayHeaderWidget(QLabel):
 
     def set_time(self, start_time):
         self.start_time = start_time
-        t = time.strftime("%a %Y-%m-%d", time.localtime(start_time))
+        t = format_time(start_time, "%a %Y-%m-%d")
         if start_time < time.time() - SECS_PER_DAY:
             self.setText("<font color='red'>{}</font>".format(t))
         elif start_time > time.time():

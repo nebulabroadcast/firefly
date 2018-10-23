@@ -4,6 +4,8 @@ QWidget,
 QToolBar {
     background-color : #2a2e30;
     color : #c0c0c0;
+    padding-top: 2px;
+    padding-left: 0;
 }
 
 QStatusBar,
@@ -18,10 +20,6 @@ a {
 
 QToolBar::separator{
     width: 30px;
-}
-
-QToolButton{
-    font-size: 24px;
 }
 
 /* MENU */
@@ -141,10 +139,9 @@ QPushButton:!enabled {
 }
 
 
-
 QPushButton:checked{
-    background : #009fbc;
-    color: #000000;
+    background-color: #50595B;
+    border: 1px solid #50595B;
 }
 
 QPushButton:pressed{
@@ -161,7 +158,9 @@ QProgressBar {
     background: #161616;
     border:0;
     border-radius:0;
-    height: 4px
+    max-height: 8px;
+    padding : 0;
+    margin : 4px;
 }
 
 QProgressBar::chunk{

@@ -77,6 +77,9 @@ class PlayoutPlugins(QTabWidget):
         return self.parent().id_channel
 
     def load(self):
+        if not user.has_right("mcr", self.id_channel):
+            return
+
         logging.debug("Loading playout plugins")
         for idx in reversed(range(self.count())):
             widget = self.widget(idx)

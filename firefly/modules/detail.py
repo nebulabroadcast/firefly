@@ -1,6 +1,6 @@
-import functools
-
 from firefly import *
+from firefly.modules.detail_toolbars import *
+from firefly.modules.detail_subclips import *
 
 try:
     from proxyplayer import VideoPlayer
@@ -69,11 +69,12 @@ class DetailTabMain(QWidget):
             self.form.set_defaults()
 
         if self.form:
-            enabled = True#has_right("asset_edit", id_folder)
+            enabled = has_right("asset_edit", id_folder)
             self.form.setEnabled(enabled)
 
     def on_focus(self):
         pass
+
 
 class MetaList(QTextEdit):
     def __init__(self, parent):
@@ -86,6 +87,7 @@ class MetaList(QTextEdit):
 
     def on_focus(self):
         pass
+
 
 class DetailTabExtended(MetaList):
     def load(self, asset, **kwargs):
@@ -102,7 +104,6 @@ class DetailTabExtended(MetaList):
                 continue
             elif tag not in [r[0] for r in config["folders"][asset["id_folder"]]["meta_set"]]:
                 self.tag_groups["other"].append(tag)
-
         data = ""
         for tag_group in ["core", "other"]:
             for tag in self.tag_groups[tag_group]:
@@ -113,7 +114,6 @@ class DetailTabExtended(MetaList):
                 if value:
                     data += "{:<40}: {}\n".format(tag_title, value)
             data += "\n\n"
-
         self.setText(data)
 
 
@@ -124,7 +124,6 @@ class DetailTabTechnical(MetaList):
                 "Format"  : [],
                 "QC"   : []
             }
-
         for tag in sorted(meta_types):
             if tag.startswith("file") or tag in ["id_storage", "path", "origin"]:
                 self.tag_groups["File"].append(tag)
@@ -132,7 +131,6 @@ class DetailTabTechnical(MetaList):
                 self.tag_groups["Format"].append(tag)
             elif meta_types[tag]["ns"] == "q" and not tag.startswith("qc/"):
                 self.tag_groups["QC"].append(tag)
-
         data = ""
         if not asset["id_folder"]:
             return
@@ -145,38 +143,8 @@ class DetailTabTechnical(MetaList):
                 if value:
                     data += "{:<40}: {}\n".format(tag_title, value)
             data += "\n\n"
-
         self.setText(data)
 
-def preview_toolbar(wnd):
-    toolbar = QToolBar(wnd)
-
-    action_set_poster = QAction(QIcon(pix_lib["set-poster"]), 'Set poster frame', wnd)
-    action_set_poster.setStatusTip('Set poster frame')
-    action_set_poster.triggered.connect(wnd.set_poster)
-    toolbar.addAction(action_set_poster)
-
-    action_save_marks = QAction(QIcon(pix_lib["save-marks"]), 'Save marks', wnd)
-    action_save_marks.setStatusTip('Save marks')
-    action_save_marks.triggered.connect(wnd.save_marks)
-    toolbar.addAction(action_save_marks)
-
-    action_restore_marks = QAction(QIcon(pix_lib["restore-marks"]), 'Restore marks', wnd)
-    action_restore_marks.setStatusTip('Restore marks')
-    action_restore_marks.triggered.connect(wnd.restore_marks)
-    toolbar.addAction(action_restore_marks)
-
-    action_create_subclip = QAction(QIcon(pix_lib["create-subclip"]), 'Create subclip', wnd)
-    action_create_subclip.setStatusTip('Create subclip')
-    action_create_subclip.triggered.connect(wnd.create_subclip)
-    toolbar.addAction(action_create_subclip)
-
-    action_manage_subclips = QAction(QIcon(pix_lib["manage-subclips"]), 'Manage subclips', wnd)
-    action_manage_subclips.setStatusTip('Manage subclips')
-    action_manage_subclips.triggered.connect(wnd.manage_subclips)
-    toolbar.addAction(action_manage_subclips)
-
-    return toolbar
 
 
 class DetailTabPreview(QWidget):
@@ -184,14 +152,17 @@ class DetailTabPreview(QWidget):
         super(DetailTabPreview, self).__init__(parent)
         layout = QVBoxLayout()
         self.player = VideoPlayer(self, pixlib)
+        self.subclips = FireflySubclipsView(self)
         toolbar = preview_toolbar(self)
 
         layout.addWidget(toolbar, 0)
-        layout.addWidget(self.player)
+        layout.addWidget(self.player, 3)
+        layout.addWidget(self.subclips, 1)
         self.setLayout(layout)
+        self.subclips.hide()
         self.has_focus = False
         self.loaded = False
-        self.changes = {}
+        self.changed = {}
 
     @property
     def current_asset(self):
@@ -199,9 +170,10 @@ class DetailTabPreview(QWidget):
 
     def load(self, asset, **kwargs):
         self.loaded = False
-        self.changes = {}
+        self.changed = {}
         if self.has_focus:
             self.load_video()
+        self.subclips.load()
 
     def load_video(self):
         if self.current_asset and not self.loaded:
@@ -220,25 +192,28 @@ class DetailTabPreview(QWidget):
         self.load_video()
 
     def set_poster(self):
-        self.changes["poster_frame"] = self.player.position
+        self.changed["poster_frame"] = self.player.position
 
     def save_marks(self):
         if self.player.mark_in and self.player.mark_out and self.player.mark_in > self.player.mark_out:
             logging.error("Unable to save marks. In point must precede out point")
         else:
-            self.changes["mark_in"] = self.player.mark_in
-            self.changes["mark_out"] = self.player.mark_out
+            self.changed["mark_in"] = self.player.mark_in
+            self.changed["mark_out"] = self.player.mark_out
 
     def restore_marks(self):
         pass
 
     def create_subclip(self):
-        #TODO
-        logging.error("Not implemented")
+        if not self.subclips.isVisible():
+            self.subclips.show()
+        self.subclips.create_subclip(self.player.mark_in, self.player.mark_out)
 
     def manage_subclips(self):
-        #TODO
-        logging.error("Not implemented")
+        if self.subclips.isVisible():
+            self.subclips.hide()
+        else:
+            self.subclips.show()
 
 
 
@@ -285,61 +260,6 @@ class DetailTabs(QTabWidget):
 
 
 
-def detail_toolbar(wnd):
-    toolbar = QToolBar(wnd)
-
-    fdata = []
-    for id_folder in sorted(config["folders"].keys()):
-        fdata.append([id_folder, config["folders"][id_folder]["title"]])
-
-    wnd.folder_select = FireflySelect(wnd, data=fdata)
-    for i, fd in enumerate(fdata):
-        wnd.folder_select.setItemIcon(i, QIcon(pix_lib["folder_"+str(fd[0])]))
-    wnd.folder_select.currentIndexChanged.connect(wnd.on_folder_changed)
-    wnd.folder_select.setEnabled(False)
-    toolbar.addWidget(wnd.folder_select)
-
-    toolbar.addSeparator()
-
-    wnd.duration =  FireflyTimecode(wnd)
-    toolbar.addWidget(wnd.duration)
-
-    toolbar.addSeparator()
-
-    wnd.action_approve = QAction(QIcon(pix_lib["qc_approved"]),'Approve', wnd)
-    wnd.action_approve.setShortcut('Y')
-    wnd.action_approve.triggered.connect(functools.partial(wnd.on_set_qc, 4))
-    wnd.action_approve.setEnabled(False)
-    toolbar.addAction(wnd.action_approve)
-
-    wnd.action_qc_reset = QAction(QIcon(pix_lib["qc_new"]),'QC Reset', wnd)
-    wnd.action_qc_reset.setShortcut('T')
-    wnd.action_qc_reset.triggered.connect(functools.partial(wnd.on_set_qc, 0))
-    wnd.action_qc_reset.setEnabled(False)
-    toolbar.addAction(wnd.action_qc_reset)
-
-    wnd.action_reject = QAction(QIcon(pix_lib["qc_rejected"]),'Reject', wnd)
-    wnd.action_reject.setShortcut('U')
-    wnd.action_reject.triggered.connect(functools.partial(wnd.on_set_qc, 3))
-    wnd.action_reject.setEnabled(False)
-    toolbar.addAction(wnd.action_reject)
-
-    toolbar.addWidget(ToolBarStretcher(wnd))
-
-    wnd.action_revert = QAction(QIcon(pix_lib["cancel"]), '&Revert changes', wnd)
-    wnd.action_revert.setStatusTip('Revert changes')
-    wnd.action_revert.triggered.connect(wnd.on_revert)
-    toolbar.addAction(wnd.action_revert)
-
-    wnd.action_apply = QAction(QIcon(pix_lib["accept"]), '&Apply changes', wnd)
-    wnd.action_apply.setShortcut('Ctrl+S')
-    wnd.action_apply.setStatusTip('Apply changes')
-    wnd.action_apply.triggered.connect(wnd.on_apply)
-    toolbar.addAction(wnd.action_apply)
-
-    return toolbar
-
-
 
 
 class DetailModule(BaseModule):
@@ -356,6 +276,10 @@ class DetailModule(BaseModule):
     @property
     def form(self):
         return self.detail_tabs.tab_main.form
+
+    @property
+    def preview(self):
+        return self.detail_tabs.tab_preview
 
     def set_title(self, title):
         self.main_window.main_widget.tabs.setTabText(0, title)
@@ -390,15 +314,21 @@ class DetailModule(BaseModule):
         # Save changes?
         #
 
-        changed = False
+        changed = []
         if self.form and self.asset and not silent:
-           changed = (self.asset["id_folder"] != self.folder_select.get_value()) or self.form.changed
+            if self.asset["id_folder"] != self.folder_select.get_value():
+                changed.append("id_folder")
+            changed.extend(self.form.changed)
+            changed.extend(self.preview.changed)
 
         if changed:
             reply = QMessageBox.question(
                     self,
                     "Save changes?",
-                    "{} has been changed.\n\nSave changes?".format(self.asset),
+                    "Following data has been changed in the {}\n\n{}".format(
+                        self.asset, "\n".join(
+                            [meta_types[k].alias(config.get("language", "en")) for k in changed]
+                        )),
                     QMessageBox.Yes | QMessageBox.No
                     )
 
@@ -442,7 +372,11 @@ class DetailModule(BaseModule):
         data = {key: self.form[key] for key in self.form.changed}
         self.detail_tabs.load(self.asset, id_folder=self.folder_select.get_value())
         for key in data:
-            self.form[key] = data[key]
+            if key in self.form.inputs:
+                self.form[key] = data[key]
+            else:
+                pass #TODO: Delete from metadata? How?
+
 
     def new_asset(self):
         new_asset = Asset()
@@ -486,8 +420,8 @@ class DetailModule(BaseModule):
             for key in self.form.keys():
                 data[key] = self.form[key]
 
-        if has_player and self.detail_tabs.tab_preview.changes:
-            data.update(self.detail_tabs.tab_preview.changes)
+        if has_player and self.preview.changed:
+            data.update(self.preview.changed)
 
         self.form.setEnabled(False) # reenable on seismic message with new data
         response = api.set(objects=[self.asset.id], data=data)

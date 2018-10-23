@@ -1,23 +1,24 @@
+from .common import *
+
 from nebulacore import *
 from nebulacore.base_objects import BaseObject
 
 __all__ = ["FireflyObject"]
 
-DEFAULT_TEXT_COLOR  = "#c0c0c0"
 RUNDOWN_EVENT_BACKGROUND_COLOR = "#0f0f0f"
 
 STATUS_FG_COLORS = {
-    OFFLINE  : "#dd0000",
-    ONLINE   : DEFAULT_TEXT_COLOR,
-    CREATING : "#dddd00",
-    TRASHED  : "#808080",
-    ARCHIVED : "#808080",
-    RESET    : "#dddd00",
-    REMOTE   : "#dddd00",
-    UNKNOWN  : "#909090",
-    AIRED    : "#646464",
-    ONAIR    : "#ff9090",
-    RETRIEVING  : "#dddd00"
+    OFFLINE  : COLOR_TEXT_RED,
+    ONLINE   : COLOR_TEXT_NORMAL,
+    CREATING : COLOR_TEXT_YELLOW,
+    TRASHED  : COLOR_TEXT_FADED,
+    ARCHIVED : COLOR_TEXT_FADED,
+    RESET    : COLOR_TEXT_YELLOW,
+    REMOTE   : COLOR_TEXT_YELLOW,
+    UNKNOWN  : COLOR_TEXT_RED,
+    AIRED    : COLOR_TEXT_FADED,
+    ONAIR    : COLOR_TEXT_RED,
+    RETRIEVING  : COLOR_TEXT_YELLOW
 }
 
 DEFAULT_FOLDER = {
@@ -69,7 +70,7 @@ class FormatPromoted(CellFormat):
         return ""
 
     def decoration(self, obj, **kwargs):
-        return ["star_disabled", "star_enabled"][int(obj[self.key])]
+        return ["unstar", "star"][int(obj[self.key])]
 
 
 class FormatStatus(CellFormat):
@@ -195,7 +196,7 @@ class FormatTitle(CellFormat):
     key = "title"
     def decoration(self, obj, **kwargs):
         if obj.object_type == "event":
-            return ["unstar-sm", "unstar-sm"][int(obj["promoted"])]
+            return ["unstar-sm", "star-sm"][int(obj["promoted"])]
         elif obj["status"] == ARCHIVED:
             return "archive-sm"
         elif obj["status"] == TRASHED:

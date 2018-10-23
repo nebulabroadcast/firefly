@@ -1,10 +1,12 @@
 import sys
 import locale
 
+from pprint import pprint
+
 from .common import *
 
-from .dialogs.site_select import SiteSelectDialog
-from .dialogs.login import LoginDialog
+from .dialogs.login import *
+from .dialogs.site_select import *
 
 from .main_window import FireflyMainWindow, FireflyMainWidget
 
@@ -21,9 +23,7 @@ def check_login(wnd):
                 data["message"]
             )
         return False
-    dlg = LoginDialog()
-    dlg.exec_()
-    return dlg.result
+    return login_dialog()
 
 
 class FireflyApplication(Application):
@@ -38,11 +38,12 @@ class FireflyApplication(Application):
         i = 0
         if "sites" in config:
             if len(config["sites"]) > 1:
-                dlg = SiteSelect(None, config["sites"])
-                i = dlg.exec_()
+                i = site_select_dialog()
             else:
                 i = 0
         config.update(config["sites"][i])
+
+        self.app_state_path = os.path.join(app_dir, "{}-{}.appstate".format(app_settings["name"], config["site_name"]))
 
         # Login
 
@@ -114,6 +115,7 @@ class FireflyApplication(Application):
                     "folders",
                     "views",
                     "actions",
+                    "services",
                 ]:
             ng = {}
             for id in config[config_group]:

@@ -150,13 +150,11 @@ def rundown_toolbar(wnd):
     action_toggle_mcr.triggered.connect(wnd.toggle_mcr)
     toolbar.addAction(action_toggle_mcr)
 
-    #TODO: change icon
     action_toggle_plugins = QAction(QIcon(pix_lib["plugins"]), '&Plugins controls', wnd)
     action_toggle_plugins.setShortcut('F4')
     action_toggle_plugins.setStatusTip('Toggle plugins controls')
     action_toggle_plugins.triggered.connect(wnd.toggle_plugins)
     toolbar.addAction(action_toggle_plugins)
-
 
     toolbar.addWidget(ToolBarStretcher(wnd))
 

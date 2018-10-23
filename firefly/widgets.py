@@ -3,6 +3,8 @@ import functools
 
 from nx import *
 
+from nebulacore.meta_format import format_select
+
 from .common import *
 from .dialogs.text_editor import TextEditorDialog
 
@@ -173,6 +175,10 @@ class FireflySelect(QComboBox):
     def setReadOnly(self, val):
         self.setEnabled(not val)
 
+    def auto_data(self, key):
+        data = [[k["value"], k["alias"]] for k in format_select(key, -1, full=True)]
+        self.set_data(data)
+
     def set_data(self, data):
         self.clear()
         for i, row in enumerate(sorted(data)):
@@ -281,7 +287,22 @@ class FireflyFraction(FireflyNotImplementedEditor):
 class FireflyList(FireflyNotImplementedEditor):
     pass
 
+class FireflyColorPicker(QPushButton):
+    def __init__(self, parent, **kwargs):
+        super(FireflyColorPicker, self).__init__(parent)
+        self.color = 0
+        self.clicked.connect(self.execute)
 
+    def execute(self):
+        color = int(QColorDialog.getColor(QColor(self.color)).rgb())
+        self.set_value(color)
+
+    def get_value(self):
+        return self.color
+
+    def set_value(self, value):
+        self.color = value
+        self.setStyleSheet("background-color: #{:06x}".format(self.color))
 
 
 
@@ -297,6 +318,7 @@ meta_editors = {
     FRACTION  : FireflyFraction,
     SELECT    : FireflySelect,
     LIST      : FireflyList,
+    COLOR     : FireflyColorPicker,
 }
 
 
