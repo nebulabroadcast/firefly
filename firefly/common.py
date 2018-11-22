@@ -50,7 +50,7 @@ ABOUT_TEXT = \
     "License as published by the Free Software Foundation; " \
     "either version 3 of the License, or (at your option) any later version." \
     "<br><br>" \
-    "For more information visit <a href=\"https://nebulabroadcast.com\" style=\"color: #ccdd00;\">https://nebulabroadcast.com</a>"
+    "For more information visit <a href=\"https://nebulabroadcast.com\" style=\"color: #009fbc;\">https://nebulabroadcast.com</a>"
 
 def about_dialog(parent):
     QMessageBox.about(parent, "Firefly {}".format(FIREFLY_VERSION), ABOUT_TEXT)

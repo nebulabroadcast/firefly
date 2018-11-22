@@ -24,21 +24,21 @@ class NebulaAPI(object):
                     self._settings["hub"] + "/ping",
                     cookies=self._cookies,
                     headers=headers,
-                    timeout=config.get("timeout", 10)
+                    timeout=config.get("timeout", 5)
                 )
             self._cookies = response.cookies
             if response.status_code >= 400:
-                return {
-                        "response" : response.status_code,
-                        "message" : "Unable to connect nebula server:\n{}".format(self._settings["hub"])
-                    }
+                return NebulaResponse(
+                        response.status_code,
+                        "Unable to connect nebula server:\n{}".format(self._settings["hub"])
+                    )
             result = json.loads(response.text)
         except Exception:
             log_traceback()
-            return {"response" : 500, "message" : "Connection failed"}
+            return NebulaResponse(ERROR_INTERNAL, "Connection failed")
         if not result["user"]:
-            return {"response" : 403, "message" : "Unable to log-in"}
-        return {"response" : 200, "data" : result["user"]}
+            return NebulaResponse(ERROR_UNAUTHORISED, "Unable to log-in")
+        return NebulaResponse(SUCCESS_OK, data=result["user"])
 
     @property
     def auth_key(self):

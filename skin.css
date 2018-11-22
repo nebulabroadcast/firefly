@@ -2,20 +2,14 @@ QMainWindow,
 QDialog,
 QWidget,
 QToolBar {
-    background-color : #2a2e30;
-    color : #c0c0c0;
-    padding-top: 2px;
-    padding-left: 0;
+    background-color: #2a2e30;
+    color: #c0c0c0;
 }
 
 QStatusBar,
 QHeaderView {
-    background-color : #161616;
-    color : #c0c0c0;
-}
-
-a {
-    color: #009fbc;
+    background-color: #161616;
+    color: #c0c0c0;
 }
 
 QToolBar::separator{
@@ -25,14 +19,14 @@ QToolBar::separator{
 /* MENU */
 
 QMenu{
-    background-color #2a2e30;
-    color : #c0c0c0;
-    border: 1px solid #50595B;
+    background-color: #2a2e30;
+    color: #c0c0c0;
+    border: 1px solid #50595b;
 }
 
 QMenuBar {
-    background-color : #2a2e30;
-    color : #c0c0c0;
+    background-color: #2a2e30;
+    color: #c0c0c0;
 }
 
 QMenuBar::item {
@@ -56,11 +50,11 @@ QMenu::item:!enabled {
 /* TABLES */
 
 QTableView {
-    border : 0;
+    border: 0;
     background-color: #222222;
     alternate-background-color: #202020;
-    selection-background-color : rgba(110, 110, 110, 170);
-    color : #c0c0c0;
+    selection-background-color: rgba(110, 110, 110, 170);
+    color: #c0c0c0;
 }
 
 QTableView::item:focus {
@@ -70,7 +64,7 @@ QTableView::item:focus {
 QHeaderView::section {
     background-color: #161616;
     color: #c0c0c0;
-    padding :5px;
+    padding: 5px;
 }
 
 QTableCornerButton::section{
@@ -81,7 +75,7 @@ QTableCornerButton::section{
 
 
 QTabWidget::pane {
-    border-top: 1px solid #50595B;
+    border-top: 1px solid #50595b;
 }
 
 QTabBar::tab {
@@ -92,13 +86,13 @@ QTabBar::tab {
     padding-left: 8px;
     padding-right: 8px;
     background-color: #2a2e30;
-    border: 1px solid #50595B;
+    border: 1px solid #50595b;
     border-bottom: 0;
 }
 
 QTabBar::tab:selected {
-    background-color: #50595B;
-    border: 1px solid #50595B;
+    background-color: #50595b;
+    border: 1px solid #50595b;
     border-bottom: 0;
 }
 
@@ -112,15 +106,21 @@ QSpinBox {
     padding-left: 5px;
     padding-right: 5px;
     background-color: #2a2e30;
-    border: 1px solid #50595B;
+    border: 1px solid #50595b;
     min-width: 80px;
     min-height: 30px;
 }
 
 
 QCheckBox {
-    color: #009fbc;
+    color: #cccccc;
 }
+
+QCheckBox::indicator{
+    width: 24px;
+    height: 24px;
+}
+
 
 QLineEdit:focus,
 QTextEdit:focus,
@@ -135,36 +135,36 @@ QTextEdit:!enabled,
 QComboBox:!enabled,
 QCheckBox::indicator:!enabled,
 QPushButton:!enabled {
-    color : #646464;
+    color: #646464;
 }
 
 
 QPushButton:checked{
-    background-color: #50595B;
-    border: 1px solid #50595B;
+    background-color: #50595b;
+    border: 1px solid #50595b;
 }
 
 QPushButton:pressed{
-    border-color:#00a5c3;
+    border-color: #00a5c3;
     color: #c0c0c0;
 }
 
 QTextEdit {
-    color : #f8f8f2;
+    color: #f8f8f2;
     min-height: 150px;
 }
 
 QProgressBar {
     background: #161616;
-    border:0;
-    border-radius:0;
+    border: 0;
+    border-radius: 0;
     max-height: 8px;
-    padding : 0;
-    margin : 4px;
+    padding: 0;
+    margin: 4px;
 }
 
 QProgressBar::chunk{
-    background : #009fbc;
+    background: #009fbc;
 }
 
 QSlider::groove:horizontal {
@@ -179,21 +179,23 @@ QSlider::handle:horizontal {
     width: 15px;
 }
 
-.FireflyTimecode {
+.FireflyTimecode,
+.TimecodeWindow {
     font: 12px monospace;
     font-weight: bold;
     min-width : 88px;
     max-width : 88px;
+    text-align: center;
 }
 
 .ChannelDisplay {
     background-color: transparent;
-    color : #c0c0c0;
+    color: #c0c0c0;
     margin-right: 10px;
     font: 16px;
 }
 
-.SendToButton {
+.ActionButton {
     min-height: 35px;
     min-width: 300px;
 }
@@ -203,23 +205,25 @@ QSlider::handle:horizontal {
 QScrollBar:horizontal {
     background: #161616;
     height: 16px;
-    padding-left:24px;
-    padding-right:24px;
+    padding-left: 24px;
+    padding-right: 24px;
 }
 
 QScrollBar:vertical {
     background: #161616;
     width: 16px;
-    padding-top:24px;
-    padding-bottom:24px;
+    padding-top: 24px;
+    padding-bottom: 24px;
 }
 
-QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
-  background: none;
+QScrollBar::add-page:horizontal,
+QScrollBar::sub-page:horizontal {
+    background: none;
 }
 
-QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
-  background: none;
+QScrollBar::add-page:vertical,
+QScrollBar::sub-page:vertical {
+    background: none;
 }
 
 QScrollBar::handle:horizontal {

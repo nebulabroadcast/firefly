@@ -4,8 +4,6 @@ from firefly import *
 
 __all__ = ["site_select_dialog"]
 
-class SiteSelectButton(QPushButton):
-    pass
 
 class SiteSelectDialog(QDialog):
     def __init__(self,  parent, sites=[]):
@@ -18,7 +16,7 @@ class SiteSelectDialog(QDialog):
 
         layout = QVBoxLayout()
         for i, site in enumerate(sites):
-            btn_site = SiteSelectButton(site.get("site_title", False) or site["site_name"])
+            btn_site = ActionButton(site.get("site_title", False) or site["site_name"])
             btn_site.clicked.connect(functools.partial(self.on_select, i))
             layout.addWidget(btn_site, 1)
 

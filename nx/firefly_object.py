@@ -145,7 +145,10 @@ class FormatDuration(CellFormat):
     key = "duration"
     def display(self, obj, **kwargs):
         if obj.object_type in ["asset", "item"] and obj["duration"]:
-            return s2time(obj.duration)
+            t = s2time(obj.duration)
+            if obj.object_type == "asset" and obj["subclips"]:
+                t+="*"
+            return t
         else:
             return ""
 

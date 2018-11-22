@@ -88,5 +88,3 @@ class Event(EventMixIn, FireflyObject):
 
 class User(UserMixIn, FireflyObject):
     pass
-
-

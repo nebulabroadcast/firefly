@@ -17,6 +17,9 @@ class ToolBarStretcher(QWidget):
         super(ToolBarStretcher, self).__init__(parent)
         self.setSizePolicy(QSizePolicy.Expanding,QSizePolicy.Expanding)
 
+class ActionButton(QPushButton):
+    pass
+
 #
 # Metadata editor widgets
 #
@@ -148,18 +151,24 @@ class FireflyDatetime(QLineEdit):
 class FireflyTimecode(QLineEdit):
     def __init__(self, parent, **kwargs):
         super(FireflyTimecode,self).__init__(parent)
+        self.fps = kwargs.get("fps", 25.0)
         self.setInputMask("99:99:99:99")
         self.setText("00:00:00:00")
         self.default = self.get_value()
 
+        fm = self.fontMetrics()
+        w = fm.boundingRect(self.text()).width() + 16
+        self.setMinimumWidth(w)
+        self.setMaximumWidth(w)
+
     def set_value(self, value):
-        self.setText(s2time(value))
+        self.setText(s2tc(value, self.fps))
         self.setCursorPosition(0)
         self.default = self.get_value()
 
     def get_value(self):
         hh, mm, ss, ff = [int(i) for i in self.text().split(":")]
-        return (hh*3600) + (mm*60) + ss + (ff/25.0) #FIXME: FPS
+        return (hh*3600) + (mm*60) + ss + (ff/self.fps)
 
 
 
@@ -176,21 +185,29 @@ class FireflySelect(QComboBox):
         self.setEnabled(not val)
 
     def auto_data(self, key):
-        data = [[k["value"], k["alias"]] for k in format_select(key, -1, full=True)]
+        data = [[k["value"], k["alias"], k["selected"]] for k in format_select(key, -1, full=True)]
         self.set_data(data)
 
     def set_data(self, data):
         self.clear()
         for i, row in enumerate(sorted(data)):
-            value, label = row
+            if len(row) == 3:
+                value, label, selected = row
+            else:
+                value, label = row
+                selected = i==0
             if not label:
                 label = value
             self.cdata.append(value)
             self.addItem(label)
-        self.setCurrentIndex(-1)
+            if selected:
+                self.setCurrentIndex(i)
 
     def set_value(self, value):
         if value == self.get_value():
+            return
+        if not value and self.cdata and self.cdata[0] == "0":
+            self.setCurrentIndex(0)
             return
         for i, val in enumerate(self.cdata):
             if val == value:

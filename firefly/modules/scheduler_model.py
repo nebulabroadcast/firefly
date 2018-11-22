@@ -320,7 +320,7 @@ class SchedulerDayWidget(SchedulerVerticalBar):
         drop_ts = max(self.start_time, self.round_ts(self.cursor_time - self.calendar.drag_offset))
         do_reload = False
 
-        if not user.has_right("channel_edit", self.id_channel):
+        if not user.has_right("scheduler_edit", self.id_channel):
             logging.error("You are not allowed to modify schedule of this channel.")
             self.calendar.drag_source = False
             self.calendar.dragging = False
@@ -438,7 +438,7 @@ class SchedulerDayWidget(SchedulerVerticalBar):
 
     def on_delete_event(self):
         cursor_event = self.cursor_event
-        if not user.has_right("channel_edit", self.id_channel):
+        if not user.has_right("scheduler_edit", self.id_channel):
             logging.error("You are not allowed to modify schedule of this channel.")
             return
 

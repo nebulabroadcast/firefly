@@ -4,9 +4,6 @@ from firefly import *
 __all__ = ["send_to_dialog"]
 
 
-class SendToButton(QPushButton):
-    pass
-
 class SendToDialog(QDialog):
     def __init__(self,  parent, objects=[]):
         super(SendToDialog, self).__init__(parent)
@@ -28,7 +25,7 @@ class SendToDialog(QDialog):
         else:
             layout = QVBoxLayout()
             for id_action, title in response.data:
-                btn_send = SendToButton(title)
+                btn_send = ActionButton(title)
                 btn_send.clicked.connect(functools.partial(self.on_send, id_action))
                 layout.addWidget(btn_send,1)
 

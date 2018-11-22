@@ -5,10 +5,20 @@ from firefly import *
 def preview_toolbar(wnd):
     toolbar = QToolBar(wnd)
 
-    action_set_poster = QAction(QIcon(pix_lib["set-poster"]), 'Set poster frame', wnd)
-    action_set_poster.setStatusTip('Set poster frame')
-    action_set_poster.triggered.connect(wnd.set_poster)
-    toolbar.addAction(action_set_poster)
+    action_poster = QMenu("Set poster", wnd)
+    action_poster.menuAction().setIcon(QIcon(pix_lib["set-poster"]))
+    action_poster.menuAction().triggered.connect(wnd.set_poster)
+    action_poster.menuAction().setStatusTip('Set poster frame')
+
+    action_poster_set = QAction("Set poster", wnd)
+    action_poster_set.triggered.connect(wnd.set_poster)
+    action_poster.addAction(action_poster_set)
+
+    action_poster_goto = QAction("Go to poster", wnd)
+    action_poster_goto.triggered.connect(wnd.go_to_poster)
+    action_poster.addAction(action_poster_goto)
+
+    toolbar.addAction(action_poster.menuAction())
 
     action_save_marks = QAction(QIcon(pix_lib["save-marks"]), 'Save marks', wnd)
     action_save_marks.setStatusTip('Save marks')

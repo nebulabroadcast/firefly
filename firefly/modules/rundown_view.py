@@ -137,10 +137,13 @@ class RundownView(FireflyView):
 
 
         if "item" in obj_set:
-            action_send_to = QAction('&Send to...', self)
-            action_send_to.setStatusTip('Create action for selected asset(s)')
-            action_send_to.triggered.connect(self.on_send_to)
-            menu.addAction(action_send_to)
+            if len(self.selected_objects) == 1 and self.selected_objects[0]["item_role"] == "placeholder":
+                pass
+            else:
+                action_send_to = QAction('&Send to...', self)
+                action_send_to.setStatusTip('Create action for selected asset(s)')
+                action_send_to.triggered.connect(self.on_send_to)
+                menu.addAction(action_send_to)
 
         if "event" in obj_set:
             pass
@@ -225,7 +228,7 @@ class RundownView(FireflyView):
 
 
     def on_send_to(self):
-        objs = set([obj for obj in self.selected_objects if obj.object_type == "item"])
+        objs = set([obj for obj in self.selected_objects if obj.object_type == "item" and obj["id_asset"]])
         send_to_dialog(objs)
 
 

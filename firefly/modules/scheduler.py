@@ -114,6 +114,9 @@ class SchedulerModule(BaseModule):
                 "Templates (*.xml)"
             )[0]
 
+        if not file_path:
+            return
+
         QApplication.setOverrideCursor(Qt.WaitCursor)
         try:
             feed = decode_if_py3(open(file_path, "rb").read())

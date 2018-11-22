@@ -61,7 +61,10 @@ def dump_template(calendar):
             for key in event.meta:
                 if meta_types[key]["ns"] != "m":
                     continue
-                result += "            <meta key=\"{}\">{}</meta>\n".format(key, event[key])
+                value = event[key]
+                if type(value) in string_types:
+                    value = value.replace("&", "&amp;")
+                result += "            <meta key=\"{}\">{}</meta>\n".format(key, value)
             result += "        </event>\n"
         result += "    </day>\n"
 
