@@ -207,7 +207,7 @@ class DetailTabPreview(QWidget):
             self.player.seek(pos)
 
     def save_marks(self):
-        if self.player.mark_in and self.player.mark_out and self.player.mark_in > self.player.mark_out:
+        if self.player.mark_in and self.player.mark_out and self.player.mark_in >= self.player.mark_out:
             logging.error("Unable to save marks. In point must precede out point")
         else:
             self.changed["mark_in"] = self.player.mark_in
@@ -219,6 +219,9 @@ class DetailTabPreview(QWidget):
     def create_subclip(self):
         if not self.subclips.isVisible():
             self.subclips.show()
+        if (not (self.player.mark_in and self.player.mark_out)) or self.player.mark_in >= self.player.mark_out:
+            logging.error("Unable to create subclip. Invalid region selected.")
+            return
         self.subclips.create_subclip(self.player.mark_in, self.player.mark_out)
 
     def manage_subclips(self):
@@ -226,7 +229,6 @@ class DetailTabPreview(QWidget):
             self.subclips.hide()
         else:
             self.subclips.show()
-
 
 
 class DetailTabs(QTabWidget):
@@ -273,7 +275,6 @@ class DetailTabs(QTabWidget):
     def load(self, asset, **kwargs):
         for tab in self.tabs:
             tab.load(asset, **kwargs)
-
 
 
 

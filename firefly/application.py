@@ -28,7 +28,7 @@ def check_login(wnd):
 
 class FireflyApplication(Application):
     def __init__(self, **kwargs):
-        super(FireflyApplication, self).__init__(name="firefly", title="Firefly")
+        super(FireflyApplication, self).__init__(name="firefly", title="Firefly 5.0 BETA 3")
         locale.setlocale(locale.LC_NUMERIC, 'C')
         self.splash = QSplashScreen(pix_lib['splash'])
         self.splash.show()

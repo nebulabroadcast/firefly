@@ -47,12 +47,13 @@ def scheduler_toolbar(wnd):
     action_week_next.triggered.connect(wnd.on_week_next)
     toolbar.addAction(action_week_next)
 
-    toolbar.addSeparator()
-
-    wnd.action_show_runs = QAction(QIcon(pix_lib["show-runs"]), '&Show runs', wnd)
-    wnd.action_show_runs.setStatusTip('Show runs')
-    wnd.action_show_runs.setCheckable(True)
-    toolbar.addAction(wnd.action_show_runs)
+#TODO
+#    toolbar.addSeparator()
+#
+#    wnd.action_show_runs = QAction(QIcon(pix_lib["show-runs"]), '&Show runs', wnd)
+#    wnd.action_show_runs.setStatusTip('Show runs')
+#    wnd.action_show_runs.setCheckable(True)
+#    toolbar.addAction(wnd.action_show_runs)
 
     toolbar.addSeparator()
 

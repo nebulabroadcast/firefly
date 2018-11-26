@@ -33,13 +33,15 @@ class FireflyMainWidget(QWidget):
         # Channel control modules
 
         if config["playout_channels"]:
-            self.scheduler = SchedulerModule(self)
-            self.rundown = RundownModule(self)
-            self.main_window.add_subscriber(self.scheduler, ["objects_changed"])
-            self.main_window.add_subscriber(self.rundown, ["objects_changed", "rundown_changed", "playout_status"])
+            if user.has_right("scheduler_view", anyval=True) or user.has_right("scheduler_edit", anyval=True):
+                self.scheduler = SchedulerModule(self)
+                self.main_window.add_subscriber(self.scheduler, ["objects_changed"])
+                self.tabs.addTab(self.scheduler, "SCHEDULER")
 
-            self.tabs.addTab(self.scheduler, "SCHEDULER")
-            self.tabs.addTab(self.rundown, "RUNDOWN")
+            if user.has_right("rundown_view", anyval=True) or user.has_right("rundown_edit", anyval=True):
+                self.rundown = RundownModule(self)
+                self.main_window.add_subscriber(self.rundown, ["objects_changed", "rundown_changed", "playout_status"])
+                self.tabs.addTab(self.rundown, "RUNDOWN")
 
         # Layout
 
@@ -81,7 +83,7 @@ class FireflyMainWidget(QWidget):
             self.detail.detail_tabs.on_switch(-1)
 
         if self.current_module == self.rundown:
-            if self.rundown.mcr.isVisible():
+            if self.rundown.mcr and self.rundown.mcr.isVisible():
                 self.rundown.mcr.request_display_resize = True
             # Refresh rundown on focus
             self.rundown.load()
@@ -110,9 +112,15 @@ class FireflyMainWindow(MainWindow):
         self.seismic_timer.start(40)
         self.load_default_state()
 
-        if config["playout_channels"]:
-            self.id_channel = min(config["playout_channels"].keys())
-            self.set_channel(self.id_channel)
+
+        for id_channel in config["playout_channels"]:
+            if user.has_right("rundown_view", id_channel) \
+              or user.has_right("rundown_edit", id_channel) \
+              or user.has_right("scheduler_view", id_channel) \
+              or user.has_right("scheduler_edit", id_channel):
+                self.id_channel = min(config["playout_channels"].keys())
+                self.set_channel(self.id_channel)
+                break
         logging.info("[MAIN WINDOW] Firefly is ready")
 
 
@@ -176,7 +184,7 @@ class FireflyMainWindow(MainWindow):
         self.browser.search_box.selectAll()
 
     def now(self):
-        if config["playout_channels"]:
+        if config["playout_channels"] and (user.has_right("rundown_view", self.id_channel) or user.has_right("rundown_edit", self.id_channel)):
             self.show_rundown()
             self.rundown.go_now()
 
@@ -188,8 +196,10 @@ class FireflyMainWindow(MainWindow):
             for action in self.menu_scheduler.actions():
                 if hasattr(action, "id_channel") and action.id_channel == id_channel:
                     action.setChecked(True)
-            self.scheduler.set_channel(id_channel)
-            self.rundown.set_channel(id_channel)
+            if self.scheduler:
+                self.scheduler.set_channel(id_channel)
+            if self.rundown:
+                self.rundown.set_channel(id_channel)
             self.id_channel = id_channel
 
     def show_detail(self):
@@ -199,18 +209,20 @@ class FireflyMainWindow(MainWindow):
             self.main_widget.tabs.setCurrentIndex(0)
 
     def show_scheduler(self):
-        if config["playout_channels"]:
+        if config["playout_channels"] and (user.has_right("scheduler_view", self.id_channel) or user.has_right("scheduler_edit", self.id_channel)):
             self.main_widget.switch_tab(self.scheduler)
 
     def show_rundown(self):
-        if config["playout_channels"]:
+        if config["playout_channels"] and (user.has_right("rundown_view", self.id_channel) or user.has_right("rundown_edit", self.id_channel)):
             self.main_widget.switch_tab(self.rundown)
 
     def refresh(self):
         self.browser.load()
         if config["playout_channels"]:
-            self.rundown.load()
-            self.scheduler.load()
+            if self.rundown:
+                self.rundown.load()
+            if self.scheduler:
+                self.scheduler.load()
 
     def export_template(self):
         self.scheduler.export_template()

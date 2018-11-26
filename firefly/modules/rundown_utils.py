@@ -138,23 +138,25 @@ def rundown_toolbar(wnd):
     action_day_next.triggered.connect(wnd.go_day_next)
     toolbar.addAction(action_day_next)
 
-    toolbar.addSeparator()
+    if user.has_right("rundown_edit", anyval=True):
 
-    for btn_config in ITEM_BUTTONS:
-        toolbar.addWidget(ItemButton(wnd, btn_config))
+        toolbar.addSeparator()
 
-    toolbar.addSeparator()
+        for btn_config in ITEM_BUTTONS:
+            toolbar.addWidget(ItemButton(wnd, btn_config))
 
-    action_toggle_mcr = QAction(QIcon(pix_lib["mcr"]), '&Playout controls', wnd)
-    action_toggle_mcr.setStatusTip('Toggle playout controls')
-    action_toggle_mcr.triggered.connect(wnd.toggle_mcr)
-    toolbar.addAction(action_toggle_mcr)
+        toolbar.addSeparator()
 
-    action_toggle_plugins = QAction(QIcon(pix_lib["plugins"]), '&Plugins controls', wnd)
-    action_toggle_plugins.setShortcut('F4')
-    action_toggle_plugins.setStatusTip('Toggle plugins controls')
-    action_toggle_plugins.triggered.connect(wnd.toggle_plugins)
-    toolbar.addAction(action_toggle_plugins)
+        action_toggle_mcr = QAction(QIcon(pix_lib["mcr"]), '&Playout controls', wnd)
+        action_toggle_mcr.setStatusTip('Toggle playout controls')
+        action_toggle_mcr.triggered.connect(wnd.toggle_mcr)
+        toolbar.addAction(action_toggle_mcr)
+
+        action_toggle_plugins = QAction(QIcon(pix_lib["plugins"]), '&Plugins controls', wnd)
+        action_toggle_plugins.setShortcut('F4')
+        action_toggle_plugins.setStatusTip('Toggle plugins controls')
+        action_toggle_plugins.triggered.connect(wnd.toggle_plugins)
+        toolbar.addAction(action_toggle_plugins)
 
     toolbar.addWidget(ToolBarStretcher(wnd))
 

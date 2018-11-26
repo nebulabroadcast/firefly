@@ -254,6 +254,8 @@ class SchedulerDayWidget(SchedulerVerticalBar):
 
 
     def dragTargetChanged(self, evt):
+        if not user.has_right("scheduler_edit", self.calendar.id_channel):
+            return
         if type(evt) == SchedulerDayWidget:
             self.drag_outside = False
         else:
@@ -261,6 +263,8 @@ class SchedulerDayWidget(SchedulerVerticalBar):
             self.calendar.drag_source.update()
 
     def dragEnterEvent(self, evt):
+        if not user.has_right("scheduler_edit", self.calendar.id_channel):
+            return
         if evt.mimeData().hasFormat('application/nx.asset'):
             d = evt.mimeData().data("application/nx.asset").data()
             d = json.loads(d.decode("ascii"))
@@ -296,7 +300,9 @@ class SchedulerDayWidget(SchedulerVerticalBar):
 
 
     def dragMoveEvent(self, evt):
-        self.dragging= True
+        if not user.has_right("scheduler_edit", self.calendar.id_channel):
+            return
+        self.dragging = True
         self.calendar.focus_data = []
         self.mx = evt.pos().x()
         self.my = evt.pos().y()
@@ -414,15 +420,15 @@ class SchedulerDayWidget(SchedulerVerticalBar):
         action_open_rundown.triggered.connect(self.on_open_rundown)
         menu.addAction(action_open_rundown)
 
-        action_edit_event = QAction('Edit', self)
+        action_edit_event = QAction('Event details', self)
         action_edit_event.triggered.connect(self.on_edit_event)
         menu.addAction(action_edit_event)
 
-        menu.addSeparator()
-
-        action_delete_event = QAction('Delete event', self)
-        action_delete_event.triggered.connect(self.on_delete_event)
-        menu.addAction(action_delete_event)
+        if user.has_right("scheduler_edit", self.calendar.id_channel):
+            menu.addSeparator()
+            action_delete_event = QAction('Delete event', self)
+            action_delete_event.triggered.connect(self.on_delete_event)
+            menu.addAction(action_delete_event)
 
         menu.exec_(event.globalPos())
 

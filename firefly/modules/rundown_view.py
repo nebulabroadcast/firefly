@@ -137,7 +137,7 @@ class RundownView(FireflyView):
 
 
         if "item" in obj_set:
-            if len(self.selected_objects) == 1 and self.selected_objects[0]["item_role"] == "placeholder":
+            if len(self.selected_objects) == 1 and self.selected_objects[0]["item_role"] in ["placeholder", "lead_in", "lead_out", "live"]:
                 pass
             else:
                 action_send_to = QAction('&Send to...', self)
@@ -157,8 +157,7 @@ class RundownView(FireflyView):
             menu.addAction(action_delete)
 
             if len(obj_set) == 1 and "event" in obj_set:
-                action_edit = QAction('&Edit', self)
-                action_edit.setStatusTip('Edit selected event')
+                action_edit = QAction('Event details', self)
                 action_edit.triggered.connect(self.on_edit_event)
                 menu.addAction(action_edit)
 
@@ -269,6 +268,6 @@ class RundownView(FireflyView):
                         logging.error(response.message)
 
         # Event edit
-        elif obj.object_type == "event" and has_right("scheduler_edit", self.id_channel):
+        elif obj.object_type == "event" and (has_right("scheduler_view", self.id_channel) or has_right("scheduler_edit", self.id_channel)):
             self.on_edit_event()
         self.clearSelection()

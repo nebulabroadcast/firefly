@@ -151,7 +151,7 @@ class RundownModel(FireflyViewModel):
             return True
 
         if not user.has_right("rundown_edit", self.id_channel):
-            logging.warning("You are not allowed to modify this rundown")
+            logging.info("You are not allowed to modify this rundown")
             return True
 
         if row < 1:
@@ -231,7 +231,6 @@ class RundownModel(FireflyViewModel):
                     sorted_items.append({"object_type" : "asset", "id_object" : obj.id, "meta" : meta})
 
 
-
         # Append trailing items
 
         i = row
@@ -264,5 +263,5 @@ class RundownModel(FireflyViewModel):
                 logging.info("Bin order changed")
             else:
                 logging.error("Unable to change bin order: {}".format(result.message))
-            self.load() #TODO: Reload using rundown_changed seismic message
+#            self.load() #TODO: Reload using rundown_changed seismic message
         return True

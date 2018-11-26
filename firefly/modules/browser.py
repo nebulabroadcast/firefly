@@ -242,12 +242,12 @@ class BrowserModule(BaseModule):
         action_send_to.triggered.connect(self.on_send_to)
         menu.addAction(action_send_to)
 
-        menu.addSeparator()
-
-        action_columns = QAction('Choose columns', self)
-        action_columns.setStatusTip('Choose header columns')
-        action_columns.triggered.connect(self.on_choose_columns)
-        menu.addAction(action_columns)
+#TODO
+#        menu.addSeparator()
+#        action_columns = QAction('Choose columns', self)
+#        action_columns.setStatusTip('Choose header columns')
+#        action_columns.triggered.connect(self.on_choose_columns)
+#        menu.addAction(action_columns)
 
         menu.exec_(event.globalPos())
 

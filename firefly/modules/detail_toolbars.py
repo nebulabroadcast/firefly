@@ -25,10 +25,11 @@ def preview_toolbar(wnd):
     action_save_marks.triggered.connect(wnd.save_marks)
     toolbar.addAction(action_save_marks)
 
-    action_restore_marks = QAction(QIcon(pix_lib["restore-marks"]), 'Restore marks', wnd)
-    action_restore_marks.setStatusTip('Restore marks')
-    action_restore_marks.triggered.connect(wnd.restore_marks)
-    toolbar.addAction(action_restore_marks)
+#TODO
+#    action_restore_marks = QAction(QIcon(pix_lib["restore-marks"]), 'Restore marks', wnd)
+#    action_restore_marks.setStatusTip('Restore marks')
+#    action_restore_marks.triggered.connect(wnd.restore_marks)
+#    toolbar.addAction(action_restore_marks)
 
     action_create_subclip = QAction(QIcon(pix_lib["create-subclip"]), 'Create subclip', wnd)
     action_create_subclip.setStatusTip('Create subclip')

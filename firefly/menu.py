@@ -70,6 +70,13 @@ def create_menu(wnd):
                     ))
             a.id_channel = id_channel
             a.triggered.connect(partial(wnd.set_channel, id_channel))
+            if user.has_right("rundown_view", a.id_channel) \
+              or user.has_right("rundown_edit", a.id_channel) \
+              or user.has_right("scheduler_view", a.id_channel) \
+              or user.has_right("scheduler_edit", a.id_channel):
+                  a.setEnabled(True)
+            else:
+                a.setEnabled(False)
             wnd.menu_scheduler.addAction(a)
 
         wnd.menu_scheduler.addSeparator()

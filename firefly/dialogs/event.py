@@ -23,6 +23,7 @@ class EventDialog(QDialog):
 
         self.event = kwargs.get("event", Event())
         self.accepted = False
+        self.can_edit = user.has_right("scheduler_edit", self.event["id_channel"])
 
         for key in ["start", "id_channel"]:
             if kwargs.get(key, False):
@@ -39,8 +40,10 @@ class EventDialog(QDialog):
 
         self.form = MetaEditor(self, keys)
         for key in self.form.keys():
-            if self.event[key]:
-                self.form[key] = self.event[key]
+            self.form[key] = self.event[key]
+
+        if not self.can_edit:
+            self.form.setEnabled(False)
 
 
         buttons = QDialogButtonBox(
@@ -62,15 +65,22 @@ class EventDialog(QDialog):
         self.close()
 
     def on_accept(self):
+        if not self.can_edit:
+            self.close()
+            return
+
         meta = self.form.meta
+        for key in ["id_channel", "start"]:
+            meta[key] = self.event[key]
+
         for key in meta:
             value = meta[key]
-            if value:
-                self.event[key] = value
+            self.event[key] = value     # use event as a validator
+            meta[key] = self.event[key]
 
         result = api.schedule(
                 id_channel=self.event["id_channel"],
-                events=[self.event.meta]
+                events=[meta]
             )
 
         if result.is_error:

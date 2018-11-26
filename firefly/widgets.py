@@ -321,6 +321,9 @@ class FireflyColorPicker(QPushButton):
         self.color = value
         self.setStyleSheet("background-color: #{:06x}".format(self.color))
 
+    def setReadOnly(self, stat):
+        self.setEnabled(not stat)
+
 
 
 meta_editors = {

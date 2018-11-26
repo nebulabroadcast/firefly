@@ -20,31 +20,35 @@ class RundownModule(BaseModule):
         self.last_search = ""
         self.first_load = True
 
-        self.view = RundownView(self)
-        self.mcr = MCR(self)
-        self.plugins = PlayoutPlugins(self)
-
         self.toolbar = rundown_toolbar(self)
 
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(2)
         layout.addWidget(self.toolbar, 0)
-        layout.addWidget(self.mcr)
-        layout.addWidget(self.plugins)
+
+        self.view = RundownView(self)
+
+        self.mcr = self.plugins = False
+
+        if user.has_right("mcr", anyval=True):
+            self.mcr = MCR(self)
+            self.plugins = PlayoutPlugins(self)
+            if self.app_state.get("show_mcr", False):
+                self.mcr.show()
+            else:
+                self.mcr.hide()
+
+            if self.app_state.get("show_plugins", False):
+                self.plugins.show()
+            else:
+                self.plugins.hide()
+            layout.addWidget(self.mcr)
+            layout.addWidget(self.plugins)
+
+
         layout.addWidget(self.view, 1)
-
         self.setLayout(layout)
-
-        if self.app_state.get("show_mcr", False):
-            self.mcr.show()
-        else:
-            self.mcr.hide()
-
-        if self.app_state.get("show_plugins", False):
-            self.plugins.show()
-        else:
-            self.plugins.hide()
 
 
     @property
@@ -136,13 +140,14 @@ class RundownModule(BaseModule):
         if self.id_channel != id_channel or self.first_load:
             self.id_channel = id_channel
             self.load()
-            self.plugins.load()
 
-            can_mcr = has_right("mcr", self.id_channel)
-            self.mcr.btn_take.setEnabled(can_mcr)
-            self.mcr.btn_freeze.setEnabled(can_mcr)
-            self.mcr.btn_retake.setEnabled(can_mcr)
-            self.mcr.btn_abort.setEnabled(can_mcr)
+            if self.mcr:
+                can_mcr = has_right("mcr", self.id_channel)
+                self.plugins.load()
+                self.mcr.btn_take.setEnabled(can_mcr)
+                self.mcr.btn_freeze.setEnabled(can_mcr)
+                self.mcr.btn_retake.setEnabled(can_mcr)
+                self.mcr.btn_abort.setEnabled(can_mcr)
 
 
     def go_day_prev(self):
@@ -173,6 +178,8 @@ class RundownModule(BaseModule):
         self.load(start_time=time.mktime(dt.timetuple()))
 
     def toggle_mcr(self):
+        if not self.mcr:
+            return
         if self.mcr.isVisible():
             self.mcr.hide()
             self.app_state["show_mcr"] = False
@@ -182,6 +189,8 @@ class RundownModule(BaseModule):
             self.load()
 
     def toggle_plugins(self):
+        if not self.mcr:
+            return
         if self.plugins.isVisible():
             self.plugins.hide()
             self.app_state["show_plugins"] = False
@@ -205,6 +214,7 @@ class RundownModule(BaseModule):
             self.do_find(text)
         else:
             self.last_search = ""
+
     def find_next(self):
         if self.last_search:
             self.do_find(self.last_search)
@@ -220,7 +230,7 @@ class RundownModule(BaseModule):
                     start_row = idx.row()
         start_row += 1
         for i, row in enumerate(self.view.model().object_data[start_row:]):
-            for key in ["title", "identifier/main"]:
+            for key in ["title", "id/main"]:
                 if str(row[key]).lower().find(search_string) > -1:
                     selection = QItemSelection()
                     i1 = self.view.model().index(i + start_row, 0, QModelIndex())
@@ -254,12 +264,13 @@ class RundownModule(BaseModule):
 
             if message.data["cued_item"] != self.cued_item:
                 self.cued_item = message.data["cued_item"]
-                if self.mcr.isVisible():
+                if self.mcr and self.mcr.isVisible():
                     self.load()
                 else:
                     self.view.model().refresh_items([self.current_item])
 
-            self.mcr.seismic_handler(message)
+            if self.mcr:
+                self.mcr.seismic_handler(message)
 
         elif message.method == "objects_changed" and message.data["object_type"] == "event":
             for id_event in message.data["objects"]:

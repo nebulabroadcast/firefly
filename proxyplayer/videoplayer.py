@@ -139,34 +139,57 @@ class VideoPlayer(QWidget):
         self.region_bar.update()
 
     def on_timeline_seek(self):
-        self.player["pause"] = True
-        self.player.seek(self.timeline.value() / 100.0, "absolute", "exact")
+        if not self.loaded:
+            return
+        try:
+            self.player["pause"] = True
+            self.player.seek(self.timeline.value() / 100.0, "absolute", "exact")
+        except Exception:
+            pass
 
     def on_frame_next(self):
+        if not self.loaded:
+            return
         self.player.frame_step()
 
     def on_frame_prev(self):
+        if not self.loaded:
+            return
         self.player.frame_back_step()
 
     def on_5_next(self):
+        if not self.loaded:
+            return
         self.player.seek(5*self.frame_dur, "relative", "exact")
 
     def on_5_prev(self):
+        if not self.loaded:
+            return
         self.player.seek(-5*self.frame_dur, "relative", "exact")
 
     def on_go_start(self):
+        if not self.loaded:
+            return
         self.player.seek(0, "absolute", "exact")
 
     def on_go_end(self):
+        if not self.loaded:
+            return
         self.player.seek(self.duration, "absolute", "exact")
 
     def on_go_in(self):
+        if not self.loaded:
+            return
         self.seek(self.mark_in)
 
     def on_go_out(self):
+        if not self.loaded:
+            return
         self.seek(self.mark_out or self.duration)
 
     def on_mark_in(self, value=False):
+        if not self.loaded:
+            return
         if value:
             if isinstance(value, TimecodeWindow):
                 value = value.get_value()
@@ -178,6 +201,8 @@ class VideoPlayer(QWidget):
         self.region_bar.update()
 
     def on_mark_out(self, value=False):
+        if not self.loaded:
+            return
         if value:
             if isinstance(value, TimecodeWindow):
                 value = value.get_value()
@@ -189,27 +214,39 @@ class VideoPlayer(QWidget):
         self.region_bar.update()
 
     def on_clear_in(self):
+        if not self.loaded:
+            return
         self.mark_in = 0
         self.region_bar.update()
 
     def on_clear_out(self):
+        if not self.loaded:
+            return
         self.mark_out = 0
         self.region_bar.update()
 
     def on_clear_marks(self):
+        if not self.loaded:
+            return
         self.mark_out = self.mark_in = 0
         self.region_bar.update()
 
     def seek(self, position):
+        if not self.loaded:
+            return
         if isinstance(position, TimecodeWindow):
             position = position.get_value()
             self.setFocus()
         self.player.seek(position, "absolute", "exact")
 
     def on_pause(self):
+        if not self.loaded:
+            return
         self.player["pause"] = not self.player["pause"]
 
     def force_pause(self):
+        if not self.loaded:
+            return
         if not self.player["pause"]:
             self.player["pause"] = True
 
