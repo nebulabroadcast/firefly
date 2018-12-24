@@ -114,6 +114,7 @@ class BrowserModule(BaseModule):
         return self.search_query["id_view"]
 
     def load_view_menu(self):
+        i = 1
         for id_view in sorted(
                     config["views"].keys(),
                     key=lambda k: config["views"][k]["position"]
@@ -123,9 +124,11 @@ class BrowserModule(BaseModule):
                 self.action_search.addSeparator()
                 continue
             action = QAction(view["title"], self, checkable=True)
+            action.setShortcut("ALT+{}".format(i))
             action.id_view = id_view
             action.triggered.connect(functools.partial(self.set_view, id_view))
             self.action_search.addAction(action)
+            i+=1
 
     def on_section_resize(self, *args, **kwargs):
         if self.loading:

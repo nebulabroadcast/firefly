@@ -139,6 +139,7 @@ class MCR(QWidget):
         api.playout(action="take", id_channel=self.id_channel)
 
     def on_freeze(self):
+        self.paused = not self.paused
         api.playout(action="freeze", id_channel=self.id_channel)
 
     def on_retake(self):
@@ -205,7 +206,7 @@ class MCR(QWidget):
             return
         else:
             oldval = self.progress_bar.value()
-            if ppos > oldval or abs(oldval-ppos) > (PROGRESS_BAR_RESOLUTION/self.dur):
+            if ppos > oldval or abs(oldval-ppos) > (PROGRESS_BAR_RESOLUTION/self.dur)*self.fps:
                 self.progress_bar.setValue(ppos)
 
         if self.request_display_resize:

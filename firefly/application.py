@@ -4,6 +4,7 @@ import locale
 from pprint import pprint
 
 from .common import *
+from .filesystem import load_filesystem
 
 from .dialogs.login import *
 from .dialogs.site_select import *
@@ -28,7 +29,7 @@ def check_login(wnd):
 
 class FireflyApplication(Application):
     def __init__(self, **kwargs):
-        super(FireflyApplication, self).__init__(name="firefly", title="Firefly 5.0 BETA 3")
+        super(FireflyApplication, self).__init__(name="firefly", title="Firefly 5.0")
         locale.setlocale(locale.LC_NUMERIC, 'C')
         self.splash = QSplashScreen(pix_lib['splash'])
         self.splash.show()
@@ -64,6 +65,8 @@ class FireflyApplication(Application):
         # Load settings and show main window
         self.splash_message("Loading site settings...")
         self.load_settings()
+        self.splash_message("Loading filesystem...")
+        load_filesystem()
         self.splash_message("Loading asset cache...")
         asset_cache.load()
         self.splash_message("Loading user workspace...")

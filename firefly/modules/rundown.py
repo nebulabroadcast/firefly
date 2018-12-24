@@ -272,9 +272,25 @@ class RundownModule(BaseModule):
             if self.mcr:
                 self.mcr.seismic_handler(message)
 
-        elif message.method == "objects_changed" and message.data["object_type"] == "event":
-            for id_event in message.data["objects"]:
-                if id_event in self.view.model().event_ids:
-                    logging.debug("Event id {} has been changed. Reloading rundown.".format(id_event))
-                    self.load()
-                    break
+        elif message.method == "objects_changed":
+            if message.data["object_type"] == "event":
+                for id_event in message.data["objects"]:
+                    if id_event in self.view.model().event_ids:
+                        logging.debug("Event id {} has been changed. Reloading rundown.".format(id_event))
+                        self.load()
+                        break
+            elif message.data["object_type"] == "asset":
+                model = self.view.model()
+                for row, obj in enumerate(model.object_data):
+                    if obj.id in message.data["objects"]:
+                        model.object_data[row] = asset_cache[obj.id]
+                        model.dataChanged.emit(model.index(row, 0), model.index(row, len(model.header_data)-1))
+
+        elif message.method == "job_progress":
+            if self.playout_config.get("send_action", 0) == message.data["id_action"]:
+
+                model = self.view.model()
+                for row, obj in enumerate(model.object_data):
+                    if obj["id_asset"] == message.data["id_asset"]:
+                        model.object_data[row].transfer_progress = message.data["progress"]
+                        model.dataChanged.emit(model.index(row, 0), model.index(row, len(model.header_data)-1))

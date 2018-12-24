@@ -156,12 +156,19 @@ class RundownView(FireflyView):
             action_delete.triggered.connect(self.on_delete)
             menu.addAction(action_delete)
 
-            if len(obj_set) == 1 and "event" in obj_set:
-                action_edit = QAction('Event details', self)
-                action_edit.triggered.connect(self.on_edit_event)
-                menu.addAction(action_edit)
+            if len(self.selected_objects) == 1:
+                if "event" in obj_set:
+                    action_edit = QAction('Edit', self)
+                    action_edit.triggered.connect(self.on_edit_event)
+                    menu.addAction(action_edit)
+                elif self.selected_objects[0]["item_role"] in ["placeholder", "live"]:
+                    action_edit = QAction('Edit', self)
+                    action_edit.triggered.connect(self.on_edit_item)
+                    menu.addAction(action_edit)
 
         menu.exec_(event.globalPos())
+
+
 
 
     def on_set_mode(self, mode):
@@ -230,6 +237,27 @@ class RundownView(FireflyView):
         objs = set([obj for obj in self.selected_objects if obj.object_type == "item" and obj["id_asset"]])
         send_to_dialog(objs)
 
+    def on_edit_item(self):
+        objs = [obj for obj in self.selected_objects if obj.object_type == "item" and obj["item_role"] in ["live", "placeholder"]]
+        if not objs:
+            return
+        obj = objs[0]
+        dlg = PlaceholderDialog(self, obj.meta)
+        dlg.exec_()
+        if not dlg.ok:
+            return False
+        data = {}
+        for key in dlg.meta:
+            if dlg.meta[key] != obj[key]:
+                data[key] = dlg.meta[key]
+        if data:
+            response = api.set(
+                    object_type=obj.object_type,
+                    objects=[obj.id],
+                    data=data
+                )
+            if response.is_error:
+                logging.error(response.message)
 
     def on_edit_event(self):
         objs = [obj for obj in self.selected_objects if obj.object_type == "event"]
@@ -249,23 +277,9 @@ class RundownView(FireflyView):
                 self.clearSelection()
 
             # Virtual item edit
+
             elif obj["item_role"] in ["placeholder", "live"]:
-                dlg = PlaceholderDialog(self, obj.meta)
-                dlg.exec_()
-                if not dlg.ok:
-                    return False
-                data = {}
-                for key in dlg.meta:
-                    if dlg.meta[key] != obj[key]:
-                        data[key] = dlg.meta[key]
-                if data:
-                    response = api.set(
-                            object_type=obj.object_type,
-                            objects=[obj.id],
-                            data=data
-                        )
-                    if response.is_error:
-                        logging.error(response.message)
+                self.on_edit_item()
 
         # Event edit
         elif obj.object_type == "event" and (has_right("scheduler_view", self.id_channel) or has_right("scheduler_edit", self.id_channel)):

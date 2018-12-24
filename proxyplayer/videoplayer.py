@@ -40,6 +40,10 @@ class VideoPlayer(QWidget):
         def duration_observer(_name, value):
             self.on_duration_change(value)
 
+        @self.player.property_observer('pause')
+        def duration_observer(_name, value):
+            self.on_pause_change(value)
+
         #
         # Displays
         #
@@ -137,6 +141,11 @@ class VideoPlayer(QWidget):
         self.loaded = True
         self.duration_changed = True
         self.region_bar.update()
+
+    def on_pause_change(self, value):
+        if hasattr(self, "action_play"):
+            self.action_play.setIcon(QIcon(self.pixlib[["pause", "play"][int(value)]]))
+
 
     def on_timeline_seek(self):
         if not self.loaded:

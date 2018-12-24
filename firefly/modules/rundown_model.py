@@ -72,6 +72,7 @@ class RundownModel(FireflyViewModel):
                     i += 1
             elif row["object_type"] == "item":
                 item = Item(meta=row)
+                item.id_channel = self.id_channel
                 if row["id_asset"]:
                     required_assets.append([row["id_asset"], row["asset_mtime"]])
                 else:

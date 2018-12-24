@@ -16,6 +16,7 @@ STATUS_FG_COLORS = {
     RESET    : COLOR_TEXT_YELLOW,
     REMOTE   : COLOR_TEXT_YELLOW,
     UNKNOWN  : COLOR_TEXT_RED,
+    CORRUPTED  : COLOR_TEXT_RED,
     AIRED    : COLOR_TEXT_FADED,
     ONAIR    : COLOR_TEXT_RED,
     RETRIEVING  : COLOR_TEXT_YELLOW
@@ -73,6 +74,40 @@ class FormatPromoted(CellFormat):
         return ["unstar", "star"][int(obj[self.key])]
 
 
+def parse_item_status(obj):
+    asset = obj.asset
+    try:
+        obj.id_channel
+    except:
+        print ("bad idc", obj.meta)
+    pskey = "playout_status/{}".format(obj.id_channel)
+
+    if obj["status"] in [ONAIR, AIRED]:
+        return obj["status"]
+
+    if asset["status"] == OFFLINE:
+        return OFFLINE
+
+    if not pskey in asset.meta:
+        return  REMOTE
+    elif asset[pskey]["status"] == OFFLINE:
+        return REMOTE
+    elif asset[pskey]["status"] == ONLINE:
+        return  ONLINE
+    elif asset[pskey]["status"] == CORRUPTED:
+        return CORRUPTED
+    elif asset[pskey]["status"] == CREATING:
+        return CREATING
+
+#        if obj["rundown_transfer_progress"] and float(obj["rundown_transfer_progress"]) == -1:
+#            return "PENDING"
+#
+#        elif obj["rundown_transfer_progress"] and float(obj["rundown_transfer_progress"]) > -1:
+#            return "{:0.2f}%".format(float(obj["rundown_transfer_progress"]))
+
+    return UNKNOWN
+
+
 class FormatStatus(CellFormat):
     key = "status"
     def display(self, obj, **kwargs):
@@ -82,21 +117,21 @@ class FormatStatus(CellFormat):
         if obj.object_type != "item" or not obj["id_asset"]:
             return ""
 
-#        if obj["rundown_transfer_progress"] and float(obj["rundown_transfer_progress"]) == -1:
-#            return "PENDING"
-#
-#        elif obj["rundown_transfer_progress"] and float(obj["rundown_transfer_progress"]) > -1:
-#            return "{:0.2f}%".format(float(obj["rundown_transfer_progress"]))
+        state = parse_item_status(obj)
 
-        return obj.show("status")
+        xfr = ""
+        if hasattr(obj, "transfer_progress"):
+            if obj.transfer_progress < 100:
+                xfr = " ({:.01f}%)".format(obj.transfer_progress)
 
+        return get_object_state_name(state).upper() + xfr
 
     def foreground(self, obj, **kwargs):
-#        if obj["rundown_transfer_progress"] and int(obj["rundown_transfer_progress"]) >= -1:
-#            return NXColors[ASSET_FG_CREATING]
-
-        if obj.object_type in ["asset", "item"]:
+        if obj.object_type == "asset":
             return STATUS_FG_COLORS[obj["status"]]
+
+        elif obj.object_type == "item" and obj["id_asset"]:
+            return STATUS_FG_COLORS[parse_item_status(obj)]
 
 
 
@@ -218,8 +253,11 @@ class FormatTitle(CellFormat):
                 return "placeholder-sm"
 
     def foreground(self, obj, **kwargs):
-        if obj.object_type in ["asset", "item"]:
+        if obj.object_type == "asset":
             return STATUS_FG_COLORS[obj["status"]]
+        elif obj.object_type == "item" and obj["id_asset"]:
+            return STATUS_FG_COLORS[parse_item_status(obj)]
+
 
     def font(self, obj, **kwargs):
         if obj.object_type == "event":
@@ -266,6 +304,8 @@ class FireflyObject(BaseObject):
             )
 
     def format_foreground(self, key, **kwargs):
+        if self.object_type == "item" and self["status"] == AIRED:
+            return COLOR_TEXT_FADED
         if key in format_helpers:
             return format_helpers[key].foreground(self, **kwargs)
 

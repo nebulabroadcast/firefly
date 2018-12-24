@@ -40,7 +40,7 @@ class FireflyMainWidget(QWidget):
 
             if user.has_right("rundown_view", anyval=True) or user.has_right("rundown_edit", anyval=True):
                 self.rundown = RundownModule(self)
-                self.main_window.add_subscriber(self.rundown, ["objects_changed", "rundown_changed", "playout_status"])
+                self.main_window.add_subscriber(self.rundown, ["objects_changed", "rundown_changed", "playout_status", "job_progress"])
                 self.tabs.addTab(self.rundown, "RUNDOWN")
 
         # Layout
