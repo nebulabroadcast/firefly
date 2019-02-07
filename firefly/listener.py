@@ -2,8 +2,10 @@ import json
 import time
 import websocket
 
-
 from .common import *
+
+if config.get("debug"):
+    websocket.enableTrace(True)
 
 __all__ = ["SeismicListener"]
 
@@ -54,7 +56,9 @@ class SeismicListener(QThread):
         self.halted = True
 
 
-    def on_message(self, ws, data):
+    def on_message(self, *args):
+        data = args[-1]
+
         if not self.active:
             logging.goodnews("Listener connected", handlers=False)
             self.active = True
@@ -88,10 +92,11 @@ class SeismicListener(QThread):
         else:
             self.queue.append(message)
 
-    def on_error(self, ws, error):
+    def on_error(self, *args):
+        error = args[-1]
         logging.error(error, handlers=False)
 
-    def on_close(self, ws):
+    def on_close(self, *args):
         self.active = False
         logging.warning("WS connection interrupted. Reconnecting", handlers=False)
 

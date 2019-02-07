@@ -229,12 +229,28 @@ class FireflyRadio(QWidget):
         self.cdata = []
         self.current_index = -1
         self.buttons = []
-        self.set_data(data)
+        self.layout = QHBoxLayout()
+        self.layout.setContentsMargins(0,0,0,0)
+        self.setLayout(self.layout)
+        if kwargs.get("data", []):
+            self.set_data(kwargs["data"])
         self.default = self.get_value()
 
-    def set_data(self, data):
+    def clear(self):
+        for i, button in enumerate(self.buttons):
+            button.deleteLater()
+            self.layout.removeWidget(button)
         self.current_index = -1
-        vbox = QHBoxLayout()
+        self.cdata = []
+        self.buttons = []
+
+    def auto_data(self, key):
+        data = [[k["value"], k["alias"], k["selected"]] for k in format_select(key, -1, full=True)]
+        self.set_data(data)
+
+    def set_data(self, data):
+        self.clear()
+        self.current_index = -1
         for i, row in enumerate(sorted(data)):
             value, label = row
             if not label:
@@ -244,18 +260,19 @@ class FireflyRadio(QWidget):
             self.buttons.append(QPushButton(label))
             self.buttons[-1].setCheckable(True)
             self.buttons[-1].setAutoExclusive(True)
-            self.buttons[-1].clicked.connect(partial(self.switch, i))
-            vbox.addWidget(self.buttons[-1])
+            self.buttons[-1].clicked.connect(functools.partial(self.switch, i))
+            self.layout.addWidget(self.buttons[-1])
 
-        vbox.setContentsMargins(0,0,0,0)
-        self.setLayout(vbox)
 
     def switch(self, index):
         self.current_index = index
 
     def set_value(self, value):
-        if value == self.get_value():
-            return
+        value = str(value)
+
+        if not value and self.cdata and self.cdata[0] == "0":
+            value = "0"
+
         for i, val in enumerate(self.cdata):
             if val == value:
                 self.buttons[i].setChecked(True)
@@ -272,7 +289,7 @@ class FireflyRadio(QWidget):
     def get_value(self):
         if self.current_index == -1:
             return ""
-        return self.cdata[self.current_index]
+        return str(self.cdata[self.current_index])
 
     def setReadOnly(self, val):
         for w in self.buttons:
@@ -339,6 +356,7 @@ meta_editors = {
     SELECT    : FireflySelect,
     LIST      : FireflyList,
     COLOR     : FireflyColorPicker,
+    "radio"   : FireflyRadio
 }
 
 
@@ -356,8 +374,10 @@ class MetaEditor(QWidget):
             key_settings = meta_types[key].settings
             key_settings.update(conf)
 
+            widget = key_settings.get("widget", key_class)
+
             self.inputs[key] = meta_editors.get(
-                    key_class,
+                    widget,
                     FireflyNotImplementedEditor
                 )(self, **key_settings)
 

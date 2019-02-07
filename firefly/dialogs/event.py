@@ -78,13 +78,13 @@ class EventDialog(QDialog):
             self.event[key] = value     # use event as a validator
             meta[key] = self.event[key]
 
-        result = api.schedule(
+        response = api.schedule(
                 id_channel=self.event["id_channel"],
                 events=[meta]
             )
 
-        if result.is_error:
-            logging.error(result.message)
+        if not response:
+            logging.error(response.message)
 
         self.accepted = True
         self.close()

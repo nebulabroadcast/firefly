@@ -22,18 +22,6 @@ def create_menu(wnd):
 
     menu_file.addSeparator()
 
-    action_search = QAction('&Search assets', wnd)
-    action_search.setShortcut('ESC')
-    action_search.setStatusTip('Focus asset search bar')
-    action_search.triggered.connect(wnd.search_assets)
-    menu_file.addAction(action_search)
-
-    action_detail = QAction('Asset &detail', wnd)
-    action_detail.setShortcut('F2')
-    action_detail.setStatusTip('Focus asset search bar')
-    action_detail.triggered.connect(wnd.show_detail)
-    menu_file.addAction(action_detail)
-
     action_refresh = QAction('&Refresh', wnd)
     action_refresh.setShortcut('F5')
     action_refresh.setStatusTip('Refresh views')
@@ -52,6 +40,50 @@ def create_menu(wnd):
     action_exit.setStatusTip('Quit Firefly')
     action_exit.triggered.connect(wnd.exit)
     menu_file.addAction(action_exit)
+
+
+#
+# Browser
+#
+
+    menu_browser = menubar.addMenu('Browser')
+
+    action_detail = QAction('Asset &detail', wnd)
+    action_detail.setShortcut('F2')
+    action_detail.setStatusTip('Focus asset search bar')
+    action_detail.triggered.connect(wnd.show_detail)
+    menu_browser.addAction(action_detail)
+
+    action_search = QAction('&Search assets', wnd)
+    action_search.setShortcut('ESC')
+    action_search.setStatusTip('Focus asset search bar')
+    action_search.triggered.connect(wnd.search_assets)
+    menu_browser.addAction(action_search)
+
+    menu_browser.addSeparator()
+
+    action_new_tab = QAction('&New tab', wnd)
+    action_new_tab.setShortcut('CTRL+T')
+    action_new_tab.setStatusTip('Open new browser tab')
+    action_new_tab.triggered.connect(wnd.new_tab)
+    menu_browser.addAction(action_new_tab)
+
+    action_close_tab = QAction('&Close tab', wnd)
+    action_close_tab.setShortcut('CTRL+W')
+    action_close_tab.setStatusTip('Close current browser tab')
+    action_close_tab.triggered.connect(wnd.close_tab)
+    menu_browser.addAction(action_close_tab)
+
+    action_prev_tab = QAction('&Previous tab', wnd)
+    action_prev_tab.setShortcut('CTRL+PgUp')
+    action_prev_tab.triggered.connect(wnd.prev_tab)
+    menu_browser.addAction(action_prev_tab)
+
+    action_next_tab = QAction('&Next tab', wnd)
+    action_next_tab.setShortcut('CTRL+PgDown')
+    action_next_tab.triggered.connect(wnd.next_tab)
+    menu_browser.addAction(action_next_tab)
+
 
 #
 # Scheduling
@@ -110,7 +142,6 @@ def create_menu(wnd):
         action_refresh_plugins.setStatusTip('Refresh rundown plugins')
         action_refresh_plugins.triggered.connect(wnd.refresh_plugins)
         menu_rundown.addAction(action_refresh_plugins)
-
 
 #
 # HELP

@@ -136,9 +136,10 @@ class VideoPlayer(QWidget):
     def on_duration_change(self, value):
         if value:
             self.duration = value
+            self.loaded = True
         else:
             self.duration = 0
-        self.loaded = True
+            self.loaded = False
         self.duration_changed = True
         self.region_bar.update()
 

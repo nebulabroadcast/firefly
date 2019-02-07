@@ -48,23 +48,6 @@ def preview_toolbar(wnd):
 def detail_toolbar(wnd):
     toolbar = QToolBar(wnd)
 
-    fdata = []
-    for id_folder in sorted(config["folders"].keys()):
-        fdata.append([id_folder, config["folders"][id_folder]["title"]])
-
-    wnd.folder_select = FireflySelect(wnd, data=fdata)
-    for i, fd in enumerate(fdata):
-        wnd.folder_select.setItemIcon(i, QIcon(pix_lib["folder_"+str(fd[0])]))
-    wnd.folder_select.currentIndexChanged.connect(wnd.on_folder_changed)
-    wnd.folder_select.setEnabled(False)
-    toolbar.addWidget(wnd.folder_select)
-
-    toolbar.addSeparator()
-
-    wnd.duration =  FireflyTimecode(wnd)
-    toolbar.addWidget(wnd.duration)
-
-    toolbar.addSeparator()
 
     wnd.action_approve = QAction(QIcon(pix_lib["qc_approved"]),'Approve', wnd)
     wnd.action_approve.setShortcut('Y')

@@ -13,11 +13,11 @@ class SearchWidget(QLineEdit):
 
     def keyPressEvent(self, event):
         if event.key() in [Qt.Key_Return,Qt.Key_Enter]:
-            self.parent().parent().load()
+            self.parent().load()
         elif event.key() == Qt.Key_Escape:
             self.line_edit.setText("")
         elif event.key() == Qt.Key_Down:
-            self.parent().parent().view.setFocus()
+            self.parent().view.setFocus()
         QLineEdit.keyPressEvent(self, event)
 
 
@@ -63,18 +63,25 @@ class FireflyBrowserView(FireflyView):
 
 
 
-class BrowserModule(BaseModule):
-    def __init__(self, parent):
-        super(BrowserModule, self).__init__(parent)
-
-        id_view = self.app_state.get("id_view", min(config["views"]))
+class BrowserTab(QWidget):
+    def __init__(self, parent, **kwargs):
+        super(BrowserTab, self).__init__(parent)
+        self._parent = parent
         self.loading = False
 
+        # Search query
+
         self.search_query = {
-                "id_view" : id_view
+                "id_view" : kwargs.get("id_view", min(config["views"])),
+                "fulltext" : kwargs.get("fulltext", "")
             }
 
+        # Layout
+
         self.search_box = SearchWidget(self)
+        if self.search_query.get("fulltext"):
+            self.search_box.setText(self.search_query["fulltext"])
+
         self.first_load = True
         self.view = FireflyBrowserView(self)
         self.view.horizontalHeader().sectionResized.connect(self.on_section_resize)
@@ -93,17 +100,21 @@ class BrowserModule(BaseModule):
         action_copy.triggered.connect(self.on_copy_result)
         self.addAction(action_copy)
 
-        toolbar = QToolBar()
-        toolbar.addWidget(self.search_box)
+
+        toolbar = QToolBar(self)
         toolbar.addAction(action_clear)
         toolbar.addAction(self.action_search.menuAction())
 
+        search_layout = QHBoxLayout()
+        search_layout.setContentsMargins(0,0,0,0)
+        search_layout.addWidget(self.search_box)
+        search_layout.addWidget(toolbar)
+
         layout = QVBoxLayout()
         layout.setContentsMargins(0,0,0,0)
-        layout.addWidget(toolbar, 0)
+        layout.addLayout(search_layout, 0)
         layout.addWidget(self.view, 1)
         self.setLayout(layout)
-        self.load()
 
     @property
     def model(self):
@@ -112,6 +123,14 @@ class BrowserModule(BaseModule):
     @property
     def id_view(self):
         return self.search_query["id_view"]
+
+    @property
+    def main_window(self):
+        return self._parent.main_window
+
+    @property
+    def app_state(self):
+        return self._parent.app_state
 
     def load_view_menu(self):
         i = 1
@@ -174,10 +193,7 @@ class BrowserModule(BaseModule):
                 self.view.horizontalHeader().resizeSection(i, w)
             self.first_load = False
         self.loading = False
-
-
-    def refresh(self):
-        self.load()
+        self._parent.redraw_tabs()
 
     def on_clear(self):
         self.search_box.setText("")
@@ -283,7 +299,7 @@ class BrowserModule(BaseModule):
                 )
         else:
             return
-        if response.is_error:
+        if not response:
             logging.error("Unable to trash:\n\n" + response.message)
 
     def on_untrash(self):
@@ -294,7 +310,7 @@ class BrowserModule(BaseModule):
                 objects=objects,
                 data={"status" : CREATING}
             )
-        if response.is_error:
+        if not response:
             logging.error("Unable to untrash:\n\n" + response.message)
 
     def on_archive(self):
@@ -313,7 +329,7 @@ class BrowserModule(BaseModule):
                 )
         else:
             return
-        if response.is_error:
+        if not response:
             logging.error("Unable to archive:\n\n" + response.message)
 
     def on_unarchive(self):
@@ -324,7 +340,7 @@ class BrowserModule(BaseModule):
                 objects=objects,
                 data={"status" : RETRIEVING}
             )
-        if response.is_error:
+        if not response:
             logging.error("Unable to unarchive:\n\n" + response.message)
 
 
@@ -341,8 +357,101 @@ class BrowserModule(BaseModule):
         clipboard.setText(result)
 
     def seismic_handler(self, message):
-        if message.method == "objects_changed" and message.data["object_type"] == "asset":
             for row, obj in enumerate(self.model.object_data):
                 if obj.id in message.data["objects"]:
                     self.model.object_data[row] = asset_cache[obj.id]
                     self.model.dataChanged.emit(self.model.index(row, 0), self.model.index(row, len(self.model.header_data)-1))
+
+
+class BrowserModule(BaseModule):
+    def __init__(self, parent):
+        super(BrowserModule, self).__init__(parent)
+        self.tabs = QTabWidget(self)
+        self.tabs.setTabsClosable(True)
+        self.tabs.tabCloseRequested.connect(self.close_tab)
+
+        self.layout = QVBoxLayout(self)
+        self.layout.setSpacing(0)
+        self.layout.setContentsMargins(0,0,0,0)
+        self.layout.addWidget(self.tabs)
+
+        self.setLayout(self.layout)
+
+        tabscfg = self.app_state.get("browser_tabs", [])
+        created_tabs = 0
+        for tabcfg in tabscfg:
+            try:
+                if tabcfg["id_view"] not in config["views"]:
+                    continue
+                self.new_tab(**tabcfg)
+                created_tabs += 1
+            except Exception:
+                log_traceback()
+                logging.warning("Unable to restore tab")
+        if not created_tabs:
+            self.new_tab()
+
+    def new_tab(self, **kwargs):
+        if not "id_view" in kwargs:
+            try:
+                id_view = self.tabs.currentWidget().id_view
+            except AttributeError:
+                pass
+            else:
+                kwargs["id_view"] = id_view
+        tab = BrowserTab(self, **kwargs)
+        self.tabs.addTab(tab, "New tab")
+        self.tabs.setCurrentIndex(self.tabs.indexOf(tab))
+        tab.load()
+
+
+    def close_tab(self, idx=False):
+        if self.tabs.count() == 1:
+            return
+        if not idx:
+            idx = self.tabs.currentIndex()
+        w = self.tabs.widget(idx)
+        w.deleteLater()
+        self.tabs.removeTab(idx)
+        self.redraw_tabs()
+
+    def prev_tab(self):
+        cur = self.tabs.currentIndex()
+        if cur == 0:
+            n = self.tabs.count() -  1
+        else:
+            n = cur -1
+        self.tabs.setCurrentIndex(n)
+
+    def next_tab(self):
+        cur = self.tabs.currentIndex()
+        if cur == self.tabs.count() - 1:
+            n = 0
+        else:
+            n = cur + 1
+        self.tabs.setCurrentIndex(n)
+
+    def load(self):
+        for b in self.browsers:
+            b.load()
+
+    def seismic_handler(self, message):
+        if message.method == "objects_changed" and message.data["object_type"] == "asset":
+            for b in self.browsers:
+                b.seismic_handler(message)
+
+    @property
+    def browsers(self):
+        r = []
+        for i in range(0,self.tabs.count()):
+            r.append(self.tabs.widget(i))
+        return r
+
+    def redraw_tabs(self):
+        QApplication.processEvents()
+        views = []
+        for i,b in enumerate(self.browsers):
+            id_view = b.id_view
+            self.tabs.setTabText(i, config["views"][id_view]["title"])
+            views.append(b.search_query)
+        self.app_state["browser_tabs"] = views

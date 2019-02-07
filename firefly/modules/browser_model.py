@@ -16,12 +16,12 @@ class BrowserModel(FireflyViewModel):
 
         search_query = kwargs
         search_query["result"] = ["id", "mtime"]
-        result = api.get(**search_query)
-        if result.is_error:
-            logging.error(result.message)
+        response = api.get(**search_query)
+        if not response:
+            logging.error(response.message)
         else:
-            if asset_cache.request(result.data):
-                self.object_data = [asset_cache[row[0]] for row in result.data]
+            if asset_cache.request(response.data):
+                self.object_data = [asset_cache[row[0]] for row in response.data]
         self.endResetModel()
         QApplication.restoreOverrideCursor()
 

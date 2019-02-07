@@ -263,11 +263,15 @@ class RundownModule(BaseModule):
                 self.view.model().refresh_items([self.current_item])
 
             if message.data["cued_item"] != self.cued_item:
+                model = self.view.model()
                 self.cued_item = message.data["cued_item"]
-                if self.mcr and self.mcr.isVisible():
-                    self.load()
-                else:
-                    self.view.model().refresh_items([self.current_item])
+                for obj in model.object_data:
+                    if obj.object_type == "item" and obj.id == self.cued_item:
+                        if self.mcr and self.mcr.isVisible():
+                            self.load()
+                        else:
+                            self.view.model().refresh_items([self.current_item])
+                        break
 
             if self.mcr:
                 self.mcr.seismic_handler(message)

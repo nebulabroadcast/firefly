@@ -63,6 +63,7 @@ class MCR(QWidget):
         self.request_time = 0
         self.paused = False
         self.stopped = True
+        self.cueing = False
         self.local_request_time = time.time()
         self.updating = False
         self.request_display_resize = False
@@ -136,17 +137,17 @@ class MCR(QWidget):
         return self.parent().id_channel
 
     def on_take(self):
-        api.playout(action="take", id_channel=self.id_channel)
+        api.playout(timeout=1, action="take", id_channel=self.id_channel)
 
     def on_freeze(self):
         self.paused = not self.paused
-        api.playout(action="freeze", id_channel=self.id_channel)
+        api.playout(timeout=1, action="freeze", id_channel=self.id_channel)
 
     def on_retake(self):
-        api.playout(action="retake", id_channel=self.id_channel)
+        api.playout(timeout=1, action="retake", id_channel=self.id_channel)
 
     def on_abort(self):
-        api.playout(action="abort", id_channel=self.id_channel)
+        api.playout(timeout=1, action="abort", id_channel=self.id_channel)
 
     def seismic_handler(self, data):
         status = data.data
@@ -169,9 +170,14 @@ class MCR(QWidget):
             self.display_current.set_text(self.current)
             self.request_display_resize = False
 
-        if self.cued != status["cued_title"]:
+        cueing = status.get("cueing", False)
+        if self.cued != status["cued_title"] or self.cueing != cueing:
             self.cued = status["cued_title"]
-            self.display_cued.set_text(self.cued)
+            if cueing:
+                self.display_cued.set_text("<font color='yellow'>{}</font>".format(self.cued))
+            else:
+                self.display_cued.set_text(self.cued)
+            self.cueing = cueing
             self.request_display_resize = False
 
     def show(self, *args, **kwargs):
@@ -199,6 +205,9 @@ class MCR(QWidget):
             self.display_rem.set_text("<font color='red'>{}</font>".format(t))
         else:
             self.display_rem.set_text(t)
+
+        if self.pos == self.dur == self.progress_bar.value() == 0:
+            self.progress_bar.setValue(0)
 
         try:
             ppos = int((rpos/self.dur) * PROGRESS_BAR_RESOLUTION)

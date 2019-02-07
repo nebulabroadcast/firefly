@@ -60,10 +60,10 @@ class PlayoutPlugin(QWidget):
                 action_name=name,
                 data=json.dumps(data)
             )
-        if response.is_error:
-            logging.error("Plugin error {}\n\n{}".format(response.response, response.message))
-        else:
+        if response:
             logging.info("{} action '{}' executed succesfully.".format(self.title, name))
+        else:
+            logging.error("Plugin error {}\n\n{}".format(response.response, response.message))
 
 
 
@@ -87,7 +87,7 @@ class PlayoutPlugins(QTabWidget):
             widget.deleteLater()
 
         response = api.playout(action="plugin_list", id_channel=self.id_channel)
-        if response.is_error:
+        if not response:
             logging.error("Unable to load playout plugins:\n{}".format(response.message))
             return
 

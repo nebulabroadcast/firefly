@@ -171,7 +171,7 @@ class SchedulerModule(BaseModule):
                 events=events
             )
         QApplication.restoreOverrideCursor()
-        if response.is_error:
+        if not response:
             logging.error(response.message)
         else:
             logging.info(response.message)

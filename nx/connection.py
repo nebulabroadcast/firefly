@@ -7,6 +7,7 @@ from multiprocessing import Queue # needed by cx_freeze
 from firefly.version import FIREFLY_VERSION
 from nebulacore import *
 
+
 __all__ = ["api"]
 
 headers = {
@@ -20,6 +21,7 @@ class NebulaAPI(object):
 
     def get_user(self):
         try:
+
             response = requests.post(
                     self._settings["hub"] + "/ping",
                     cookies=self._cookies,
@@ -27,6 +29,7 @@ class NebulaAPI(object):
                     timeout=config.get("timeout", 5)
                 )
             self._cookies = response.cookies
+
             if response.status_code >= 400:
                 return NebulaResponse(
                         response.status_code,
@@ -65,24 +68,29 @@ class NebulaAPI(object):
         data = json.loads(response.text)
         return NebulaResponse(**data)
 
-    def run(self, method, **kwargs):
-        response = requests.post(
-                self._settings["hub"] + "/api/" + method,
-                data=json.dumps(kwargs),
-                cookies=self._cookies,
-                headers=headers
-            )
-        self._cookies = response.cookies
-        if response.status_code >= 400:
-            return NebulaResponse(
-                    response=response.status_code,
-                    message=DEFAULT_RESPONSE_MESSAGES.get(
-                            response.status_code,
-                            "Unknown error"
-                        )
+    def run(self, method, timeout=False, **kwargs):
+        logging.debug("Executing {} query".format(method))
+        try:
+            response = requests.post(
+                    self._settings["hub"] + "/api/" + method,
+                    data=json.dumps(kwargs),
+                    cookies=self._cookies,
+                    headers=headers,
+                    timeout=timeout or config.get("timeout", (3.05, 10))
                 )
 
-        data = json.loads(response.text)
+        except requests.exceptions.Timeout:
+            return NebulaResponse(504)
+        self._cookies = response.cookies
+        if response.status_code >= 400:
+            logging.debug("Query {} responded {}".format(method, response.status_code))
+            return NebulaResponse(response.status_code)
+        try:
+            data = json.loads(response.text)
+        except Exception:
+            logging.debug("Query {} responded {}".format(method, response.status_code))
+            return NebulaResponse(500, "Unknown response from server")
+        logging.debug("Query {} responded {}".format(method, response.status_code))
         return NebulaResponse(**data)
 
     def __getattr__(self, method_name):

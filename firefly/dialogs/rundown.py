@@ -1,6 +1,6 @@
 from firefly import *
 
-__all__ = ["PlaceholderDialog", "SubclipSelectDialog"]
+__all__ = ["PlaceholderDialog", "SubclipSelectDialog", "trim_dialog"]
 
 
 class PlaceholderDialog(QDialog):
@@ -107,3 +107,64 @@ class SubclipSelectDialog(QDialog):
                 }]
         self.ok = True
         self.close()
+
+
+
+class TrimDialog(QDialog):
+    def __init__(self,  parent, item):
+        super(TrimDialog, self).__init__(parent)
+        self.setWindowTitle("Trim {}".format(item))
+
+        self.ok = False
+        self.item = item
+
+        keys = [
+                ["mark_in", {}],
+                ["mark_out", {}],
+            ]
+
+        self.form = MetaEditor(parent, keys)
+        for k,s in keys:
+            self.form[k] = item[k]
+
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.Ok | QDialogButtonBox.Cancel,
+            Qt.Horizontal, self)
+        buttons.accepted.connect(self.on_accept)
+        buttons.rejected.connect(self.on_cancel)
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.form, 1)
+        layout.addWidget(buttons, 0)
+        self.setLayout(layout)
+
+        self.setModal(True)
+        self.setMinimumWidth(400)
+
+    @property
+    def meta(self):
+        return self.form.meta
+
+    def on_cancel(self):
+        self.close()
+
+    def on_accept(self):
+        QApplication.processEvents()
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+        response = api.set(
+                object_type="item",
+                objects=[self.item.id],
+                data={
+                        "mark_in" : self.form["mark_in"],
+                        "mark_out" : self.form["mark_out"]
+                    }
+
+            )
+        QApplication.restoreOverrideCursor()
+        if not response:
+            logging.error(response.message)
+        self.close()
+
+def trim_dialog(item):
+    dlg = TrimDialog(None, item)
+    dlg.exec_()

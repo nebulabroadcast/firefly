@@ -25,15 +25,15 @@ class LoginDialog(QDialog):
         self.result = False
 
     def handleLogin(self):
-        result = api.login(
+        response = api.login(
                 login=self.login.text(),
                 password=self.password.text()
             )
-        if result.is_success and result.data:
-            self.result = result.data
+        if response and response.data:
+            self.result = response.data
             self.close()
         else:
-            QMessageBox.critical(self, "Error", result.message)
+            QMessageBox.critical(self, "Error", response.message)
 
 
 def login_dialog():

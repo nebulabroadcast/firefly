@@ -21,10 +21,13 @@ class FireflyViewModel(QAbstractTableModel):
         font_bold.setBold(True)
         font_underline = QFont()
         font_underline.setUnderline(True)
+        font_strikeout = QFont()
+        font_strikeout.setStrikeOut(True)
         self.fonts = {
                 "bold" : font_bold,
                 "italic" : font_italic,
-                "underline" : font_underline
+                "underline" : font_underline,
+                "strikeout" : font_strikeout
            }
 
     def rowCount(self, parent):

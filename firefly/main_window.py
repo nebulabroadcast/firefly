@@ -5,11 +5,13 @@ from .listener import SeismicListener
 
 __all__ = ["FireflyMainWidget", "FireflyMainWindow"]
 
+
 class FireflyMainWidget(QWidget):
     def __init__(self, main_window):
         super(FireflyMainWidget, self).__init__(main_window)
         self.main_window = main_window
         current_tab = self.main_window.app_state.get("current_module",0)
+
         self.tabs = QTabWidget(self)
 
         self.browser = self.detail = self.rundown = self.scheduler = self.jobs = False
@@ -23,7 +25,7 @@ class FireflyMainWidget(QWidget):
         self.main_window.add_subscriber(self.browser, ["objects_changed"])
         self.main_window.add_subscriber(self.detail, ["objects_changed"])
 
-        # Jobs modul
+        # Jobs module
 
         if config["actions"]:
             self.jobs = JobsModule(self)
@@ -179,9 +181,22 @@ class FireflyMainWindow(MainWindow):
     def exit(self):
         self.close()
 
+    def new_tab(self):
+        self.browser.new_tab()
+
+    def close_tab(self):
+        self.browser.close_tab()
+
+    def prev_tab(self):
+        self.browser.prev_tab()
+
+    def next_tab(self):
+        self.browser.next_tab()
+
     def search_assets(self):
-        self.browser.search_box.setFocus()
-        self.browser.search_box.selectAll()
+        search_box = self.browser.tabs.currentWidget().search_box
+        search_box.setFocus()
+        search_box.selectAll()
 
     def now(self):
         if config["playout_channels"] and (user.has_right("rundown_view", self.id_channel) or user.has_right("rundown_edit", self.id_channel)):

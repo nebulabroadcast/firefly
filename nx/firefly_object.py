@@ -82,9 +82,6 @@ def parse_item_status(obj):
         print ("bad idc", obj.meta)
     pskey = "playout_status/{}".format(obj.id_channel)
 
-    if obj["status"] in [ONAIR, AIRED]:
-        return obj["status"]
-
     if asset["status"] == OFFLINE:
         return OFFLINE
 
@@ -121,7 +118,9 @@ class FormatStatus(CellFormat):
 
         xfr = ""
         if hasattr(obj, "transfer_progress"):
-            if obj.transfer_progress < 100:
+            if obj.transfer_progress == 0:
+                xfr = " (PENDING)"
+            elif obj.transfer_progress < 100:
                 xfr = " ({:.01f}%)".format(obj.transfer_progress)
 
         return get_object_state_name(state).upper() + xfr
@@ -140,6 +139,8 @@ class FormatRundownDifference(CellFormat):
     key = "rundown_difference"
     def display(self, obj, **kwargs):
         if obj[self.key]:
+            if obj["run_mode"] == RUN_SKIP:
+                return ""
             return s2tc(abs(obj[self.key]))
         return ""
 
@@ -148,10 +149,13 @@ class FormatRundownDifference(CellFormat):
             diff = obj["rundown_broadcast"] - obj["rundown_scheduled"]
             return ["#ff0000", "#00ff00"][diff >= 0]
 
+
 class FormatRundownScheduled(CellFormat):
     key = "rundown_scheduled"
     def display(self, obj, **kwargs):
         if obj.id:
+            if obj["run_mode"] == RUN_SKIP:
+                return ""
             return obj.show(self.key)
         return ""
 
@@ -159,6 +163,8 @@ class FormatRundownBroadcast(CellFormat):
     key = "rundown_broadcast"
     def display(self, obj, **kwargs):
         if obj.id:
+            if obj["run_mode"] == RUN_SKIP:
+                return ""
             return obj.show(self.key)
         return ""
 
@@ -166,12 +172,14 @@ class FormatRundownBroadcast(CellFormat):
 class FormatRunMode(CellFormat):
     key = "run_mode"
     def display(self, obj, **kwargs):
-        if obj[self.key] == 1:
+        if obj[self.key] == RUN_MANUAL:
             return "MANUAL"
-        if obj[self.key] == 2:
+        if obj[self.key] == RUN_SOFT:
             return "SOFT"
-        elif obj[self.key] == 3:
+        elif obj[self.key] == RUN_HARD:
             return "HARD"
+        elif obj[self.key] == RUN_SKIP:
+            return "SKIP"
         if obj.id:
             return "AUTO"
         return ""
@@ -262,8 +270,11 @@ class FormatTitle(CellFormat):
     def font(self, obj, **kwargs):
         if obj.object_type == "event":
             return "bold"
-        elif obj.object_type == "item" and obj["id_asset"] == obj["rundown_event_asset"]:
-            return "bold"
+        elif obj.object_type == "item":
+            if obj["run_mode"] == RUN_SKIP:
+                return "strikeout"
+            if obj["id_asset"] == obj["rundown_event_asset"]:
+                return "bold"
 
 
 format_helpers_list = [

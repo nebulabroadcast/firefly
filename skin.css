@@ -67,6 +67,7 @@ QHeaderView::section {
     padding: 5px;
 }
 
+
 QTableCornerButton::section{
     background-color: #242424;
 }
@@ -76,6 +77,10 @@ QTableCornerButton::section{
 
 QTabWidget::pane {
     border-top: 1px solid #50595b;
+}
+
+QTabBar::close-button {
+    image: url(images/cancel-sm.png);
 }
 
 QTabBar::tab {

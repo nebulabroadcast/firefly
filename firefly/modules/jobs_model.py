@@ -116,12 +116,12 @@ class JobsModel(FireflyViewModel):
         self.beginResetModel()
         QApplication.setOverrideCursor(Qt.WaitCursor)
         self.object_data = []
-        result = api.jobs(**self.request_data)
-        if result.is_error:
-            logging.error(result.message)
+        response = api.jobs(**self.request_data)
+        if not response:
+            logging.error(response.message)
         else:
             request_assets = []
-            for row in result.data:
+            for row in response.data:
                 self.object_data.append(row)
                 request_assets.append([row["id_asset"], 0])
             asset_cache.request(request_assets)
@@ -179,18 +179,18 @@ class FireflyJobsView(FireflyView):
 
 
     def on_restart(self, jobs):
-        result = api.jobs(restart=jobs)
-        if result.is_error:
-            logging.error(result.message)
+        response = api.jobs(restart=jobs)
+        if not response:
+            logging.error(response.message)
         else:
-            logging.info(result.message)
+            logging.info(response.message)
         self.model.load()
 
 
     def on_abort(self, jobs):
-        result = api.jobs(abort=jobs)
-        if result.is_error:
-            logging.error(result.message)
+        response = api.jobs(abort=jobs)
+        if not response:
+            logging.error(response.message)
         else:
-            logging.info(result.message)
+            logging.info(response.message)
         self.model.load()

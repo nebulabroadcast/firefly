@@ -44,8 +44,8 @@ class RundownModel(FireflyViewModel):
         QApplication.setOverrideCursor(Qt.WaitCursor)
         logging.info("Loading rundown. Please wait...")
 
-        result = api.rundown(id_channel=self.id_channel, start_time=self.start_time)
-        if result.is_error:
+        response = api.rundown(id_channel=self.id_channel, start_time=self.start_time)
+        if not response:
             QApplication.restoreOverrideCursor()
             return
 
@@ -58,7 +58,7 @@ class RundownModel(FireflyViewModel):
         self.event_ids = []
 
         i = 0
-        for row in result.data:
+        for row in response.data:
             row["rundown_row"] = i
             if row["object_type"] == "event":
                 self.object_data.append(Event(meta=row))
@@ -95,7 +95,7 @@ class RundownModel(FireflyViewModel):
         QApplication.restoreOverrideCursor()
         logging.goodnews(
                 "{} rows of {} rundown loaded in {:.03f}".format(
-                    len(result.data),
+                    len(response.data),
                     format_time(self.start_time, "%Y-%m-%d"),
                     time.time() - load_start_time
                 )
@@ -254,15 +254,12 @@ class RundownModel(FireflyViewModel):
         if sorted_items:
             QApplication.processEvents()
             QApplication.setOverrideCursor(Qt.WaitCursor)
-            result = api.order(
+            response = api.order(
                     id_channel=self.id_channel,
                     id_bin=to_bin,
                     order=sorted_items
                 )
             QApplication.restoreOverrideCursor()
-            if result.is_success:
-                logging.info("Bin order changed")
-            else:
-                logging.error("Unable to change bin order: {}".format(result.message))
-#            self.load() #TODO: Reload using rundown_changed seismic message
+            if not response:
+                logging.error("Unable to change bin order: {}".format(response.message))
         return True

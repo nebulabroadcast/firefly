@@ -19,7 +19,7 @@ class SendToDialog(QDialog):
 
         self.actions = []
         response = api.actions(ids=self.assets)
-        if response.is_error:
+        if not response:
             logging.error(response.message)
             self.close()
         else:
@@ -60,7 +60,7 @@ class SendToDialog(QDialog):
                 restart_running=self.restart_running.isChecked()
             )
         QApplication.restoreOverrideCursor()
-        if response.is_error:
+        if not response:
             logging.error(response.message)
         else:
             self.close()
