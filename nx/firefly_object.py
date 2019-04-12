@@ -44,6 +44,9 @@ class CellFormat(object):
     def font(self, obj, **kwargs):
         return None
 
+    def tooltip(self, obj, **kwargs):
+        return None
+
 #
 # Cell formatters
 #
@@ -187,6 +190,8 @@ class FormatRunMode(CellFormat):
 class FormatDuration(CellFormat):
     key = "duration"
     def display(self, obj, **kwargs):
+        if obj["loop"]:
+            return "--:--:--:--"
         if obj.object_type in ["asset", "item"] and obj["duration"]:
             t = s2time(obj.duration)
             if obj.object_type == "asset" and obj["subclips"]:
@@ -196,8 +201,11 @@ class FormatDuration(CellFormat):
             return ""
 
     def foreground(self, obj, **kwargs):
+        if obj["loop"]:
+            return COLOR_TEXT_YELLOW
         if obj["mark_in"] or obj["mark_out"]:
             return "#00ccaa"
+
 
 class FormatMarkIn(CellFormat):
     key = "mark_in"
@@ -237,6 +245,10 @@ class FormatState(CellFormat):
                 4 : "#00cc00"
                 }[int(obj.meta.get(self.key, 0))]
 
+    def tooltip(self, obj, **kwargs):
+        if "qc/report" in obj.meta:
+            return obj["qc/report"]
+
 
 class FormatTitle(CellFormat):
     key = "title"
@@ -267,14 +279,6 @@ class FormatTitle(CellFormat):
             return STATUS_FG_COLORS[parse_item_status(obj)]
 
 
-    def font(self, obj, **kwargs):
-        if obj.object_type == "event":
-            return "bold"
-        elif obj.object_type == "item":
-            if obj["run_mode"] == RUN_SKIP:
-                return "strikeout"
-            if obj["id_asset"] == obj["rundown_event_asset"]:
-                return "bold"
 
 
 format_helpers_list = [
@@ -328,6 +332,8 @@ class FireflyObject(BaseObject):
         if model and self.object_type == "item":
             if not self.id:
                 return "#111140"
+            if self.object_type == "item" and self["item_role"] == "live":
+                return COLOR_LIVE_BACKGROUND
             elif model.cued_item == self.id:
                 return "#059005"
             elif model.current_item == self.id:
@@ -342,6 +348,16 @@ class FireflyObject(BaseObject):
         return None
 
     def format_font(self, key, **kwargs):
+        if self.object_type == "event":
+            return "bold"
+        elif self.object_type == "item":
+            if self["run_mode"] == RUN_SKIP:
+                return "strikeout"
+            if self["id_asset"] == self["rundown_event_asset"]:
+                return "bold"
         if key in format_helpers:
             return format_helpers[key].font(self, **kwargs)
-        return None
+
+    def format_tooltip(self, key, **kwargs):
+        if key in format_helpers:
+            return format_helpers[key].tooltip(self, **kwargs)

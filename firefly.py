@@ -10,4 +10,7 @@ from firefly.application import FireflyApplication
 
 if __name__ == "__main__":
     app = FireflyApplication()
-    app.start()
+    try:
+        app.start()
+    except Exception:
+        log_traceback()

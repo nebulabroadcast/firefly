@@ -48,10 +48,14 @@ class BrowserModel(FireflyViewModel):
         paths = [self.object_data[row].file_path for row in rows if self.object_data[row].file_path]
         urls = [QUrl.fromLocalFile(path) for path in paths]
 
-        mimeData = QMimeData()
-        mimeData.setData(
-                "application/nx.asset",
-                json.dumps(data).encode("ascii")
-            )
-        mimeData.setUrls(urls)
-        return mimeData
+        try:
+            mimeData = QMimeData()
+            mimeData.setData(
+                    "application/nx.asset",
+                    json.dumps(data).encode("ascii")
+                )
+            mimeData.setUrls(urls)
+            return mimeData
+        except Exception:
+            log_traceback()
+            return

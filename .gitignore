@@ -12,9 +12,7 @@ build
 # Settings
 
 settings.json
-*.appstate
-cache*
-auth.key
+ffdata.*
 templates/
 
 # Other

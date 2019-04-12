@@ -1,5 +1,6 @@
 import json
 import requests
+import socket
 
 import idna.idnadata
 from multiprocessing import Queue # needed by cx_freeze
@@ -17,6 +18,7 @@ headers = {
 class NebulaAPI(object):
     def __init__(self, **kwargs):
         self._settings = kwargs
+        self.timeout = config.get("timeout", 5)
         self._cookies = requests.cookies.RequestsCookieJar()
 
     def get_user(self):
@@ -26,7 +28,7 @@ class NebulaAPI(object):
                     self._settings["hub"] + "/ping",
                     cookies=self._cookies,
                     headers=headers,
-                    timeout=config.get("timeout", 5)
+                    timeout=self.timeout
                 )
             self._cookies = response.cookies
 
@@ -56,14 +58,14 @@ class NebulaAPI(object):
                 "password" : password,
                 "api" : 1
             }
-        response = requests.post(self._settings["hub"] + "/login", data, headers=headers)
+        response = requests.post(self._settings["hub"] + "/login", data, headers=headers, timeout=self.timeout)
         self._cookies = response.cookies
         data = json.loads(response.text)
         return NebulaResponse(**data)
 
     def logout(self):
         data = {"api" : 1}
-        response = requests.post(self._settings["hub"] + "/logout", data, headers=headers)
+        response = requests.post(self._settings["hub"] + "/logout", data, headers=headers, timeout=self.timeout)
         self._cookies = response.cookies
         data = json.loads(response.text)
         return NebulaResponse(**data)
@@ -76,21 +78,26 @@ class NebulaAPI(object):
                     data=json.dumps(kwargs),
                     cookies=self._cookies,
                     headers=headers,
-                    timeout=timeout or config.get("timeout", (3.05, 10))
+                    timeout=timeout or config.get("timeout", (self.timeout, self.timeout * 2))
                 )
 
         except requests.exceptions.Timeout:
-            return NebulaResponse(504)
-        self._cookies = response.cookies
+            return NebulaResponse(ERROR_TIMEOUT)
+
+        except Exception:
+            return NebulaResponse(ERROR_SERVICE_UNAVAILABLE)
+
         if response.status_code >= 400:
             logging.debug("Query {} responded {}".format(method, response.status_code))
             return NebulaResponse(response.status_code)
+
         try:
             data = json.loads(response.text)
         except Exception:
-            logging.debug("Query {} responded {}".format(method, response.status_code))
             return NebulaResponse(500, "Unknown response from server")
+
         logging.debug("Query {} responded {}".format(method, response.status_code))
+        self._cookies = response.cookies
         return NebulaResponse(**data)
 
     def __getattr__(self, method_name):

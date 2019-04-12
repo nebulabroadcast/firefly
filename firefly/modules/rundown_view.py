@@ -81,7 +81,6 @@ class RundownView(FireflyView):
         if len(obj_set) == 1:
             if len(self.selected_objects) == 1:
                 if self.selected_objects[0]["item_role"] == "placeholder":
-                    #solvers = config["playout_channels"][self.id_channel].get("solvers", [])
                     solvers = self.playout_config.get("solvers", [])
                     if solvers:
                         solver_menu = menu.addMenu("Solve using...")
@@ -97,24 +96,39 @@ class RundownView(FireflyView):
                     action_trim.triggered.connect(self.on_trim)
                     menu.addAction(action_trim)
 
-            if obj_set[0] == "item" and self.selected_objects[0]["id_asset"]:
+            if obj_set[0] == "item" and (self.selected_objects[0]["id_asset"] or self.selected_objects[0]["item_role"] == "live"):
 
                 mode_menu = menu.addMenu("Run mode")
 
                 action_mode_auto = QAction('&Auto', self)
                 action_mode_auto.setStatusTip('Set run mode to auto')
+                action_mode_auto.setCheckable(True)
+                action_mode_auto.setChecked(self.selected_objects[0]["run_mode"] == RUN_AUTO)
                 action_mode_auto.triggered.connect(functools.partial(self.on_set_mode, RUN_AUTO))
                 mode_menu.addAction(action_mode_auto)
 
                 action_mode_manual = QAction('&Manual', self)
                 action_mode_manual.setStatusTip('Set run mode to manual')
+                action_mode_manual.setCheckable(True)
+                action_mode_manual.setChecked(self.selected_objects[0]["run_mode"] == RUN_MANUAL)
                 action_mode_manual.triggered.connect(functools.partial(self.on_set_mode, RUN_MANUAL))
                 mode_menu.addAction(action_mode_manual)
 
                 action_mode_skip = QAction('&Skip', self)
                 action_mode_skip.setStatusTip('Set run mode to skip')
+                action_mode_skip.setCheckable(True)
+                action_mode_skip.setChecked(self.selected_objects[0]["run_mode"] == RUN_SKIP)
                 action_mode_skip.triggered.connect(functools.partial(self.on_set_mode, RUN_SKIP))
                 mode_menu.addAction(action_mode_skip)
+
+                if self.selected_objects[0]["id_asset"]:
+                    mode_menu.addSeparator()
+                    action_mode_loop = QAction('&Loop', self)
+                    action_mode_loop.setStatusTip('Loop item')
+                    action_mode_loop.setCheckable(True)
+                    action_mode_loop.setChecked(self.selected_objects[0]["loop"])
+                    action_mode_loop.triggered.connect(self.on_set_loop)
+                    mode_menu.addAction(action_mode_loop)
 
 
             elif obj_set[0] == "event" and len(self.selected_objects) == 1:
@@ -123,29 +137,29 @@ class RundownView(FireflyView):
                 action_mode_auto = QAction('&Auto', self)
                 action_mode_auto.setStatusTip('Set run mode to auto')
                 action_mode_auto.setCheckable(True)
-                action_mode_auto.setChecked(self.selected_objects[0]["run_mode"] == 0)
-                action_mode_auto.triggered.connect(functools.partial(self.on_set_mode, 0))
+                action_mode_auto.setChecked(self.selected_objects[0]["run_mode"] == RUN_AUTO)
+                action_mode_auto.triggered.connect(functools.partial(self.on_set_mode, RUN_AUTO))
                 mode_menu.addAction(action_mode_auto)
 
                 action_mode_manual = QAction('&Manual', self)
                 action_mode_manual.setStatusTip('Set run mode to manual')
                 action_mode_manual.setCheckable(True)
-                action_mode_manual.setChecked(self.selected_objects[0]["run_mode"] == 1)
-                action_mode_manual.triggered.connect(functools.partial(self.on_set_mode, 1))
+                action_mode_manual.setChecked(self.selected_objects[0]["run_mode"] == RUN_MANUAL)
+                action_mode_manual.triggered.connect(functools.partial(self.on_set_mode, RUN_MANUAL))
                 mode_menu.addAction(action_mode_manual)
 
                 action_mode_soft = QAction('&Soft', self)
                 action_mode_soft.setStatusTip('Set run mode to soft')
                 action_mode_soft.setCheckable(True)
-                action_mode_soft.setChecked(self.selected_objects[0]["run_mode"] == 2)
-                action_mode_soft.triggered.connect(functools.partial(self.on_set_mode, 2))
+                action_mode_soft.setChecked(self.selected_objects[0]["run_mode"] == RUN_SOFT)
+                action_mode_soft.triggered.connect(functools.partial(self.on_set_mode, RUN_SOFT))
                 mode_menu.addAction(action_mode_soft)
 
                 action_mode_hard = QAction('&Hard', self)
                 action_mode_hard.setStatusTip('Set run mode to hard')
                 action_mode_hard.setCheckable(True)
-                action_mode_hard.setChecked(self.selected_objects[0]["run_mode"] == 3)
-                action_mode_hard.triggered.connect(functools.partial(self.on_set_mode, 3))
+                action_mode_hard.setChecked(self.selected_objects[0]["run_mode"] == RUN_HARD)
+                action_mode_hard.triggered.connect(functools.partial(self.on_set_mode, RUN_HARD))
                 mode_menu.addAction(action_mode_hard)
 
 
@@ -182,6 +196,18 @@ class RundownView(FireflyView):
         menu.exec_(event.globalPos())
 
 
+
+    def on_set_loop(self):
+        if not self.parent().can_edit:
+            logging.error("You are not allowed to modify this rundown")
+            return
+        mode = not self.selected_objects[0]["loop"]
+        QApplication.processEvents()
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+        response = api.set(object_type=self.selected_objects[0].object_type, objects=[obj.id for obj in self.selected_objects], data={"loop" : mode})
+        QApplication.restoreOverrideCursor()
+        if not response:
+            logging.error(response.message)
 
 
     def on_set_mode(self, mode):

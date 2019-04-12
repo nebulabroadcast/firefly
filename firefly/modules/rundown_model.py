@@ -151,8 +151,7 @@ class RundownModel(FireflyViewModel):
         if action == Qt.IgnoreAction:
             return True
 
-        if not user.has_right("rundown_edit", self.id_channel):
-            logging.info("You are not allowed to modify this rundown")
+        if not self.parent().parent().edit_enabled:
             return True
 
         if row < 1:
@@ -203,7 +202,11 @@ class RundownModel(FireflyViewModel):
             p_item = current_object.id
             if not p_item in [item.id for item in drop_objects]:
                 if p_item:
-                    sorted_items.append({"object_type" : "item", "id_object" : p_item, "meta" : {}})
+                    sorted_items.append({
+                            "object_type" : "item",
+                            "id_object" : p_item,
+                            "meta" : {}
+                        })
             i-=1
         sorted_items.reverse()
 
@@ -211,7 +214,11 @@ class RundownModel(FireflyViewModel):
 
         for obj in drop_objects:
             if data.hasFormat("application/nx.item"):
-                sorted_items.append({"object_type" : "item", "id_object" : obj.id, "meta" : obj.meta})
+                sorted_items.append({
+                        "object_type" : "item",
+                        "id_object" : obj.id,
+                        "meta" : obj.meta
+                    })
 
             elif data.hasFormat("application/nx.asset"):
                 metas = []
@@ -220,8 +227,11 @@ class RundownModel(FireflyViewModel):
                     dlg.exec_()
                     if dlg.ok:
                         for meta in dlg.result:
-                            sorted_items.append({"object_type" : "asset", "id_object" : obj.id, "meta" : meta})
-
+                            sorted_items.append({
+                                    "object_type" : "asset",
+                                    "id_object" : obj.id,
+                                    "meta" : meta
+                                })
 
                 else: # Asset does not have subclips
                     meta = {}
@@ -242,7 +252,11 @@ class RundownModel(FireflyViewModel):
             p_item = current_object.id
             if not p_item in [item.id for item in drop_objects]:
                 if p_item:
-                    sorted_items.append({"object_type" : "item", "id_object" : p_item, "meta" : {}})
+                    sorted_items.append({
+                            "object_type" : "item",
+                            "id_object" : p_item,
+                            "meta" : {}
+                        })
             i+=1
 
         #

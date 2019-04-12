@@ -439,11 +439,15 @@ class SchedulerDayWidget(SchedulerVerticalBar):
         self.calendar.open_rundown(self.start_time, self.cursor_event)
 
     def on_edit_event(self):
-        if event_dialog(event=self.cursor_event):
+        if not self.calendar.selected_event:
+            return
+        if event_dialog(event=self.calendar.selected_event):
             self.calendar.load()
 
     def on_delete_event(self):
-        cursor_event = self.cursor_event
+        if not self.calendar.selected_event:
+            return
+        cursor_event = self.calendar.selected_event
         if not user.has_right("scheduler_edit", self.id_channel):
             logging.error("You are not allowed to modify schedule of this channel.")
             return
@@ -546,6 +550,7 @@ class SchedulerCalendar(QWidget):
         self.drag_offset = 0
         self.drag_source = False
         self.append_condition = False
+        self.selected_event = False
 
         header_layout = QHBoxLayout()
         header_layout.addSpacing(CLOCKBAR_WIDTH + 15)

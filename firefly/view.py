@@ -68,6 +68,8 @@ class FireflyViewModel(QAbstractTableModel):
                 if obj.object_type == "item":
                     r += "\n\n" + pformat(obj.asset.meta) if obj.asset else ""
                 return r
+            else:
+                return obj.format_tooltip(key, model=self)
         return None
 
 

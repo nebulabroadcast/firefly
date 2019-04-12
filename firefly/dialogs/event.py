@@ -70,8 +70,9 @@ class EventDialog(QDialog):
             return
 
         meta = self.form.meta
-        for key in ["id_channel", "start"]:
-            meta[key] = self.event[key]
+        for key in ["id_channel", "start", "id"]:
+            if not key in meta:
+                meta[key] = self.event[key]
 
         for key in meta:
             value = meta[key]

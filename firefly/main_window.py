@@ -50,6 +50,7 @@ class FireflyMainWidget(QWidget):
         self.main_splitter = QSplitter(Qt.Horizontal)
         self.main_splitter.addWidget(self.browser)
         self.main_splitter.addWidget(self.tabs)
+        self.main_splitter.splitterMoved.connect(self.main_window.save_window_state)
 
         create_menu(self.main_window)
 
@@ -101,6 +102,7 @@ class FireflyMainWindow(MainWindow):
         self.subscribers = []
         super(FireflyMainWindow, self).__init__(parent, MainWidgetClass)
         self.setWindowIcon(QIcon(get_pix("icon")))
+        self.setWindowTitle("Firefly {} ({}@{})".format(FIREFLY_VERSION, user["login"], config["site_name"]))
 
         logging.handlers = [self.log_handler]
         self.listener = SeismicListener(
@@ -112,8 +114,8 @@ class FireflyMainWindow(MainWindow):
         self.seismic_timer = QTimer(self)
         self.seismic_timer.timeout.connect(self.on_seismic_timer)
         self.seismic_timer.start(40)
-        self.load_default_state()
 
+        self.load_window_state()
 
         for id_channel in config["playout_channels"]:
             if user.has_right("rundown_view", id_channel) \
@@ -126,10 +128,18 @@ class FireflyMainWindow(MainWindow):
         logging.info("[MAIN WINDOW] Firefly is ready")
 
 
-    def load_default_state(self):
+    def load_window_state(self):
+        self.window_state = self.app_state.get("window_state", {})
         self.showMaximized()
         one_third = self.width() / 3
-        self.main_widget.main_splitter.setSizes([one_third, one_third*2])
+        sizes = self.window_state.get("splitter_sizes", [one_third, one_third*2])
+        self.main_widget.main_splitter.setSizes(sizes)
+
+    def save_window_state(self, *args, **kwargs):
+        state = {
+                "splitter_sizes" : self.main_widget.main_splitter.sizes()
+            }
+        self.app_state["window_state"] = state
 
     @property
     def current_module(self):
@@ -203,6 +213,10 @@ class FireflyMainWindow(MainWindow):
             self.show_rundown()
             self.rundown.go_now()
 
+    def toggle_rundown_edit(self):
+        if config["playout_channels"] and user.has_right("rundown_edit", self.id_channel):
+            cstate = self.rundown.toggle_rundown_edit()
+
     def refresh_plugins(self):
         self.rundown.plugins.load()
 
@@ -250,6 +264,10 @@ class FireflyMainWindow(MainWindow):
     #
 
     def on_seismic_timer(self):
+        now = time.time()
+        if now - self.listener.last_msg > 5:
+            logging.debug("No seismic message received. Something may be wrong")
+            self.listener.last_msg = time.time()
         try:
             message = self.listener.queue.pop(0)
         except IndexError:

@@ -2,6 +2,11 @@ from functools import partial
 
 from .common import *
 
+
+def throw_exception():
+    print (1000/0)
+
+
 def create_menu(wnd):
     menubar = wnd.menuBar()
 
@@ -136,6 +141,14 @@ def create_menu(wnd):
         action_now.triggered.connect(wnd.now)
         menu_rundown.addAction(action_now)
 
+        wnd.action_rundown_edit = QAction('Rundown edit mode', wnd)
+        wnd.action_rundown_edit.setShortcut('Ctrl+R')
+        wnd.action_rundown_edit.setStatusTip('Toggle rundown edit mode')
+        wnd.action_rundown_edit.setCheckable(True)
+        wnd.action_rundown_edit.setEnabled(has_right("rundown_edit"))
+        wnd.action_rundown_edit.triggered.connect(wnd.toggle_rundown_edit)
+        menu_rundown.addAction(wnd.action_rundown_edit)
+
         menu_rundown.addSeparator()
 
         action_refresh_plugins = QAction('Refresh plugins', wnd)
@@ -152,3 +165,8 @@ def create_menu(wnd):
     action_about.setStatusTip('About Firefly')
     action_about.triggered.connect(partial(about_dialog, wnd))
     menu_help.addAction(action_about)
+
+    if config.get("debug", False):
+        action_throw_exception = QAction('Throw exception', wnd)
+        action_throw_exception.triggered.connect(throw_exception)
+        menu_help.addAction(action_throw_exception)

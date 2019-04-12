@@ -20,6 +20,9 @@ class RundownModule(BaseModule):
         self.last_search = ""
         self.first_load = True
 
+        self.edit_wanted = self.app_state.get("edit_enabled", True)
+        self.edit_enabled = False
+
         self.toolbar = rundown_toolbar(self)
 
         layout = QVBoxLayout()
@@ -46,9 +49,21 @@ class RundownModule(BaseModule):
             layout.addWidget(self.mcr)
             layout.addWidget(self.plugins)
 
-
         layout.addWidget(self.view, 1)
         self.setLayout(layout)
+
+
+    def toggle_rundown_edit(self, val=None):
+        if val is None:
+            self.edit_enabled = not self.edit_enabled
+            self.edit_wanted = self.edit_enabled
+        else:
+            self.edit_enabled = val
+            self.edit_wanted = val
+        self.app_state["edit_enabled"] = self.edit_wanted
+        self.view.setDragEnabled(self.edit_enabled)
+        self.main_window.action_rundown_edit.setChecked(self.edit_enabled)
+
 
 
     @property
@@ -68,7 +83,6 @@ class RundownModule(BaseModule):
                         self.view.model().object_data[idx.row()].object_type,
                         self.view.model().object_data[idx.row()].id
                     ])
-
 
         do_update_header = False
         if "id_channel" in kwargs and kwargs["id_channel"] != self.id_channel:
@@ -149,6 +163,10 @@ class RundownModule(BaseModule):
                 self.mcr.btn_retake.setEnabled(can_mcr)
                 self.mcr.btn_abort.setEnabled(can_mcr)
 
+            can_rundown_edit = has_right("rundown_edit", self.id_channel)
+            self.main_window.action_rundown_edit.setEnabled(can_rundown_edit)
+            self.toggle_rundown_edit(can_rundown_edit and self.edit_wanted)
+
 
     def go_day_prev(self):
         self.load(start_time=self.start_time - (3600*24))
@@ -158,11 +176,8 @@ class RundownModule(BaseModule):
 
     def go_now(self):
         if not (self.start_time + 86400 > time.time() > self.start_time):
-            self.load(start_time=day_start(
-                        time.time(),
-                        self.playout_config["day_start"]
-                    )
-                )
+            #do not use day_start here. it will be used in the load method
+            self.load(start_time=int(time.time()))
 
         for i,r in enumerate(self.view.model().object_data):
             if self.current_item == r.id and r.object_type=="item":

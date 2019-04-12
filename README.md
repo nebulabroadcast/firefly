@@ -63,7 +63,14 @@ Alt+Left       | Rundown    | Previous day
 Alt+Right      | Rundown    | Next day
 Ctrl+D         | Rundown    | Show calendar
 Ctrl+F         | Rundown    | Search in rundown
+Ctrl+R         | Rundown    | Toggle rundown edit mode
 F3             | Rundown    | Search in rundown again
+Ctrl+J         | MCR        | Cue previous item
+Ctrl+K         | MCR        | Take
+Ctrl+L         | MCR        | Cue next item
+Alt+J          | MCR        | Retake
+Alt+K          | MCR        | Freeze
+Alt+L          | MCR        | Abort
 1, J           | Preview    | Seek previous 5 frames
 2, L           | Preview    | Seek next 5 frames
 3, Left        | Preview    | Seek previous frame

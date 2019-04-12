@@ -46,7 +46,7 @@ class AssetCache(object):
 
     @property
     def cache_path(self):
-        return "cache.{}.json".format(config["site_name"])
+        return "ffdata.{}.cache".format(config["site_name"])
 
     def load(self):
         if not os.path.exists(self.cache_path):

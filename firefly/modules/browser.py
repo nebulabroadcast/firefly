@@ -1,4 +1,5 @@
 import math
+import copy
 import functools
 
 from firefly import *
@@ -27,6 +28,7 @@ class FireflyBrowserView(FireflyView):
         self.setSortingEnabled(True)
         self.model = BrowserModel(self)
         self.sort_model = FireflySortModel(self.model)
+        self.activated.connect(self.on_activate)
         self.setModel(self.sort_model)
 
     def selectionChanged(self, selected, deselected):
@@ -59,7 +61,13 @@ class FireflyBrowserView(FireflyView):
 
 
 
+    def on_activate(self, mi):
+        obj = self.model.object_data[mi.row()]
+        key = self.model.header_data[mi.column()]
+        val = obj.show(key)
 
+        QApplication.clipboard().setText(str(val))
+        logging.info("Copied \"{}\" to clipboard".format(val))
 
 
 
@@ -73,7 +81,7 @@ class BrowserTab(QWidget):
 
         self.search_query = {
                 "id_view" : kwargs.get("id_view", min(config["views"])),
-                "fulltext" : kwargs.get("fulltext", "")
+                "fulltext" : kwargs.get("fulltext", ""),
             }
 
         # Layout
@@ -85,6 +93,7 @@ class BrowserTab(QWidget):
         self.first_load = True
         self.view = FireflyBrowserView(self)
         self.view.horizontalHeader().sectionResized.connect(self.on_section_resize)
+        self.view.horizontalHeader().sortIndicatorChanged.connect(self.on_section_resize)
 
         action_clear = QAction(QIcon(pix_lib["cancel"]), '&Clear search query', parent)
         action_clear.triggered.connect(self.on_clear)
@@ -142,7 +151,8 @@ class BrowserTab(QWidget):
             if view["title"] == "-":
                 self.action_search.addSeparator()
                 continue
-            action = QAction(view["title"], self, checkable=True)
+            action = QAction(view["title"], self)
+            action.setCheckable(True)
             action.setShortcut("ALT+{}".format(i))
             action.id_view = id_view
             action.triggered.connect(functools.partial(self.set_view, id_view))
@@ -191,7 +201,15 @@ class BrowserTab(QWidget):
                 else:
                     w = 120
                 self.view.horizontalHeader().resizeSection(i, w)
+            for action in self.action_search.actions():
+                if not hasattr(action, "id_view"):
+                    continue
+                if action.id_view == self.id_view:
+                    action.setChecked(True)
+                else:
+                    action.setChecked(False)
             self.first_load = False
+
         self.loading = False
         self._parent.redraw_tabs()
 
@@ -201,14 +219,6 @@ class BrowserTab(QWidget):
 
     def set_view(self, id_view):
         self.load(id_view=id_view)
-        for action in self.action_search.actions():
-            if not hasattr(action, "id_view"):
-                continue
-            if action.id_view == id_view:
-                action.setChecked(True)
-            else:
-                action.setChecked(False)
-        self.app_state["id_view"] = id_view
 
 
     def contextMenuEvent(self, event):
@@ -369,6 +379,7 @@ class BrowserModule(BaseModule):
         self.tabs = QTabWidget(self)
         self.tabs.setTabsClosable(True)
         self.tabs.tabCloseRequested.connect(self.close_tab)
+        self.tabs.currentChanged.connect(self.redraw_tabs)
 
         self.layout = QVBoxLayout(self)
         self.layout.setSpacing(0)
@@ -379,10 +390,17 @@ class BrowserModule(BaseModule):
 
         tabscfg = self.app_state.get("browser_tabs", [])
         created_tabs = 0
+        current_index = 0
         for tabcfg in tabscfg:
             try:
                 if tabcfg["id_view"] not in config["views"]:
                     continue
+                if tabcfg.get("active"):
+                    current_index = self.tabs.count()
+                try:
+                    del(tabcfg["active"])
+                except KeyError:
+                    pass
                 self.new_tab(**tabcfg)
                 created_tabs += 1
             except Exception:
@@ -390,6 +408,8 @@ class BrowserModule(BaseModule):
                 logging.warning("Unable to restore tab")
         if not created_tabs:
             self.new_tab()
+
+        self.tabs.setCurrentIndex(current_index)
 
     def new_tab(self, **kwargs):
         if not "id_view" in kwargs:
@@ -447,11 +467,15 @@ class BrowserModule(BaseModule):
             r.append(self.tabs.widget(i))
         return r
 
-    def redraw_tabs(self):
+    def redraw_tabs(self, *args, **kwargs):
         QApplication.processEvents()
         views = []
         for i,b in enumerate(self.browsers):
             id_view = b.id_view
             self.tabs.setTabText(i, config["views"][id_view]["title"])
-            views.append(b.search_query)
+            sq = copy.copy(b.search_query)
+            if self.tabs.currentIndex() == i:
+                logging.debug("Saving browser current index to ", i)
+                sq["active"] = True
+            views.append(sq)
         self.app_state["browser_tabs"] = views

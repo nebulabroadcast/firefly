@@ -423,6 +423,8 @@ class DetailModule(BaseModule):
             new_asset["id_folder"] = min(config["folders"])
         self.duration.set_value(0)
         self.focus(new_asset)
+        self.main_window.show_detail()
+        self.detail_tabs.setCurrentIndex(0)
 
     def clone_asset(self):
         new_asset = Asset()
@@ -430,13 +432,14 @@ class DetailModule(BaseModule):
             new_asset["id_folder"] = self.asset["id_folder"]
             for key in self.form.inputs:
                 new_asset[key] = self.form[key]
-                new_asset["duration"] = self.duration.get_value()
         else:
             new_asset["id_folder"] = min(config["folders"])
         new_asset["media_type"] = self.asset["media_type"]
         new_asset["content_type"] = self.asset["content_type"]
         self.asset = False
         self.focus(new_asset)
+        self.main_window.show_detail()
+        self.detail_tabs.setCurrentIndex(0)
 
     def on_apply(self):
         if not self.form:
@@ -459,6 +462,23 @@ class DetailModule(BaseModule):
 
         if has_player and self.preview.changed:
             data.update(self.preview.changed)
+
+
+        if config.get("debug", False):
+            reply = QMessageBox.question(
+                    self,
+                    "Save changes?",
+                    "{}".format(
+                        "\n".join("{} : {}".format(k, data[k]) for k in data if data[k])
+                        ),
+                    QMessageBox.Yes | QMessageBox.No
+                    )
+
+            if reply == QMessageBox.Yes:
+                pass
+            else:
+                logging.info("Save aborted")
+                return
 
         self.form.setEnabled(False) # reenable on seismic message with new data
         response = api.set(objects=[self.asset.id], data=data)

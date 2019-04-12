@@ -62,11 +62,11 @@ class MCR(QWidget):
         self.cued     = "(loading)"
         self.request_time = 0
         self.paused = False
-        self.stopped = True
         self.cueing = False
         self.local_request_time = time.time()
         self.updating = False
         self.request_display_resize = False
+        self.first_update = True
 
         self.fps = 25.0
 
@@ -81,12 +81,23 @@ class MCR(QWidget):
         self.btn_freeze  = MCRButton("Freeze", self, self.on_freeze)
         self.btn_retake  = MCRButton("Retake", self, self.on_retake)
         self.btn_abort   = MCRButton("Abort",  self, self.on_abort)
+        self.btn_cue_backward = MCRButton("<",  self, self.on_cue_backward)
+        self.btn_cue_forward = MCRButton(">",  self, self.on_cue_forward)
 
         can_mcr = True #TODO: ACL
         self.btn_take.setEnabled(can_mcr)
         self.btn_freeze.setEnabled(can_mcr)
         self.btn_retake.setEnabled(can_mcr)
         self.btn_abort.setEnabled(can_mcr)
+        self.btn_cue_backward.setEnabled(can_mcr)
+        self.btn_cue_forward.setEnabled(can_mcr)
+
+        self.btn_cue_backward.setShortcut('Ctrl+J')
+        self.btn_take.setShortcut('Ctrl+K')
+        self.btn_cue_forward.setShortcut('Ctrl+L')
+        self.btn_retake.setShortcut('Alt+J')
+        self.btn_freeze.setShortcut('Alt+K')
+        self.btn_abort.setShortcut('Alt+L')
 
         btns_layout = QHBoxLayout()
 
@@ -95,15 +106,17 @@ class MCR(QWidget):
         btns_layout.addWidget(self.btn_freeze ,0)
         btns_layout.addWidget(self.btn_retake,0)
         btns_layout.addWidget(self.btn_abort,0)
+        btns_layout.addWidget(self.btn_cue_backward,0)
+        btns_layout.addWidget(self.btn_cue_forward,0)
         btns_layout.addStretch(1)
 
         self.display_clock   = MCRLabel("CLK", "--:--:--:--")
         self.display_pos     = MCRLabel("POS", "--:--:--:--")
 
-        self.display_current = MCRLabel("CUR","(no clip)", tcolor="#cc0000")
-        self.display_cued    = MCRLabel("NXT","(no clip)", tcolor="#00cc00")
+        self.display_current = MCRLabel("CUR", "(no clip)", tcolor="#cc0000")
+        self.display_cued    = MCRLabel("NXT", "(no clip)", tcolor="#00cc00")
 
-        self.display_rem     = MCRLabel("REM","(unknown)")
+        self.display_rem     = MCRLabel("REM", "(unknown)")
         self.display_dur     = MCRLabel("DUR", "--:--:--:--")
 
 
@@ -123,14 +136,13 @@ class MCR(QWidget):
         info_layout.setColumnStretch(1,1)
 
         layout = QVBoxLayout()
-        layout.addLayout(info_layout,0)
-        layout.addWidget(self.progress_bar,0)
-        layout.addLayout(btns_layout,0)
+        layout.addLayout(info_layout, 0)
+        layout.addWidget(self.progress_bar, 0)
+        layout.addLayout(btns_layout, 0)
         self.setLayout(layout)
 
         self.display_timer = QTimer(self)
         self.display_timer.timeout.connect(self.update_display)
-        self.display_timer.start(40)
 
     @property
     def id_channel(self):
@@ -140,7 +152,6 @@ class MCR(QWidget):
         api.playout(timeout=1, action="take", id_channel=self.id_channel)
 
     def on_freeze(self):
-        self.paused = not self.paused
         api.playout(timeout=1, action="freeze", id_channel=self.id_channel)
 
     def on_retake(self):
@@ -149,26 +160,41 @@ class MCR(QWidget):
     def on_abort(self):
         api.playout(timeout=1, action="abort", id_channel=self.id_channel)
 
+    def on_cue_forward(self):
+        api.playout(timeout=1, action="cue_forward", id_channel=self.id_channel)
+
+    def on_cue_backward(self):
+        api.playout(timeout=1, action="cue_backward", id_channel=self.id_channel)
+
+
     def seismic_handler(self, data):
         status = data.data
         self.pos = status["position"] + (1/self.fps)
         self.request_time = status["request_time"]
         self.paused = status["paused"]
-        self.stopped = status["stopped"]
         self.local_request_time = time.time()
 
         if status["fps"] != self.fps:
             self.fps = status["fps"]
 
-        if self.dur != status["duration"]:
+        if self.dur != status["duration"] or self.first_update:
             self.dur = status["duration"]
             self.display_dur.set_text(f2tc(self.dur, self.fps))
-            self.request_display_resize = False
+            self.request_display_resize = True
+            self.first_update = False
+
+            if status["duration"] == 0:
+                self.pos = 0
+                self.dur = 0
+                self.progress_bar.setValue(0)
+                self.progress_bar.setMaximum(0)
+            else:
+                self.progress_bar.setMaximum(PROGRESS_BAR_RESOLUTION)
 
         if self.current != status["current_title"]:
             self.current = status["current_title"]
             self.display_current.set_text(self.current)
-            self.request_display_resize = False
+            self.request_display_resize = True
 
         cueing = status.get("cueing", False)
         if self.cued != status["cued_title"] or self.cueing != cueing:
@@ -178,11 +204,16 @@ class MCR(QWidget):
             else:
                 self.display_cued.set_text(self.cued)
             self.cueing = cueing
-            self.request_display_resize = False
+            self.request_display_resize = True
+
 
     def show(self, *args, **kwargs):
         super(MCR, self).show(*args, **kwargs)
-        self.request_display_resize = True
+        self.display_timer.start(40)
+
+    def hide(self, *args, **kwargs):
+        super(MCR, self).hide(*args, **kwargs)
+        self.display_timer.stop()
 
 
     def update_display(self):
@@ -192,7 +223,7 @@ class MCR(QWidget):
         rtime = self.request_time+adv
         rpos = self.pos
 
-        if not (self.paused or self.stopped):
+        if not self.paused:
             rpos += adv * self.fps
 
         clock = time.strftime("%H:%M:%S:{:02d}", time.localtime(rtime)).format(int(25*(rtime-math.floor(rtime))))
@@ -219,6 +250,7 @@ class MCR(QWidget):
                 self.progress_bar.setValue(ppos)
 
         if self.request_display_resize:
+            logging.debug("display resize")
             QApplication.processEvents()
             self.display_clock.setFixedSize(self.display_clock.size())
             self.display_pos.setFixedSize(self.display_clock.size())

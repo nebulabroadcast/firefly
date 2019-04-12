@@ -44,13 +44,14 @@ class FireflyApplication(Application):
                 i = 0
         config.update(config["sites"][i])
 
-        self.app_state_path = os.path.join(app_dir, "{}-{}.appstate".format(app_settings["name"], config["site_name"]))
+        self.app_state_path = os.path.join(app_dir, "ffdata.{}.appstate".format(config["site_name"]))
+        self.auth_key_path = os.path.join(app_dir,  "ffdata.{}.key".format(config["site_name"]))
 
         # Login
 
         api._settings["hub"] = config["hub"]
         try:
-            api.set_auth(open("auth.key").read())
+            api.set_auth(open(self.auth_key_path).read())
         except FileNotFoundError:
             pass
         except Exception:
@@ -75,14 +76,17 @@ class FireflyApplication(Application):
 
     def start(self):
         self.splash.hide()
-        self.exec_()
+        try:
+            self.exec_()
+        except:
+            log_traceback()
         self.on_exit()
 
     def on_exit(self):
         asset_cache.save()
         if not self.main_window.listener:
             return
-        with open("auth.key", "w") as f:
+        with open(self.auth_key_path, "w") as f:
             f.write(api.auth_key)
         self.main_window.listener.halt()
         i = 0

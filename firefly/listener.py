@@ -71,18 +71,19 @@ class SeismicListener(QThread):
 
         if message.site_name != self.site_name:
             return
+
         self.last_msg = time.time()
 
-        if message.method == "objects_changed":
-            for i, m in enumerate(self.queue):
-                if m.method == "objects_changed" and m.data["object_type"] == message.data["object_type"]:
-                    r = list(set(m.data["objects"] + message.data["objects"] ))
-                    self.queue[i].data["objects"] = r
-                    break
-            else:
-                self.queue.append(message)
+#        if message.method == "objects_changed":
+#            for i, m in enumerate(self.queue):
+#                if m.method == "objects_changed" and m.data["object_type"] == message.data["object_type"]:
+#                    r = list(set(m.data["objects"] + message.data["objects"] ))
+#                    self.queue[i].data["objects"] = r
+#                    break
+#            else:
+#                self.queue.append(message)
 
-        elif message.method == "playout_status":
+        if message.method == "playout_status":
             for i, m in enumerate(self.queue):
                 if m.method == "playout_status":
                     self.queue[i] = message

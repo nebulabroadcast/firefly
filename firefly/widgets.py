@@ -78,10 +78,17 @@ class FireflyText(QTextEdit):
 class FireflyInteger(QSpinBox):
     def __init__(self, parent, **kwargs):
         super(FireflyInteger,self).__init__(parent)
+        self.setFocusPolicy(Qt.StrongFocus)
         self.setMinimum(kwargs.get("min", 0))
         self.setMaximum(kwargs.get("max", 99999))
         #TODO: set step to 1. disallow floats
         self.default = self.get_value()
+
+    def wheelEvent(self, event):
+        if self.hasFocus():
+            super(FireflyInteger, self).wheelEvent(event)
+        else:
+            event.ignore()
 
     def set_value(self, value):
         if value == self.get_value():
@@ -95,11 +102,18 @@ class FireflyInteger(QSpinBox):
 
 class FireflyNumeric(QSpinBox):
     def __init__(self, parent, **kwargs):
-        super(FireflyInteger,self).__init__(parent)
+        super(FireflyNumeric,self).__init__(parent)
+        self.setFocusPolicy(Qt.StrongFocus)
         self.setMinimum(kwargs.get("min", -99999))
         self.setMaximum(kwargs.get("max", 99999))
         #TODO: custom step (default 1, allow floats)
         self.default = self.get_value()
+
+    def wheelEvent(self, event):
+        if self.hasFocus():
+            super(FireflyNumeric, self).wheelEvent(event)
+        else:
+            event.ignore()
 
     def set_value(self, value):
         if value == self.get_value():
@@ -176,10 +190,17 @@ class FireflyTimecode(QLineEdit):
 class FireflySelect(QComboBox):
     def __init__(self, parent, **kwargs):
         super(FireflySelect, self).__init__(parent)
+        self.setFocusPolicy(Qt.StrongFocus)
         self.cdata = []
         if kwargs.get("data", []):
             self.set_data(kwargs["data"])
         self.default = self.get_value()
+
+    def wheelEvent(self, event):
+        if self.hasFocus():
+            super(FireflySelect, self).wheelEvent(event)
+        else:
+            event.ignore()
 
     def setReadOnly(self, val):
         self.setEnabled(not val)
@@ -190,6 +211,7 @@ class FireflySelect(QComboBox):
 
     def set_data(self, data):
         self.clear()
+        self.cdata = []
         for i, row in enumerate(sorted(data)):
             if len(row) == 3:
                 value, label, selected = row
@@ -236,6 +258,7 @@ class FireflyRadio(QWidget):
             self.set_data(kwargs["data"])
         self.default = self.get_value()
 
+
     def clear(self):
         for i, button in enumerate(self.buttons):
             button.deleteLater()
@@ -251,8 +274,12 @@ class FireflyRadio(QWidget):
     def set_data(self, data):
         self.clear()
         self.current_index = -1
-        for i, row in enumerate(sorted(data)):
+        i = 0
+        for row in sorted(data):
             value, label = row
+            if not (value or label):
+                continue
+
             if not label:
                 label = value
             self.cdata.append(value)
@@ -262,6 +289,7 @@ class FireflyRadio(QWidget):
             self.buttons[-1].setAutoExclusive(True)
             self.buttons[-1].clicked.connect(functools.partial(self.switch, i))
             self.layout.addWidget(self.buttons[-1])
+            i+= 1
 
 
     def switch(self, index):
