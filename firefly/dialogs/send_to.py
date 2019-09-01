@@ -18,7 +18,7 @@ class SendToDialog(QDialog):
         self.setWindowTitle("Send {} to...".format(what))
 
         self.actions = []
-        response = api.actions(ids=self.assets)
+        response = api.actions(objects=self.assets)
         if not response:
             logging.error(response.message)
             self.close()
@@ -55,7 +55,7 @@ class SendToDialog(QDialog):
         QApplication.setOverrideCursor(Qt.WaitCursor)
         response = api.send(
                 id_action=id_action,
-                ids=self.assets,
+                objects=self.assets,
                 restart_existing=self.restart_existing.isChecked(),
                 restart_running=self.restart_running.isChecked()
             )

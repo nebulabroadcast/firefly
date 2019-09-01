@@ -206,6 +206,16 @@ class FormatDuration(CellFormat):
         if obj["mark_in"] or obj["mark_out"]:
             return "#00ccaa"
 
+    def tooltip(self, obj, **kwargs):
+        if not (obj["mark_in"] or obj["mark_out"] or obj["subclips"]):
+            return None
+
+        res = "Original duration: {}\n\nIN: {}\nOUT: {}".format(obj.show("duration"), obj.show("mark_in"), obj.show("mark_out"))
+        if obj["subclips"]:
+            res += "\n\n{} subclips".format(len(obj["subclips"]))
+        return res
+
+
 
 class FormatMarkIn(CellFormat):
     key = "mark_in"

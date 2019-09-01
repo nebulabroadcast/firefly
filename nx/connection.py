@@ -1,3 +1,5 @@
+__all__ = ["api", "CLIENT_ID"]
+
 import json
 import requests
 import socket
@@ -9,11 +11,12 @@ from firefly.version import FIREFLY_VERSION
 from nebulacore import *
 
 
-__all__ = ["api"]
 
 headers = {
         'User-Agent': 'nebula-firefly/{}'.format(FIREFLY_VERSION),
     }
+
+CLIENT_ID = get_guid()
 
 class NebulaAPI(object):
     def __init__(self, **kwargs):
@@ -72,6 +75,7 @@ class NebulaAPI(object):
 
     def run(self, method, timeout=False, **kwargs):
         logging.debug("Executing {} query".format(method))
+        kwargs["initiator"] = CLIENT_ID
         try:
             response = requests.post(
                     self._settings["hub"] + "/api/" + method,

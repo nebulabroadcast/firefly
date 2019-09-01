@@ -29,7 +29,10 @@ def check_login(wnd):
 
 class FireflyApplication(Application):
     def __init__(self, **kwargs):
-        super(FireflyApplication, self).__init__(name="firefly", title="Firefly {}".format(FIREFLY_VERSION))
+        title = "Firefly {}".format(FIREFLY_VERSION)
+        if FIREFLY_STATUS:
+            title += " " + FIREFLY_STATUS
+        super(FireflyApplication, self).__init__(name="firefly", title=title)
         locale.setlocale(locale.LC_NUMERIC, 'C')
         self.splash = QSplashScreen(pix_lib['splash'])
         self.splash.show()
@@ -43,6 +46,7 @@ class FireflyApplication(Application):
             else:
                 i = 0
         config.update(config["sites"][i])
+        del(config["sites"])
 
         self.app_state_path = os.path.join(app_dir, "ffdata.{}.appstate".format(config["site_name"]))
         self.auth_key_path = os.path.join(app_dir,  "ffdata.{}.key".format(config["site_name"]))
@@ -78,8 +82,9 @@ class FireflyApplication(Application):
         self.splash.hide()
         try:
             self.exec_()
-        except:
+        except Exception:
             log_traceback()
+        logging.info("Shutting down")
         self.on_exit()
 
     def on_exit(self):
@@ -88,14 +93,15 @@ class FireflyApplication(Application):
             return
         with open(self.auth_key_path, "w") as f:
             f.write(api.auth_key)
-        self.main_window.listener.halt()
-        i = 0
-        while not self.main_window.listener.halted:
-            time.sleep(.1)
-            if i > 10:
-                logging.warning("Unable to shutdown listener. Forcing quit", handlers=False)
-                sys.exit(0)
-            i+=1
+        if not self.main_window.listener.halted:
+            self.main_window.listener.halt()
+            i = 0
+            while not self.main_window.listener.halted:
+                time.sleep(.1)
+                if i > 10:
+                    logging.warning("Unable to shutdown listener. Forcing quit", handlers=False)
+                    break
+                i+=1
         sys.exit(0)
 
     def splash_message(self, msg):

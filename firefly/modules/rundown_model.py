@@ -53,7 +53,7 @@ class RundownModel(FireflyViewModel):
         required_assets = []
         self.beginResetModel()
 
-        self.header_data = DEFAULT_COLUMNS
+        self.header_data = config["playout_channels"][self.id_channel].get("rundown_columns", DEFAULT_COLUMNS)
         self.object_data = []
         self.event_ids = []
 
@@ -140,10 +140,12 @@ class RundownModel(FireflyViewModel):
         data = [self.object_data[row].meta for row in rows]
         urls = [QUrl.fromLocalFile(self.object_data[row].file_path) for row in rows if self.object_data[row].file_path]
 
-        mimeData = QMimeData()
-
-        mimeData.setData("application/nx.item", json.dumps(data).encode("ascii"))
-        mimeData.setUrls(urls)
+        try:
+            mimeData = QMimeData()
+            mimeData.setData("application/nx.item", json.dumps(data).encode("ascii"))
+            mimeData.setUrls(urls)
+        except Exception:
+            return
         return mimeData
 
 
@@ -265,15 +267,18 @@ class RundownModel(FireflyViewModel):
 
         sorted_items = [item for item in sorted_items]# if item["id_object"]]
 
-        if sorted_items:
-            QApplication.processEvents()
-            QApplication.setOverrideCursor(Qt.WaitCursor)
-            response = api.order(
-                    id_channel=self.id_channel,
-                    id_bin=to_bin,
-                    order=sorted_items
-                )
-            QApplication.restoreOverrideCursor()
-            if not response:
-                logging.error("Unable to change bin order: {}".format(response.message))
+        if not sorted_items:
+            return
+        QApplication.processEvents()
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+        response = api.order(
+                id_channel=self.id_channel,
+                id_bin=to_bin,
+                order=sorted_items
+            )
+        QApplication.restoreOverrideCursor()
+        if not response:
+            logging.error("Unable to change bin order: {}".format(response.message))
+            return False
+        self.load()
         return True

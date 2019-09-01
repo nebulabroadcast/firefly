@@ -1,14 +1,7 @@
 from firefly.modules.detail_toolbars import *
 from firefly.modules.detail_subclips import *
 
-try:
-    from proxyplayer import VideoPlayer
-    has_player = True
-except OSError:
-    log_traceback()
-    logging.warning("Unable to load MPV libraries. Video preview will not be available.")
-    has_player = False
-
+from proxyplayer import VideoPlayer
 
 class DetailTabMain(QWidget):
     def __init__(self, parent):
@@ -62,8 +55,8 @@ class DetailTabMain(QWidget):
 
         if self.form:
             for key, conf in self.keys:
-                if meta_types[key]["class"] == SELECT:
-                   self.form.inputs[key].set_data([[k["value"], k["alias"]] for k in asset.show(key, full=True)])
+                if meta_types[key]["class"] in [SELECT, LIST]:
+                    self.form.inputs[key].set_data(asset.show(key, result="full"))
                 self.form[key] = asset[key]
             self.form.set_defaults()
 
@@ -237,14 +230,12 @@ class DetailTabs(QTabWidget):
         self.tab_main = DetailTabMain(self)
         self.tab_extended = DetailTabExtended(self)
         self.tab_technical = DetailTabTechnical(self)
-        if has_player:
-            self.tab_preview = DetailTabPreview(self)
+        self.tab_preview = DetailTabPreview(self)
 
         self.addTab(self.tab_main, "MAIN")
         self.addTab(self.tab_extended, "EXTENDED")
         self.addTab(self.tab_technical, "TECHNICAL")
-        if has_player:
-            self.addTab(self.tab_preview, "PREVIEW")
+        self.addTab(self.tab_preview, "PREVIEW")
 
         self.currentChanged.connect(self.on_switch)
         self.setCurrentIndex(0)
@@ -253,8 +244,7 @@ class DetailTabs(QTabWidget):
                 self.tab_extended,
                 self.tab_technical
             ]
-        if has_player:
-            self.tabs.append(self.tab_preview)
+        self.tabs.append(self.tab_preview)
 
     def on_switch(self, *args):
         try:
@@ -262,7 +252,7 @@ class DetailTabs(QTabWidget):
         except:
             index = self.currentIndex()
 
-        if index == -1 and has_player:
+        if index == -1:
             self.tab_preview.player.force_pause()
 
         for i, tab in enumerate(self.tabs):
@@ -286,11 +276,11 @@ class DetailModule(BaseModule):
 
         fdata = []
         for id_folder in sorted(config["folders"].keys()):
-            fdata.append([id_folder, config["folders"][id_folder]["title"]])
+            fdata.append({"value" : id_folder, "alias" : config["folders"][id_folder]["title"], "role" : "option"})
 
         self.folder_select = FireflySelect(self, data=fdata)
         for i, fd in enumerate(fdata):
-            self.folder_select.setItemIcon(i, QIcon(pix_lib["folder_"+str(fd[0])]))
+            self.folder_select.setItemIcon(i, QIcon(pix_lib["folder_"+str(fd["value"])]))
         self.folder_select.currentIndexChanged.connect(self.on_folder_changed)
         self.folder_select.setEnabled(False)
         toolbar_layout.addWidget(self.folder_select, 0)
@@ -460,7 +450,7 @@ class DetailModule(BaseModule):
             for key in self.form.keys():
                 data[key] = self.form[key]
 
-        if has_player and self.preview.changed:
+        if self.preview.changed:
             data.update(self.preview.changed)
 
 
@@ -484,13 +474,16 @@ class DetailModule(BaseModule):
         response = api.set(objects=[self.asset.id], data=data)
         if not response:
             logging.error(response.message)
-            self.form.setEnabled(True) # reenable on seismic message with new data
         else:
             logging.debug("[DETAIL] Set method responded", response.response)
-            if not self.asset.id:
+            try:
                 aid = response.data[0]
-                asset_cache.request([[aid, 0]])
-                self.focus(asset_cache[aid], silent=True)
+            except Exception:
+                aid = self.asset.id
+            asset_cache.request([[aid, 0]])
+            self.focus(asset_cache[aid], silent=True)
+            self.main_window.browser.refresh_assets(aid)
+        self.form.setEnabled(True)
 
 
 
@@ -502,6 +495,14 @@ class DetailModule(BaseModule):
         response = api.set(objects=[self.asset.id], data={"qc/state" : state})
         if not response:
             logging.error(response.message)
+            return
+        try:
+            aid = response.data[0]
+        except Exception:
+            aid = self.asset.id
+        asset_cache.request([[aid, 0]])
+        self.focus(asset_cache[aid], silent=True)
+        self.main_window.browser.refresh_assets(aid)
 
     def seismic_handler(self, data):
         if data.method == "objects_changed" and data.data["object_type"] == "asset" and self.asset:

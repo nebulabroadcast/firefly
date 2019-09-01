@@ -3,19 +3,6 @@ Firefly
 
 Firefly is a desktop client application for [Nebula](https://github.com/nebulabroadcast/nebula) broadcast automation system.
 
-Configuration
--------------
-
-Edit **settings.json** file to set your server address and site name.
-
-```json
-{
-    "sites"  : [{
-        "site_name" : "demo",
-        "hub" : "https://demo.nebulabroadcast.com"
-    }]
-}
-```
 
 
 Installation
@@ -39,6 +26,20 @@ GitHub releases page.
 
 [Microsoft Visual C++ 2015 Redistributable](https://www.microsoft.com/en-us/download/details.aspx?id=52685)
 is required to run this application.
+
+Configuration
+-------------
+
+Edit **settings.json** file to set your server address and site name.
+
+```json
+{
+    "sites"  : [{
+        "site_name" : "nebulatv",
+        "hub" : "https://nebulatv.example.com"
+    }]
+}
+```
 
 Usage
 -----
@@ -88,3 +89,11 @@ Ctrl+S         | Detail     | Save changes/create asset
 Y              | Detail     | Mark asset as approved
 T              | Detail     | Reset QC state
 U              | Detail     | Mark asset as rejected
+
+
+### Troubleshooting
+
+> Have you tried turning it off and on again?
+
+In most cases, this helps. If the application worked and suddenly it is not possible
+to start, try to delete `ffdata` files in its directory and start it again.

@@ -2,64 +2,83 @@ from firefly import *
 
 ERR = "** ERROR **"
 
-__all__ = ["BatchOpsDialog"]
+__all__ = ["batch_ops_dialog"]
 
 class BatchOpsDialog(QDialog):
     def __init__(self,  parent, objects):
         super(BatchOpsDialog, self).__init__(parent)
         self.objects = sorted(objects, key=lambda obj: obj.id)
-        self.values = {}
         self.setWindowTitle("Batch modify: {} assets".format(len(self.objects)))
+        id_folder = self.objects[0]["id_folder"]
+        self.keys = config["folders"][id_folder]["meta_set"]
+        self.form = MetaEditor(self, self.keys)
 
-        self.key = QLineEdit("title")
-        self.exp = QLineEdit()
-        self.ident = QLineEdit("title", self)
-        self.preview = FireflyText(self)
-        self.preview.setMinimumSize(740, 400)
-        self.btn_submit = QPushButton("Submit")
-        self.btn_submit.clicked.connect(self.on_submit)
+        if self.form:
+            for key, conf in self.keys:
+                if meta_types[key]["class"] in [SELECT, LIST]:
+                    self.form.inputs[key].auto_data(meta_types[key], id_folder=id_folder)
 
-        layout = QFormLayout()
+                values = []
+                for obj in self.objects:
+                    val = obj[key]
+                    if val not in values:
+                        values.append(val)
+                if len(values) == 1:
+                    self.form[key] = values[0]
+            self.form.set_defaults()
 
-        layout.addRow("Key", self.key)
-        layout.addRow("Expression", self.exp)
-        layout.addRow("Ident", self.ident)
-        layout.addRow("Preview", self.preview)
-        layout.addRow("", self.btn_submit)
+        self.scroll_area = QScrollArea(self)
+        self.scroll_area.setFrameStyle(QFrame.NoFrame)
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setContentsMargins(0,0,0,0)
+        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
 
-        self.exp.textChanged.connect(self.on_change)
+        self.scroll_area.setWidget(self.form)
 
+
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.Ok | QDialogButtonBox.Cancel,
+            Qt.Horizontal, self)
+        buttons.accepted.connect(self.on_accept)
+        buttons.rejected.connect(self.on_cancel)
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.scroll_area, 2)
+        layout.addWidget(buttons)
         self.setLayout(layout)
-        self.setModal(True)
-
-        self.on_change()
-        self.resize(800, 400)
+        self.response = False
+        self.resize(800,800)
 
 
-    def on_change(self):
-        self.preview.clear()
-        txt = ""
-        for i, asset in enumerate(self.objects):
-            if self.exp.text():
-                try:
-                    value = eval(self.exp.text())
-                except:
-                    value = ERR
-            else:
-                value = ERR
-            self.values[asset.id] = value
-
-
-            txt += "{:<50}{}\n".format(asset[self.ident.text()], value)
-        self.preview.setText(txt)
-
-    def on_submit(self):
-        key = self.key.text()
-        for asset in self.objects:
-            value = self.values[asset.id]
-            if value == ERR:
-                continue
-            stat, res = query("set_meta", objects=[asset.id], data={key : value} )
-            if not success(stat):
-                QMessageBox.critical(self, "Error", res)
+    def on_cancel(self):
         self.close()
+
+    def on_accept(self):
+        reply = QMessageBox.question(
+                self,
+                "Save changes?",
+                "{}".format(
+                    "\n".join(" - {}".format(meta_types[k].alias(config.get("language", "en"))) for k in self.form.changed)
+                    ),
+                QMessageBox.Yes | QMessageBox.No
+                )
+
+        if reply == QMessageBox.Yes:
+            pass
+        else:
+            logging.info("Save aborted")
+            return
+
+        response = api.set(objects=[a.id for a in self.objects], data={k : self.form[k] for k in self.form.changed})
+
+        if not response:
+            logging.error(response.message)
+
+        self.response = True
+        self.close()
+
+
+def batch_ops_dialog(objects):
+    dlg = BatchOpsDialog(None, objects)
+    dlg.exec_()
+    return dlg.response

@@ -1,6 +1,6 @@
 from nxtools import *
 from pyqtbs import *
-from .version import FIREFLY_VERSION
+from .version import *
 
 from nx import *
 
@@ -8,6 +8,49 @@ DEBUG, INFO, WARNING, ERROR, GOOD_NEWS = range(5)
 
 logging.user = ""
 logging.handlers = []
+
+class FontLib():
+    def __init__(self):
+        self.data = {}
+
+    def load(self):
+
+        font_italic = QFont()
+        font_italic.setItalic(True)
+
+        font_bold = QFont()
+        font_bold.setBold(True)
+
+        font_bolditalic = QFont()
+        font_bolditalic.setBold(True)
+        font_bolditalic.setItalic(True)
+
+        font_boldunderline = QFont()
+        font_boldunderline.setBold(True)
+        font_boldunderline.setUnderline(True)
+
+        font_underline = QFont()
+        font_underline.setUnderline(True)
+
+        font_strikeout = QFont()
+        font_strikeout.setStrikeOut(True)
+
+        self.data = {
+                "bold" : font_bold,
+                "italic" : font_italic,
+                "bolditalic" : font_bolditalic,
+                "underline" : font_underline,
+                "boldunderline" : font_boldunderline,
+                "strikeout" : font_strikeout
+           }
+
+    def __getitem__(self, key):
+        if not self.data:
+            self.load()
+        return self.data.get(key)
+
+fonts = FontLib()
+
 
 #
 # pix library
@@ -61,3 +104,29 @@ pix_lib = PixLib()
 
 def has_right(*args, **kwargs):
     return user.has_right(*args, **kwargs)
+
+
+if PLATFORM == "unix":
+    import subprocess
+
+    def notify(text, header, expire):
+        subprocess.Popen([
+                "notify-send",
+                "-t", str(expire),
+                header,
+                text
+            ])
+
+def notify_send(text, level=INFO):
+    caption, expire = {
+            DEBUG : ["debug", 1],
+            INFO : ["info", 3],
+            WARNING : ["warning", 5],
+            ERROR : ["error", 10],
+            GOOD_NEWS : ["good news", 5]
+        }[level]
+    caption = "Firefly {}".format(caption)
+    if level < WARNING:
+        return
+
+    notify(text, caption, expire)

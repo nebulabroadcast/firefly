@@ -3,6 +3,7 @@ import time
 import websocket
 
 from .common import *
+from nx.connection import CLIENT_ID
 
 if config.get("debug"):
     websocket.enableTrace(True)
@@ -36,11 +37,9 @@ class SeismicListener(QThread):
         self.start()
 
     def run(self):
-        logging.info("Starting listener", handlers=False)
-
         addr = config["hub"].replace("http", "ws", 1) + "/ws/" + config["site_name"]
-
         while self.should_run:
+            logging.debug("Connecting listener", handlers=False)
             self.halted = False
             self.ws = websocket.WebSocketApp(
                     addr,
@@ -50,7 +49,6 @@ class SeismicListener(QThread):
                 )
             self.ws.run_forever()
             self.active = False
-            logging.warning("Listenner stopped", handlers=False)
 
         logging.debug("Listener halted", handlers=False)
         self.halted = True
@@ -74,14 +72,17 @@ class SeismicListener(QThread):
 
         self.last_msg = time.time()
 
-#        if message.method == "objects_changed":
-#            for i, m in enumerate(self.queue):
-#                if m.method == "objects_changed" and m.data["object_type"] == message.data["object_type"]:
-#                    r = list(set(m.data["objects"] + message.data["objects"] ))
-#                    self.queue[i].data["objects"] = r
-#                    break
-#            else:
-#                self.queue.append(message)
+        if message.data and message.data.get("initiator", None) == CLIENT_ID:
+            return
+
+        if message.method == "objects_changed":
+            for i, m in enumerate(self.queue):
+                if m.method == "objects_changed" and m.data["object_type"] == message.data["object_type"]:
+                    r = list(set(m.data["objects"] + message.data["objects"] ))
+                    self.queue[i].data["objects"] = r
+                    break
+            else:
+                self.queue.append(message)
 
         if message.method == "playout_status":
             for i, m in enumerate(self.queue):
@@ -99,9 +100,10 @@ class SeismicListener(QThread):
 
     def on_close(self, *args):
         self.active = False
-        logging.warning("WS connection interrupted. Reconnecting", handlers=False)
+        if self.should_run:
+            logging.warning("WS connection interrupted", handlers=False)
 
     def halt(self):
         logging.debug("Shutting down listener")
-        self.ws.close()
         self.should_run = False
+        self.ws.close()

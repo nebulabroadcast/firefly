@@ -3,10 +3,13 @@ from .widgets import *
 
 from pprint import pformat
 
-__all__ = ["FireflyViewModel", "FireflySortModel", "FireflyView"]
+__all__ = ["FireflyViewModel", "FireflySortModel", "FireflyView", "format_header", "format_description"]
 
 def format_header(key):
     return meta_types[key].header(config.get("language", "en"))
+
+def format_description(key):
+    return meta_types[key].description(config.get("language", "en"))
 
 class FireflyViewModel(QAbstractTableModel):
     def __init__(self, parent):
@@ -15,21 +18,6 @@ class FireflyViewModel(QAbstractTableModel):
         self.header_data = []
         self.changed_objects = []
 
-        font_italic = QFont()
-        font_italic.setItalic(True)
-        font_bold = QFont()
-        font_bold.setBold(True)
-        font_underline = QFont()
-        font_underline.setUnderline(True)
-        font_strikeout = QFont()
-        font_strikeout.setStrikeOut(True)
-        self.fonts = {
-                "bold" : font_bold,
-                "italic" : font_italic,
-                "underline" : font_underline,
-                "strikeout" : font_strikeout
-           }
-
     def rowCount(self, parent):
         return len(self.object_data)
 
@@ -37,8 +25,12 @@ class FireflyViewModel(QAbstractTableModel):
         return len(self.header_data)
 
     def headerData(self, col, orientation=Qt.Horizontal, role=Qt.DisplayRole):
-        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
-            return format_header(self.header_data[col])
+        if orientation == Qt.Horizontal:
+            if role == Qt.DisplayRole:
+                return format_header(self.header_data[col])
+            elif role == Qt.ToolTipRole:
+                desc = format_description(self.header_data[col])
+                return "<p>{}</p>".format(desc) if desc else None
         return None
 
     def data(self, index, role=Qt.DisplayRole):
@@ -60,8 +52,7 @@ class FireflyViewModel(QAbstractTableModel):
             return pix_lib[obj.format_decoration(key, model=self)]
         elif role == Qt.FontRole:
             font = obj.format_font(key, model=self)
-            if font in self.fonts:
-                return self.fonts[font]
+            return fonts[font]
         elif role == Qt.ToolTipRole:
             if config.get("debug", False):
                 r = pformat(obj.meta)

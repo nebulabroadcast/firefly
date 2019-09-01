@@ -65,6 +65,13 @@ class FireflyMainWidget(QWidget):
 
         self.tabs.currentChanged.connect(self.on_switch_tab)
 
+
+    def on_close(self):
+        self.main_window.listener.halt()
+        QApplication.quit()
+        logging.debug("Main window closed")
+
+
     @property
     def app(self):
         return self.main_window.app
@@ -102,8 +109,12 @@ class FireflyMainWindow(MainWindow):
         self.subscribers = []
         super(FireflyMainWindow, self).__init__(parent, MainWidgetClass)
         self.setWindowIcon(QIcon(get_pix("icon")))
-        self.setWindowTitle("Firefly {} ({}@{})".format(FIREFLY_VERSION, user["login"], config["site_name"]))
-
+        title = "Firefly {}".format(FIREFLY_VERSION)
+        if FIREFLY_STATUS:
+            title += " " + FIREFLY_STATUS
+        title += " ({}@{})".format(user["login"], config["site_name"])
+        self.setWindowTitle(title)
+        self.setAttribute(Qt.WA_AlwaysShowToolTips)
         logging.handlers = [self.log_handler]
         self.listener = SeismicListener(
                 config["site_name"],
@@ -126,6 +137,8 @@ class FireflyMainWindow(MainWindow):
                 self.set_channel(self.id_channel)
                 break
         logging.info("[MAIN WINDOW] Firefly is ready")
+
+
 
 
     def load_window_state(self):

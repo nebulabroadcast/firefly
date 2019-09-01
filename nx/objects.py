@@ -31,12 +31,14 @@ class AssetCache(object):
             id = int(id)
             if not id in self.data:
                 to_update.append(id)
+            elif not mtime:
+                to_update.append(id)
             elif self.data[id]["mtime"] < mtime:
                 to_update.append(id)
         if not to_update:
             return True
         logging.info("Requesting data for {} assets".format(len(to_update)))
-        result = api.get(ids=to_update)
+        result = api.get(objects=to_update)
         if result.is_error:
             logging.error(result.message)
             return False

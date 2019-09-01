@@ -102,7 +102,7 @@ class SchedulerModule(BaseModule):
         except Exception:
             log_traceback()
 
-    def import_template(self):
+    def import_template(self, day_offset=0):
         try:
             if not os.path.exists("templates"):
                 os.makedirs("templates")
@@ -138,7 +138,7 @@ class SchedulerModule(BaseModule):
                     if (hh*3600) + (mm*60) < (ch*3600) - (cm*60):
                         clock_offset += 24*3600
 
-                    start_time = day_start + clock_offset
+                    start_time = day_start + clock_offset + (day_offset*3600*24)
 
                     event = Event(meta={"start" : start_time})
                     for m in event_data.findall("meta"):
@@ -146,19 +146,20 @@ class SchedulerModule(BaseModule):
                         value = m.text
                         if value:
                             event[key] = value
-                        print (key, value, event[key])
 
                     items_data = event_data.find("items")
                     if items_data is not None:
                         event.meta["_items"] = []
-                        for item_data in items_data.findall("item"):
+                        for ipos, item_data in enumerate(items_data.findall("item")):
                             item = Item()
+                            item["position"] = ipos + 1
                             for kv in item_data.findall("meta"):
                                 item[kv.attrib["key"]] = kv.text
                             event.meta["_items"].append(item.meta)
 
                     events.append(event.meta)
-            print (events)
+                if day_offset: # Importing single day.
+                    break
         except Exception:
             QApplication.restoreOverrideCursor()
             log_traceback("Unable to parse template:")
@@ -216,4 +217,5 @@ class SchedulerModule(BaseModule):
                 if id_event in self.calendar.event_ids:
                     do_load = True
             if do_load:
+                logging.debug("Seismic message requested calendar reload")
                 self.load()

@@ -6,6 +6,7 @@ except ImportError:
     # Freezed application does not need package manager
     pass
 
+from nxtools import *
 from firefly.application import FireflyApplication
 
 if __name__ == "__main__":

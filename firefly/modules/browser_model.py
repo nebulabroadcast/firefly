@@ -1,6 +1,8 @@
+import math
 from firefly import *
 
 DEFAULT_HEADER_DATA = ["title", "duration", "id_folder"]
+RECORDS_PER_PAGE = 1000
 
 class BrowserModel(FireflyViewModel):
     def load(self, **kwargs):
@@ -16,14 +18,36 @@ class BrowserModel(FireflyViewModel):
 
         search_query = kwargs
         search_query["result"] = ["id", "mtime"]
-        response = api.get(**search_query)
+        response = api.get(
+                **search_query,
+                count=True,
+                limit=RECORDS_PER_PAGE,
+                offset=(self.parent().current_page - 1) * RECORDS_PER_PAGE
+            )
         if not response:
             logging.error(response.message)
         else:
+            page_count = int(math.ceil(response["count"] / RECORDS_PER_PAGE))
+            self.parent().set_num_pages(page_count)
             if asset_cache.request(response.data):
                 self.object_data = [asset_cache[row[0]] for row in response.data]
         self.endResetModel()
         QApplication.restoreOverrideCursor()
+
+
+    def headerData(self, col, orientation=Qt.Horizontal, role=Qt.DisplayRole):
+        if orientation == Qt.Horizontal:
+            if role == Qt.DisplayRole:
+                return format_header(self.header_data[col])
+            elif role == Qt.ToolTipRole:
+                desc = format_description(self.header_data[col])
+                return "<p>{}</p>".format(desc) if desc else None
+            elif role == Qt.DecorationRole:
+                order, trend = self.parent().current_order
+                if self.header_data[col] == order:
+                    return pix_lib[["smallarrow-up", "smallarrow-down"][int(trend=="desc")]]
+        return None
+
 
     def flags(self,index):
         flags = super(BrowserModel, self).flags(index)

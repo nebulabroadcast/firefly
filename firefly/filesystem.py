@@ -6,9 +6,7 @@ from .common import *
 if PLATFORM == "windows":
     import ctypes
     import itertools
-    import os
     import string
-    import platform
 
     def get_available_drives():
         drive_bitmask = ctypes.cdll.kernel32.GetLogicalDrives()

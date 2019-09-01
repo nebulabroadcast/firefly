@@ -126,7 +126,7 @@ class RundownView(FireflyView):
                     action_mode_loop = QAction('&Loop', self)
                     action_mode_loop.setStatusTip('Loop item')
                     action_mode_loop.setCheckable(True)
-                    action_mode_loop.setChecked(self.selected_objects[0]["loop"])
+                    action_mode_loop.setChecked(bool(self.selected_objects[0]["loop"]))
                     action_mode_loop.triggered.connect(self.on_set_loop)
                     mode_menu.addAction(action_mode_loop)
 
@@ -208,6 +208,9 @@ class RundownView(FireflyView):
         QApplication.restoreOverrideCursor()
         if not response:
             logging.error(response.message)
+            return
+        self.load()
+
 
 
     def on_set_mode(self, mode):
@@ -220,6 +223,8 @@ class RundownView(FireflyView):
         QApplication.restoreOverrideCursor()
         if not response:
             logging.error(response.message)
+            return
+        self.load()
 
     def on_trim(self):
         item = self.selected_objects[0]
@@ -227,10 +232,14 @@ class RundownView(FireflyView):
 
 
     def on_solve(self, solver):
+        QApplication.processEvents()
+        QApplication.setOverrideCursor(Qt.WaitCursor)
         response = api.solve(id_item=self.selected_objects[0]["id"], solver=solver)
+        QApplication.restoreOverrideCursor()
         if not response:
             logging.error(response.message)
         self.load()
+
 
     def on_delete(self):
         items = list(set([obj.id for obj in self.selected_objects if obj.object_type == "item"]))
@@ -262,6 +271,7 @@ class RundownView(FireflyView):
             QApplication.restoreOverrideCursor()
             if not response:
                 logging.error(response.message)
+                return
             else:
                 logging.info("Item deleted: {}".format(response.message))
 
@@ -272,10 +282,12 @@ class RundownView(FireflyView):
             QApplication.restoreOverrideCursor()
             if not response:
                 logging.error(response.message)
+                return
             else:
                 logging.info("Event deleted: {}".format(response.message))
-        self.selectionModel().clear()
 
+        self.selectionModel().clear()
+        self.load()
 
     def on_send_to(self):
         objs = set([obj for obj in self.selected_objects if obj.object_type == "item" and obj["id_asset"]])
@@ -294,14 +306,17 @@ class RundownView(FireflyView):
         for key in dlg.meta:
             if dlg.meta[key] != obj[key]:
                 data[key] = dlg.meta[key]
-        if data:
-            response = api.set(
-                    object_type=obj.object_type,
-                    objects=[obj.id],
-                    data=data
-                )
-            if not response:
-                logging.error(response.message)
+        if not data:
+            return
+        response = api.set(
+                object_type=obj.object_type,
+                objects=[obj.id],
+                data=data
+            )
+        if not response:
+            logging.error(response.message)
+            return
+        self.load()
 
     def on_edit_event(self):
         objs = [obj for obj in self.selected_objects if obj.object_type == "event"]
@@ -313,17 +328,17 @@ class RundownView(FireflyView):
         can_mcr = user.has_right("mcr", self.id_channel)
         if obj.object_type == "item":
 
-            # Playout cue
-            if obj.id and self.parent().mcr and self.parent().mcr.isVisible() and can_mcr:
-                response = api.playout(timeout=1, action="cue", id_channel=self.id_channel, id_item=obj.id)
-                if not response:
-                    logging.error(response.message)
-                self.clearSelection()
+            if obj.id:
+                if obj["item_role"] == "placeholder":
+                    self.on_edit_item()
 
-            # Virtual item edit
+                elif self.parent().mcr and self.parent().mcr.isVisible() and can_mcr:
+                    response = api.playout(timeout=1, action="cue", id_channel=self.id_channel, id_item=obj.id)
+                    if not response:
+                        logging.error(response.message)
+                    self.clearSelection()
 
-            elif obj["item_role"] in ["placeholder", "live"]:
-                self.on_edit_item()
+
 
         # Event edit
         elif obj.object_type == "event" and (has_right("scheduler_view", self.id_channel) or has_right("scheduler_edit", self.id_channel)):

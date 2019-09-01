@@ -4,6 +4,7 @@ import functools
 
 from firefly import *
 from firefly.dialogs.send_to import *
+from firefly.dialogs.batch_ops import *
 
 from .browser_model import *
 
@@ -13,11 +14,11 @@ class SearchWidget(QLineEdit):
         super(QLineEdit, self).__init__()
 
     def keyPressEvent(self, event):
-        if event.key() in [Qt.Key_Return,Qt.Key_Enter]:
+        if event.key() in [Qt.Key_Return, Qt.Key_Enter]:
             self.parent().load()
         elif event.key() == Qt.Key_Escape:
             self.line_edit.setText("")
-        elif event.key() == Qt.Key_Down:
+        elif event.key() in [Qt.Key_Down, Qt.Key_Up]:
             self.parent().view.setFocus()
         QLineEdit.keyPressEvent(self, event)
 
@@ -25,11 +26,13 @@ class SearchWidget(QLineEdit):
 class FireflyBrowserView(FireflyView):
     def __init__(self, parent):
         super(FireflyBrowserView, self).__init__(parent)
-        self.setSortingEnabled(True)
-        self.model = BrowserModel(self)
-        self.sort_model = FireflySortModel(self.model)
+        self.num_pages = 1
+        self.current_page = 1
+        self.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.activated.connect(self.on_activate)
-        self.setModel(self.sort_model)
+        self.setModel(BrowserModel(self))
+        self.horizontalHeader().sectionClicked.connect(self.on_header_clicked)
+
 
     def selectionChanged(self, selected, deselected):
         rows = []
@@ -37,11 +40,11 @@ class FireflyBrowserView(FireflyView):
 
         tot_dur = 0
         for idx in self.selectionModel().selectedIndexes():
-            row = self.sort_model.mapToSource(idx).row()
+            row = idx.row()
             if row in rows:
                 continue
             rows.append(row)
-            obj = self.model.object_data[row]
+            obj = self.model().object_data[row]
             self.selected_objects.append(obj)
             if obj.object_type in ["asset", "item"]:
                 tot_dur += obj.duration
@@ -59,15 +62,38 @@ class FireflyBrowserView(FireflyView):
                     )
         super(FireflyView, self).selectionChanged(selected, deselected)
 
+    @property
+    def current_order(self):
+        try:
+            return self.parent().search_query.get("order", "ctime desc").split(" ")
+        except Exception:
+            return ["ctime", "desc"]
+
+    def on_header_clicked(self, index):
+        old_order, old_trend = self.current_order
+        value = self.model().header_data[index]
+        if value == old_order:
+            if old_trend == "asc":
+                trend = "desc"
+            else:
+                trend = "asc"
+        else:
+            trend = "asc"
+        self.parent().search_query["order"] = "{} {}".format(value, trend)
+        self.parent().load()
 
 
     def on_activate(self, mi):
-        obj = self.model.object_data[mi.row()]
-        key = self.model.header_data[mi.column()]
+        obj = self.model().object_data[mi.row()]
+        key = self.model().header_data[mi.column()]
         val = obj.show(key)
 
         QApplication.clipboard().setText(str(val))
         logging.info("Copied \"{}\" to clipboard".format(val))
+
+    def set_num_pages(self, pages):
+        self.num_pages = pages
+        #TODO: show pagination widget if num_pages > 1
 
 
 
@@ -76,12 +102,15 @@ class BrowserTab(QWidget):
         super(BrowserTab, self).__init__(parent)
         self._parent = parent
         self.loading = False
+        self.title = False
 
         # Search query
 
         self.search_query = {
                 "id_view" : kwargs.get("id_view", min(config["views"])),
                 "fulltext" : kwargs.get("fulltext", ""),
+                "order" : kwargs.get("order", "ctime desc"),
+                "conds" : kwargs.get("conds", [])
             }
 
         # Layout
@@ -125,9 +154,8 @@ class BrowserTab(QWidget):
         layout.addWidget(self.view, 1)
         self.setLayout(layout)
 
-    @property
     def model(self):
-        return self.view.model
+        return self.view.model()
 
     @property
     def id_view(self):
@@ -148,12 +176,12 @@ class BrowserTab(QWidget):
                     key=lambda k: config["views"][k]["position"]
                 ):
             view = config["views"][id_view]
-            if view["title"] == "-":
+            if  view.get("separator", False):
                 self.action_search.addSeparator()
-                continue
             action = QAction(view["title"], self)
             action.setCheckable(True)
-            action.setShortcut("ALT+{}".format(i))
+            if i < 10:
+                action.setShortcut("ALT+{}".format(i))
             action.id_view = id_view
             action.triggered.connect(functools.partial(self.set_view, id_view))
             self.action_search.addAction(action)
@@ -168,7 +196,7 @@ class BrowserTab(QWidget):
             self.app_state["browser_default_sizes"] = {}
 
         data = {}
-        for i, h in enumerate(self.model.header_data):
+        for i, h in enumerate(self.model().header_data):
             w = self.view.horizontalHeader().sectionSize(i)
             self.app_state["browser_default_sizes"][h] = w
             data[h] = w
@@ -184,12 +212,12 @@ class BrowserTab(QWidget):
         search_string = self.search_box.text()
         self.search_query["fulltext"] = search_string
         self.search_query.update(kwargs)
-        self.view.model.load(**self.search_query)
+        self.model().load(**self.search_query)
 
         if self.first_load or self.id_view != old_view:
             view_state = self.app_state.get("browser_view_sizes", {}).get(self.id_view, {})
             default_sizes = self.app_state.get("browser_defaut_sizes", {})
-            for i, h in enumerate(self.model.header_data):
+            for i, h in enumerate(self.model().header_data):
                 if h in view_state:
                     w = view_state[h]
                 elif h in default_sizes:
@@ -218,6 +246,8 @@ class BrowserTab(QWidget):
         self.load(fulltext="")
 
     def set_view(self, id_view):
+        self.search_query["conds"] = []
+        self.title = False
         self.load(id_view=id_view)
 
 
@@ -225,9 +255,10 @@ class BrowserTab(QWidget):
         if not self.view.selected_objects:
             return
         menu = QMenu(self)
+        objs = self.view.selected_objects
 
         statuses = []
-        for obj in self.view.selected_objects:
+        for obj in objs:
             status = obj["status"]
             if not status in statuses:
                 statuses.append(status)
@@ -264,6 +295,21 @@ class BrowserTab(QWidget):
         action_reset.triggered.connect(self.on_reset)
         menu.addAction(action_reset)
 
+
+        action_batch_ops = QAction('&Batch ops...', self)
+        action_batch_ops.setStatusTip('Batch operations')
+        action_batch_ops.triggered.connect(self.on_batch_ops)
+        menu.addAction(action_batch_ops)
+
+        if len(objs) == 1:
+            menu.addSeparator()
+            for link in config["folders"][objs[0]["id_folder"]].get("links", []):
+                action_link = QAction(link["title"])
+                action_link.triggered.connect(
+                        functools.partial(self.link_exec, objs[0], **link)
+                        )
+                menu.addAction(action_link)
+
         menu.addSeparator()
 
         action_send_to = QAction('&Send to...', self)
@@ -271,27 +317,41 @@ class BrowserTab(QWidget):
         action_send_to.triggered.connect(self.on_send_to)
         menu.addAction(action_send_to)
 
-#TODO
-#        menu.addSeparator()
-#        action_columns = QAction('Choose columns', self)
-#        action_columns.setStatusTip('Choose header columns')
-#        action_columns.triggered.connect(self.on_choose_columns)
-#        menu.addAction(action_columns)
-
         menu.exec_(event.globalPos())
+
+    def link_exec(self, obj,  **kwargs):
+        param = kwargs["target_key"]
+        value = obj[kwargs["source_key"]]
+        self._parent.new_tab(
+                obj["title"],
+                id_view=kwargs["id_view"],
+                conds=["'{}' = '{}'".format(param, value)]
+            )
+        self._parent.redraw_tabs()
 
 
     def on_send_to(self):
-        send_to_dialog(self.view.selected_objects)
+        objs = self.view.selected_objects
+        if objs:
+            send_to_dialog(objs)
+
+    def on_batch_ops(self):
+        objs = self.view.selected_objects
+        if objs:
+            if batch_ops_dialog(objs):
+                self.load()
 
     def on_reset(self):
-        objects = [obj.id for obj in self.view.selected_objects if obj["status"] not in [ARCHIVED, TRASHED, RESET]],
+        objects = [obj.id for obj in self.view.selected_objects if obj["status"] not in [ARCHIVED, TRASHED, RESET]]
         if not objects:
             return
         response = api.set(
                 objects=objects,
                 data={"status" : RESET}
             )
+        if not response:
+            return
+        self.refresh_assets(*objects, request_data=True)
 
     def on_trash(self):
         objects = [obj.id for obj in self.view.selected_objects if obj["status"] not in [ARCHIVED, TRASHED]]
@@ -311,6 +371,8 @@ class BrowserTab(QWidget):
             return
         if not response:
             logging.error("Unable to trash:\n\n" + response.message)
+            return
+        self.refresh_assets(*objects, request_data=True)
 
     def on_untrash(self):
         objects = [obj.id for obj in self.view.selected_objects if obj["status"] in [TRASHED]]
@@ -322,6 +384,8 @@ class BrowserTab(QWidget):
             )
         if not response:
             logging.error("Unable to untrash:\n\n" + response.message)
+            return
+        self.refresh_assets(*objects, request_data=True)
 
     def on_archive(self):
         objects = [obj.id for obj in self.view.selected_objects if obj["status"] not in [ARCHIVED, TRASHED]]
@@ -341,6 +405,8 @@ class BrowserTab(QWidget):
             return
         if not response:
             logging.error("Unable to archive:\n\n" + response.message)
+            return
+        self.refresh_assets(*objects, request_data=True)
 
     def on_unarchive(self):
         objects = [obj.id for obj in self.view.selected_objects if obj["status"] in [ARCHIVED]]
@@ -352,6 +418,8 @@ class BrowserTab(QWidget):
             )
         if not response:
             logging.error("Unable to unarchive:\n\n" + response.message)
+            return
+        self.refresh_assets(*objects, request_data=True)
 
 
     def on_choose_columns(self):
@@ -362,15 +430,21 @@ class BrowserTab(QWidget):
     def on_copy_result(self):
         result = ""
         for obj in self.view.selected_objects:
-            result += "{}\n".format("\t".join([obj.format_display(key) or "" for key in self.view.model.header_data]))
+            result += "{}\n".format("\t".join([obj.format_display(key) or "" for key in self.model().header_data]))
         clipboard = QApplication.clipboard();
         clipboard.setText(result)
 
+    def refresh_assets(self, *objects, request_data=False):
+        if request_data:
+            asset_cache.request([[aid, 0] for aid in objects])
+        for row, obj in enumerate(self.model().object_data):
+            if obj.id in objects:
+                self.model().object_data[row] = asset_cache[obj.id]
+                self.model().dataChanged.emit(self.model().index(row, 0), self.model().index(row, len(self.model().header_data)-1))
+
+
     def seismic_handler(self, message):
-            for row, obj in enumerate(self.model.object_data):
-                if obj.id in message.data["objects"]:
-                    self.model.object_data[row] = asset_cache[obj.id]
-                    self.model.dataChanged.emit(self.model.index(row, 0), self.model.index(row, len(self.model.header_data)-1))
+        self.refresh_assets(*message.data["objects"])
 
 
 class BrowserModule(BaseModule):
@@ -379,7 +453,7 @@ class BrowserModule(BaseModule):
         self.tabs = QTabWidget(self)
         self.tabs.setTabsClosable(True)
         self.tabs.tabCloseRequested.connect(self.close_tab)
-        self.tabs.currentChanged.connect(self.redraw_tabs)
+        self.tabs.currentChanged.connect(self.on_tab_switch)
 
         self.layout = QVBoxLayout(self)
         self.layout.setSpacing(0)
@@ -401,7 +475,15 @@ class BrowserModule(BaseModule):
                     del(tabcfg["active"])
                 except KeyError:
                     pass
-                self.new_tab(**tabcfg)
+                title = False
+                if tabcfg.get("title"):
+                    title = tabcfg.get("title")
+                try:
+                    del(tabcfg["title"])
+                except KeyError:
+                    pass
+
+                self.new_tab(title, **tabcfg)
                 created_tabs += 1
             except Exception:
                 log_traceback()
@@ -411,7 +493,7 @@ class BrowserModule(BaseModule):
 
         self.tabs.setCurrentIndex(current_index)
 
-    def new_tab(self, **kwargs):
+    def new_tab(self, title=False, **kwargs):
         if not "id_view" in kwargs:
             try:
                 id_view = self.tabs.currentWidget().id_view
@@ -422,7 +504,9 @@ class BrowserModule(BaseModule):
         tab = BrowserTab(self, **kwargs)
         self.tabs.addTab(tab, "New tab")
         self.tabs.setCurrentIndex(self.tabs.indexOf(tab))
+        tab.title = title
         tab.load()
+        return tab
 
 
     def close_tab(self, idx=False):
@@ -467,15 +551,29 @@ class BrowserModule(BaseModule):
             r.append(self.tabs.widget(i))
         return r
 
+    def on_tab_switch(self):
+        browser = self.browsers[self.tabs.currentIndex()]
+        sel = browser.view.selected_objects
+        if sel:
+            self.main_window.focus(sel[0])
+        browser.search_box.setFocus()
+        self.redraw_tabs()
+
+
     def redraw_tabs(self, *args, **kwargs):
         QApplication.processEvents()
         views = []
         for i,b in enumerate(self.browsers):
             id_view = b.id_view
-            self.tabs.setTabText(i, config["views"][id_view]["title"])
+            self.tabs.setTabText(i, b.title or config["views"][id_view]["title"])
             sq = copy.copy(b.search_query)
             if self.tabs.currentIndex() == i:
-                logging.debug("Saving browser current index to ", i)
                 sq["active"] = True
+            if b.title:
+                sq["title"] = b.title
             views.append(sq)
         self.app_state["browser_tabs"] = views
+
+    def refresh_assets(self, *objects, request_data=False):
+        for b in self.browsers:
+            b.refresh_assets(*objects, request_data=request_data)

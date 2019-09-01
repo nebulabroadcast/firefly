@@ -250,7 +250,6 @@ class MCR(QWidget):
                 self.progress_bar.setValue(ppos)
 
         if self.request_display_resize:
-            logging.debug("display resize")
             QApplication.processEvents()
             self.display_clock.setFixedSize(self.display_clock.size())
             self.display_pos.setFixedSize(self.display_clock.size())
