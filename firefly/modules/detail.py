@@ -321,26 +321,10 @@ class DetailModule(BaseModule):
             idx = (self.detail_tabs.currentIndex()+1) % self.detail_tabs.count()
         self.detail_tabs.setCurrentIndex(idx)
 
-    def focus(self, asset, silent=False):
-        if not isinstance(asset, Asset):
-            logging.debug("[DETAIL] Only assets can be focused. Is: {}".format(type(asset)))
-            return
 
-        logging.debug("[DETAIL] Focusing", asset)
-
-        if self._is_loading:
-            self._load_queue = [asset]
-            return
-        else:
-            self._load_queue = False
-            self._is_loading = True
-
-        #
-        # Save changes?
-        #
-
+    def check_changed(self):
         changed = []
-        if self.form and self.asset and not silent:
+        if self.form and self.asset:
             if self.asset["id_folder"] != self.folder_select.get_value():
                 changed.append("id_folder")
             changed.extend(self.form.changed)
@@ -359,6 +343,23 @@ class DetailModule(BaseModule):
 
             if reply == QMessageBox.Yes:
                 self.on_apply()
+
+    def focus(self, asset, silent=False):
+        if not isinstance(asset, Asset):
+            logging.debug("[DETAIL] Only assets can be focused. Is: {}".format(type(asset)))
+            return
+
+        logging.debug("[DETAIL] Focusing", asset)
+
+        if self._is_loading:
+            self._load_queue = [asset]
+            return
+        else:
+            self._load_queue = False
+            self._is_loading = True
+
+        if not silent:
+            self.check_changed()
 
         #
         # Show data
@@ -492,7 +493,25 @@ class DetailModule(BaseModule):
             self.focus(asset_cache[self.asset.id], silent=True)
 
     def on_set_qc(self, state):
-        response = api.set(objects=[self.asset.id], data={"qc/state" : state})
+        report = "{} : {} flagged the asset as {}".format(
+                    format_time(time.time()),
+                    user["login"],
+                    {
+                        0 : "New",
+                        3 : "Rejected",
+                        4 : "Approved"
+                    }[state]
+                )
+        if self.asset["qc/report"]:
+            report = self.asset["qc/report"] + "\n" + report
+
+        response = api.set(
+                objects=[self.asset.id],
+                data={
+                    "qc/state" : state,
+                    "qc/report" : report
+                }
+            )
         if not response:
             logging.error(response.message)
             return

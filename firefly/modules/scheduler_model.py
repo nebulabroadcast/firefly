@@ -335,6 +335,26 @@ class SchedulerDayWidget(SchedulerVerticalBar):
 
 
         elif type(self.calendar.dragging) == Asset:
+
+            for event in self.calendar.events:
+                if event["start"] == drop_ts:
+                    if event["duration"]:
+                        ret = QMessageBox.question(self,
+                            "Overwrite",
+                            "Do you really want to overwrite a non-empty event?\n{}".format(
+                                event
+                                ),
+                            QMessageBox.Yes | QMessageBox.No
+                            )
+                        if ret == QMessageBox.Yes:
+                            pass
+                        else:
+                            self.calendar.drag_source = False
+                            self.calendar.dragging = False
+                            self.update()
+                            return
+
+
             if evt.keyboardModifiers() & Qt.AltModifier:
                 logging.info("Creating event from {} at time {}".format(
                     self.calendar.dragging,

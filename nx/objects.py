@@ -10,6 +10,8 @@ from .firefly_object import *
 
 __all__ = ["Asset", "Item", "Bin", "Event", "User", "asset_cache"]
 
+CACHE_LIMIT = 10000
+
 
 class Asset(AssetMixIn, FireflyObject):
     pass
@@ -23,7 +25,9 @@ class AssetCache(object):
         if not key in self.data:
             logging.debug("Direct loading asset id", key)
             self.request([[key, 0]])
-        return self.data[key]
+        asset = self.data[key]
+        asset["_last_access"] = time.time()
+        return asset
 
     def request(self, requested):
         to_update = []
@@ -65,6 +69,12 @@ class AssetCache(object):
         logging.debug("Loaded {} assets from cache in {:.03f}s".format(len(self.data), time.time() - start_time))
 
     def save(self):
+        if len(self.data) > CACHE_LIMIT:
+            to_rm = list(self.data.keys())
+            to_rm.sort(key=lambda x: self.data[x].meta.get("_last_access", 0))
+            for t in to_rm[:-CACHE_LIMIT]:
+                del(self.data[t])
+
         logging.info("Saving {} assets to local cache".format(len(self.data)))
         start_time = time.time()
         data = [asset.meta for asset in self.data.values()]

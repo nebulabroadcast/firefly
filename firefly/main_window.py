@@ -67,6 +67,7 @@ class FireflyMainWidget(QWidget):
 
 
     def on_close(self):
+        self.detail.check_changed()
         self.main_window.listener.halt()
         QApplication.quit()
         logging.debug("Main window closed")
@@ -229,6 +230,9 @@ class FireflyMainWindow(MainWindow):
     def toggle_rundown_edit(self):
         if config["playout_channels"] and user.has_right("rundown_edit", self.id_channel):
             cstate = self.rundown.toggle_rundown_edit()
+
+    def toggle_debug_mode(self):
+        config["debug"] = not config.get("debug")
 
     def refresh_plugins(self):
         self.rundown.plugins.load()

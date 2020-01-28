@@ -128,6 +128,9 @@ class RundownModel(FireflyViewModel):
     def mimeTypes(self):
         return ["application/nx.asset", "application/nx.item"]
 
+    def supportedDropActions(self):
+        return Qt.CopyAction | Qt.MoveAction
+
     def mimeData(self, indices):
         rows = []
         for index in indices:
@@ -149,6 +152,8 @@ class RundownModel(FireflyViewModel):
         return mimeData
 
 
+
+
     def dropMimeData(self, data, action, row, column, parent):
         if action == Qt.IgnoreAction:
             return True
@@ -167,7 +172,9 @@ class RundownModel(FireflyViewModel):
                 return False
             else:
                 for obj in items:
-                    if not obj.get("id", False):
+                    if action == Qt.CopyAction:
+                        obj["id"] = False
+                    elif not obj.get("id", False):
                         item_role = obj.get("item_role", False)
                         if item_role in ["live", "placeholder"]:
                             dlg = PlaceholderDialog(self.parent(), obj)

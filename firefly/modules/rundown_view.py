@@ -14,6 +14,7 @@ class RundownView(FireflyView):
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.setModel(RundownModel(self))
         self.focus_enabled = True
+        self.setDefaultDropAction(Qt.MoveAction)
 
     @property
     def id_channel(self):
@@ -344,3 +345,17 @@ class RundownView(FireflyView):
         elif obj.object_type == "event" and (has_right("scheduler_view", self.id_channel) or has_right("scheduler_edit", self.id_channel)):
             self.on_edit_event()
         self.clearSelection()
+
+
+    def dragMoveEvent(self, event):
+        super(RundownView, self).dragMoveEvent(event)
+        if event.mimeData().hasFormat("application/nx.item"):
+            if event.keyboardModifiers() & Qt.AltModifier:
+                event.setDropAction(Qt.CopyAction)
+            else:
+                event.setDropAction(Qt.MoveAction)
+        elif event.mimeData().hasFormat("application/nx.asset"):
+            event.setDropAction(Qt.CopyAction)
+        else:
+            event.setDropAction(Qt.IgnoreAction)
+
