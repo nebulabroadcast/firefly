@@ -26,10 +26,12 @@ class LoginDialog(QDialog):
 
     def handleLogin(self):
         response = api.login(
+                api="1",
                 login=self.login.text(),
                 password=self.password.text()
             )
         if response and response.data:
+            config["session_id"] = response["session_id"]
             self.result = response.data
             self.close()
         else:

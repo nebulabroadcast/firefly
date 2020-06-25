@@ -1,7 +1,9 @@
+import queue
+
 from .common import *
 from .modules import *
 from .menu import create_menu
-from .listener import SeismicListener
+from .listener import SeismicListener, SeismicMessage
 
 __all__ = ["FireflyMainWidget", "FireflyMainWindow"]
 
@@ -11,6 +13,7 @@ class FireflyMainWidget(QWidget):
         super(FireflyMainWidget, self).__init__(main_window)
         self.main_window = main_window
         current_tab = self.main_window.app_state.get("current_module",0)
+        self.perform_on_switch_tab = True
 
         self.tabs = QTabWidget(self)
 
@@ -70,7 +73,7 @@ class FireflyMainWidget(QWidget):
         self.detail.check_changed()
         self.main_window.listener.halt()
         QApplication.quit()
-        logging.debug("Main window closed")
+        logging.debug("[MAIN WINDOW] Window closed")
 
 
     @property
@@ -81,33 +84,39 @@ class FireflyMainWidget(QWidget):
     def current_module(self):
         return self.tabs.currentWidget()
 
-    def switch_tab(self, module):
+    def switch_tab(self, module, perform_on_switch_tab=True):
+        self.perform_on_switch_tab = perform_on_switch_tab
         for i in range(self.tabs.count()):
             if (type(module) == int and module == i) or self.tabs.widget(i) == module:
                 self.tabs.setCurrentIndex(i)
 
     def on_switch_tab(self, index=None):
-        if self.current_module == self.detail:
-            self.detail.detail_tabs.on_switch()
-        else:
-            # Disable proxy loading if player is not focused
-            self.detail.detail_tabs.on_switch(-1)
+        if self.perform_on_switch_tab:
+            if self.current_module == self.detail:
+                self.detail.detail_tabs.on_switch()
+            else:
+                # Disable proxy loading if player is not focused
+                self.detail.detail_tabs.on_switch(-1)
 
-        if self.current_module == self.rundown:
-            if self.rundown.mcr and self.rundown.mcr.isVisible():
-                self.rundown.mcr.request_display_resize = True
-            # Refresh rundown on focus
-            self.rundown.load()
+            if self.current_module == self.rundown:
+                if self.rundown.mcr and self.rundown.mcr.isVisible():
+                    self.rundown.mcr.request_display_resize = True
+                # Refresh rundown on focus
+                self.rundown.load()
 
-        if self.current_module == self.jobs:
-            self.jobs.load()
+            if self.current_module == self.jobs:
+                self.jobs.load()
 
         self.main_window.app_state["current_module"] = self.tabs.currentIndex()
+        self.perform_on_switch_tab = True
 
 
 class FireflyMainWindow(MainWindow):
     def __init__(self, parent, MainWidgetClass):
         self.subscribers = []
+        asset_cache.api = api
+        asset_cache.handler = self.on_assets_update
+
         super(FireflyMainWindow, self).__init__(parent, MainWidgetClass)
         self.setWindowIcon(QIcon(get_pix("icon")))
         title = "Firefly {}".format(FIREFLY_VERSION)
@@ -137,6 +146,8 @@ class FireflyMainWindow(MainWindow):
                 self.id_channel = min(config["playout_channels"].keys())
                 self.set_channel(self.id_channel)
                 break
+
+
         logging.info("[MAIN WINDOW] Firefly is ready")
 
 
@@ -199,7 +210,8 @@ class FireflyMainWindow(MainWindow):
         self.detail.clone_asset()
 
     def logout(self):
-        api.logout()
+        response = api.logout(api="1")
+        logging.info(response["message"])
         self.close()
 
     def exit(self):
@@ -269,6 +281,14 @@ class FireflyMainWindow(MainWindow):
                 self.rundown.load()
             if self.scheduler:
                 self.scheduler.load()
+            if self.detail:
+                if self.detail.asset:
+                    self.detail.focus(self.detail.asset, force=True)
+
+    def load_settings(self):
+        logging.info("[MAIN WINDOW] Reloading system settings")
+        self.app.load_settings()
+        self.refresh()
 
     def export_template(self):
         self.scheduler.export_template()
@@ -283,24 +303,39 @@ class FireflyMainWindow(MainWindow):
     def on_seismic_timer(self):
         now = time.time()
         if now - self.listener.last_msg > 5:
-            logging.debug("No seismic message received. Something may be wrong")
+            logging.debug("[MAIN WINDOW] No seismic message received. Something may be wrong")
             self.listener.last_msg = time.time()
-        try:
-            message = self.listener.queue.pop(0)
-        except IndexError:
-            pass
-        else:
-            self.seismic_handler(message)
+        while True:
+            try:
+                message = self.listener.queue.get_nowait()
+            except queue.Empty:
+                return
+            else:
+                self.seismic_handler(message)
 
     def add_subscriber(self, module, methods):
-        self.subscribers.append([module, methods])
+        self.subscribers.append([module, frozenset(methods)])
 
     def seismic_handler(self, message):
         if message.method == "objects_changed" and message.data["object_type"] == "asset":
-            logging.info("Requesting new data for objects {}".format(message.data["objects"]))
-            now = time.time()
-            asset_cache.request([[aid, now] for aid in message.data["objects"]])
+            objects = message.data["objects"]
+            logging.debug("[MAIN WINDOW] {} asset(s) have been changed".format(len(objects)))
+            asset_cache.request([[aid, message.timestamp + 1] for aid in objects])
+            return
+
+        if message.method == "config_changed":
+            self.load_settings()
+            return
 
         for module, methods in self.subscribers:
             if message.method in methods:
                 module.seismic_handler(message)
+
+
+    def on_assets_update(self, *assets):
+        logging.debug("[MAIN WINDOW] Updating {} assets in views".format(len(assets)))
+
+        self.browser.refresh_assets(*assets)
+        self.detail.refresh_assets(*assets)
+        if self.rundown:
+            self.rundown.refresh_assets(*assets)

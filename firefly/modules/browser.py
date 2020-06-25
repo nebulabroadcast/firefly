@@ -208,13 +208,14 @@ class BrowserTab(QWidget):
 
     def load(self, **kwargs):
         self.loading = True
-        old_view = self.search_query.get("id_view", -1)
+        self.old_view = self.search_query.get("id_view", -1)
         search_string = self.search_box.text()
         self.search_query["fulltext"] = search_string
         self.search_query.update(kwargs)
-        self.model().load(**self.search_query)
+        self.model().load(self.load_callback, **self.search_query)
 
-        if self.first_load or self.id_view != old_view:
+    def load_callback(self):
+        if self.first_load or self.id_view != self.old_view:
             view_state = self.app_state.get("browser_view_sizes", {}).get(self.id_view, {})
             default_sizes = self.app_state.get("browser_defaut_sizes", {})
             for i, h in enumerate(self.model().header_data):
@@ -444,7 +445,7 @@ class BrowserTab(QWidget):
 
 
     def seismic_handler(self, message):
-        self.refresh_assets(*message.data["objects"])
+        pass #No seismic message needed - refresh_assets method does the job
 
 
 class BrowserModule(BaseModule):
@@ -508,6 +509,12 @@ class BrowserModule(BaseModule):
         tab.load()
         return tab
 
+    @property
+    def browsers(self):
+        r = []
+        for i in range(0,self.tabs.count()):
+            r.append(self.tabs.widget(i))
+        return r
 
     def close_tab(self, idx=False):
         if self.tabs.count() == 1:
@@ -535,22 +542,6 @@ class BrowserModule(BaseModule):
             n = cur + 1
         self.tabs.setCurrentIndex(n)
 
-    def load(self):
-        for b in self.browsers:
-            b.load()
-
-    def seismic_handler(self, message):
-        if message.method == "objects_changed" and message.data["object_type"] == "asset":
-            for b in self.browsers:
-                b.seismic_handler(message)
-
-    @property
-    def browsers(self):
-        r = []
-        for i in range(0,self.tabs.count()):
-            r.append(self.tabs.widget(i))
-        return r
-
     def on_tab_switch(self):
         browser = self.browsers[self.tabs.currentIndex()]
         sel = browser.view.selected_objects
@@ -559,6 +550,9 @@ class BrowserModule(BaseModule):
         browser.search_box.setFocus()
         self.redraw_tabs()
 
+    def load(self):
+        for b in self.browsers:
+            b.load()
 
     def redraw_tabs(self, *args, **kwargs):
         QApplication.processEvents()
@@ -573,6 +567,10 @@ class BrowserModule(BaseModule):
                 sq["title"] = b.title
             views.append(sq)
         self.app_state["browser_tabs"] = views
+
+    def seismic_handler(self, message):
+        for b in self.browsers:
+            b.seismic_handler(message)
 
     def refresh_assets(self, *objects, request_data=False):
         for b in self.browsers:

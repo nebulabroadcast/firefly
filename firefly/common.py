@@ -2,12 +2,16 @@ from nxtools import *
 from pyqtbs import *
 from .version import *
 
+from .api import api
+
 from nx import *
 
 DEBUG, INFO, WARNING, ERROR, GOOD_NEWS = range(5)
 
 logging.user = ""
 logging.handlers = []
+
+
 
 class FontLib():
     def __init__(self):

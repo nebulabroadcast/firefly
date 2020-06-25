@@ -21,6 +21,7 @@ class RundownModel(FireflyViewModel):
     def __init__(self, *args, **kwargs):
         super(RundownModel, self).__init__(*args, **kwargs)
         self.event_ids = []
+        self.load_start_time = 0
 
     @property
     def id_channel(self):
@@ -38,20 +39,26 @@ class RundownModel(FireflyViewModel):
     def cued_item(self):
         return self.parent().cued_item
 
-    def load(self, **kwargs):
-        load_start_time = time.time()
-        QApplication.processEvents()
-        QApplication.setOverrideCursor(Qt.WaitCursor)
-        logging.info("Loading rundown. Please wait...")
+    def load(self, callback=None):
+        self.load_start_time = time.time()
+        self.parent().setCursor(Qt.BusyCursor)
+        self.current_callback=callback
+        api.rundown(self.load_callback, id_channel=self.id_channel, start_time=self.start_time)
 
-        response = api.rundown(id_channel=self.id_channel, start_time=self.start_time)
+
+    def load_callback(self, response):
+        self.parent().setCursor(Qt.ArrowCursor)
         if not response:
-            QApplication.restoreOverrideCursor()
+            logging.error(response.message)
             return
+
+        QApplication.processEvents()
+        self.parent().setCursor(Qt.WaitCursor)
+        self.beginResetModel()
+        logging.info("Loading rundown. Please wait...")
 
         reset = True
         required_assets = []
-        self.beginResetModel()
 
         self.header_data = config["playout_channels"][self.id_channel].get("rundown_columns", DEFAULT_COLUMNS)
         self.object_data = []
@@ -74,6 +81,7 @@ class RundownModel(FireflyViewModel):
                 item = Item(meta=row)
                 item.id_channel = self.id_channel
                 if row["id_asset"]:
+                    item._asset = asset_cache.get(row["id_asset"])
                     required_assets.append([row["id_asset"], row["asset_mtime"]])
                 else:
                     item._asset = False
@@ -84,28 +92,17 @@ class RundownModel(FireflyViewModel):
 
         asset_cache.request(required_assets)
 
-        if reset:
-            self.endResetModel()
-        elif changed_rows:
-            self.dataChanged.emit(
-                    self.index(min(changed_rows), 0),
-                    self.index(max(changed_rows), len(self.header_data)-1)
-                )
+        self.endResetModel()
+        self.parent().setCursor(Qt.ArrowCursor)
+        logging.goodnews("Rundown loaded in {:.03f}s".format(time.time() - self.load_start_time))
 
-        QApplication.restoreOverrideCursor()
-        logging.goodnews(
-                "{} rows of {} rundown loaded in {:.03f}".format(
-                    len(response.data),
-                    format_time(self.start_time, "%Y-%m-%d"),
-                    time.time() - load_start_time
-                )
-            )
-
+        if self.current_callback:
+            self.current_callback()
 
     def refresh_assets(self, assets):
         for row in range(len(self.object_data)):
             if self.object_data[row].object_type == "item" and self.object_data[row]["id_asset"] in assets:
-                self.object_data[row]._asset = asset_cache[self.object_data[row]["id_asset"]]
+                self.object_data[row]._asset = asset_cache.get(self.object_data[row]["id_asset"])
                 self.dataChanged.emit(self.index(row, 0), self.index(row, len(self.header_data)-1))
 
     def refresh_items(self, items):
@@ -276,16 +273,21 @@ class RundownModel(FireflyViewModel):
 
         if not sorted_items:
             return
+        self.parent().setCursor(Qt.BusyCursor)
         QApplication.processEvents()
-        QApplication.setOverrideCursor(Qt.WaitCursor)
         response = api.order(
+                self.order_callback,
                 id_channel=self.id_channel,
                 id_bin=to_bin,
                 order=sorted_items
             )
-        QApplication.restoreOverrideCursor()
+        return False
+
+
+    def order_callback(self, response):
+        self.parent().setCursor(Qt.ArrowCursor)
         if not response:
             logging.error("Unable to change bin order: {}".format(response.message))
             return False
         self.load()
-        return True
+        return False

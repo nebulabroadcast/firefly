@@ -1,33 +1,46 @@
 import os
 import time
 import copy
+import functools
 
 from nebulacore import *
 from nebulacore.base_objects import *
 
-from .connection import api
-from .firefly_object import *
+from .cellformat import *
 
 __all__ = ["Asset", "Item", "Bin", "Event", "User", "asset_cache"]
-
-CACHE_LIMIT = 10000
 
 
 class Asset(AssetMixIn, FireflyObject):
     pass
 
+
+asset_loading = Asset()
+asset_loading["title"] = "Loading..."
+asset_loading["status"] = CREATING
+
+
+CACHE_LIMIT = 10000
+
 class AssetCache(object):
     def __init__(self):
         self.data = {}
+        self.api = None
+        self.handler = None
 
     def __getitem__(self, key):
         key = int(key)
         if not key in self.data:
             logging.debug("Direct loading asset id", key)
             self.request([[key, 0]])
+            return Asset()
         asset = self.data[key]
         asset["_last_access"] = time.time()
         return asset
+
+    def get(self, key):
+        key = int(key)
+        return self.data.get(key, Asset(meta={"title" : "Loading...", "id": key}))
 
     def request(self, requested):
         to_update = []
@@ -41,14 +54,31 @@ class AssetCache(object):
                 to_update.append(id)
         if not to_update:
             return True
-        logging.info("Requesting data for {} assets".format(len(to_update)))
-        result = api.get(objects=to_update)
-        if result.is_error:
-            logging.error(result.message)
+
+        asset_count = len(to_update)
+        if asset_count < 10:
+            logging.info("Requesting data for asset(s) ID: {}".format(", ".join([str(k) for k in to_update])))
+        else:
+            logging.info("Requesting data for {} assets".format(asset_count))
+        self.api.get(self.on_response, objects=to_update)
+
+    def on_response(self, response):
+        if response.is_error:
+            logging.error(response.message)
             return False
-        for meta in result.data:
-            self.data[int(meta["id"])] = Asset(meta=meta)
+        ids = []
+        for meta in response.data:
+            try:
+                id_asset= int(meta["id"])
+            except KeyError:
+                continue
+            self.data[id_asset] = Asset(meta=meta)
+            ids.append(id_asset)
+        logging.debug("Updated {} assets in cache".format(len(ids)))
+        if self.handler:
+            self.handler(*ids)
         return True
+
 
     @property
     def cache_path(self):
@@ -85,12 +115,14 @@ class AssetCache(object):
 asset_cache = AssetCache()
 
 
+
+
 class Item(ItemMixIn, FireflyObject):
     @property
     def asset(self):
         if not self["id_asset"]:
             return False
-        return asset_cache[self["id_asset"]]
+        return asset_cache.get(self["id_asset"])
 
 class Bin(BinMixIn, FireflyObject):
     pass

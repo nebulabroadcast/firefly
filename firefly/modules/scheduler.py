@@ -205,17 +205,18 @@ class SchedulerModule(BaseModule):
 
     def open_rundown(self, ts, event=False):
         self.main_window.main_widget.rundown.load(start_time=ts, event=event)
-        self.main_window.main_widget.switch_tab(self.main_window.main_widget.rundown)
+        self.main_window.main_widget.switch_tab(self.main_window.main_widget.rundown, perform_on_switch_tab=False)
 
     def set_channel(self, id_channel):
         self.load()
 
+    def refresh_events(self, events):
+        for id_event in events:
+            if id_event in self.calendar.event_ids:
+                logging.debug("[SCHEDULER] Event id {} has been changed. Reloading calendar".format(id_event))
+                self.load()
+                break
+
     def seismic_handler(self, data):
        if data.method == "objects_changed" and data.data["object_type"] == "event":
-            do_load = False
-            for id_event in data.data["objects"]:
-                if id_event in self.calendar.event_ids:
-                    do_load = True
-            if do_load:
-                logging.debug("Seismic message requested calendar reload")
-                self.load()
+           self.refresh_events(data.data["objects"])

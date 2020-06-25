@@ -5,12 +5,9 @@ DEFAULT_HEADER_DATA = ["title", "duration", "id_folder"]
 RECORDS_PER_PAGE = 1000
 
 class BrowserModel(FireflyViewModel):
-    def load(self, **kwargs):
+    def load(self, callback, **kwargs):
         start_time = time.time()
-        self.beginResetModel()
-        QApplication.setOverrideCursor(Qt.WaitCursor)
 
-        self.object_data = []
         try:
             self.header_data = config["views"][kwargs["id_view"]]["columns"]
         except KeyError:
@@ -19,20 +16,31 @@ class BrowserModel(FireflyViewModel):
         search_query = kwargs
         search_query["result"] = ["id", "mtime"]
         response = api.get(
+                functools.partial(self.load_callback, callback),
                 **search_query,
                 count=True,
                 limit=RECORDS_PER_PAGE,
                 offset=(self.parent().current_page - 1) * RECORDS_PER_PAGE
             )
+
+
+    def load_callback(self, callback, response):
+        self.beginResetModel()
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+
+        self.object_data = []
+
         if not response:
             logging.error(response.message)
         else:
             page_count = int(math.ceil(response["count"] / RECORDS_PER_PAGE))
             self.parent().set_num_pages(page_count)
-            if asset_cache.request(response.data):
-                self.object_data = [asset_cache[row[0]] for row in response.data]
+            asset_cache.request(response.data)
+            self.object_data = [asset_cache.get(row[0]) for row in response.data]
+
         self.endResetModel()
         QApplication.restoreOverrideCursor()
+        callback()
 
 
     def headerData(self, col, orientation=Qt.Horizontal, role=Qt.DisplayRole):

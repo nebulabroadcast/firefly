@@ -1,5 +1,6 @@
 import sys
 import locale
+import copy
 
 from pprint import pprint
 
@@ -10,12 +11,16 @@ from .dialogs.login import *
 from .dialogs.site_select import *
 
 from .main_window import FireflyMainWindow, FireflyMainWidget
+from nebulacore.meta_utils import clear_cs_cache
 
 
 def check_login(wnd):
-    data = api.get_user()
+    data = api.ping()
     user_meta = data.get("data", False)
     if user_meta:
+        session_id = data.get("session_id", False)
+        if session_id:
+            config["session_id"] = session_id
         return user_meta
     if data["response"] > 403:
         QMessageBox.critical(
@@ -45,6 +50,8 @@ class FireflyApplication(Application):
                 i = site_select_dialog()
             else:
                 i = 0
+
+        self.local_keys = list(config["sites"][i].keys())
         config.update(config["sites"][i])
         del(config["sites"])
 
@@ -53,13 +60,15 @@ class FireflyApplication(Application):
 
         # Login
 
-        api._settings["hub"] = config["hub"]
+        session_id = None
         try:
-            api.set_auth(open(self.auth_key_path).read())
+            session_id = open(self.auth_key_path).read()
         except FileNotFoundError:
             pass
         except Exception:
             log_traceback()
+        config["session_id"] = session_id
+
 
         user_meta = check_login(self.splash)
         if not user_meta:
@@ -91,8 +100,9 @@ class FireflyApplication(Application):
         asset_cache.save()
         if not self.main_window.listener:
             return
-        with open(self.auth_key_path, "w") as f:
-            f.write(api.auth_key)
+        if config.get("session_id"):
+            with open(self.auth_key_path, "w") as f:
+                f.write(config["session_id"])
         if not self.main_window.listener.halted:
             self.main_window.listener.halt()
             i = 0
@@ -105,11 +115,12 @@ class FireflyApplication(Application):
         sys.exit(0)
 
     def splash_message(self, msg):
-        self.splash.showMessage(
-                msg,
-                alignment=Qt.AlignBottom|Qt.AlignLeft,
-                color=Qt.white
-            )
+        if self.splash.isVisible:
+            self.splash.showMessage(
+                    msg,
+                    alignment=Qt.AlignBottom|Qt.AlignLeft,
+                    color=Qt.white
+                )
 
     def load_settings(self):
         self.splash_message("Loading site settings")
@@ -117,9 +128,11 @@ class FireflyApplication(Application):
         if not response:
             QMessageBox.critical(self.splash, "Error", response.message)
             critical_error("Unable to load site settings")
+
         for key in response.data:
-            if config.get(key):
-                continue
+            if config.get(key) and key != "site_name":
+                if key in self.local_keys:
+                    continue
             config[key] = response.data[key]
 
         # Fix indices
@@ -136,3 +149,4 @@ class FireflyApplication(Application):
             for id in config[config_group]:
                 ng[int(id)] = config[config_group][id]
             config[config_group] = ng
+        clear_cs_cache()

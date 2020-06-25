@@ -3,7 +3,6 @@ import datetime
 import functools
 
 from firefly import *
-from firefly.dialogs.send_to import SendToDialog
 
 from .rundown_utils import *
 from .rundown_mcr import MCR
@@ -75,6 +74,8 @@ class RundownModule(BaseModule):
         return user.has_right("scheduler_edit", self.id_channel)
 
     def load(self, **kwargs):
+        event = kwargs.get("event", False)
+        go_to_now = kwargs.get("go_to_now", False)
         # Save current selection
         selection = []
         for idx in self.view.selectionModel().selectedIndexes():
@@ -99,8 +100,11 @@ class RundownModule(BaseModule):
             do_update_header = True
             self.start_time = day_start(time.time(), self.playout_config["day_start"])
 
-        self.view.load()
+        self.view.model().load(functools.partial(self.load_callback, do_update_header, selection, event, go_to_now))
 
+
+
+    def load_callback(self, do_update_header, selection, event=False, go_to_now=False):
         if do_update_header:
             self.update_header()
 
@@ -109,7 +113,6 @@ class RundownModule(BaseModule):
             self.view.horizontalHeader().resizeSection(0, 300)
             self.first_load = False
 
-        event = kwargs.get("event", False)
         if event:
             for i, r in enumerate(self.view.model().object_data):
                 if event.id == r.id and r.object_type == "event":
@@ -132,6 +135,13 @@ class RundownModule(BaseModule):
         self.view.focus_enabled = True
 
 
+        if go_to_now:
+            for i,r in enumerate(self.view.model().object_data):
+                if self.current_item == r.id and r.object_type=="item":
+                    self.view.scrollTo(self.view.model().index(i, 0, QModelIndex()), QAbstractItemView.PositionAtTop  )
+                    break
+
+
     def update_header(self):
         ch = self.playout_config["title"]
         t = datetime.date.fromtimestamp(self.start_time)
@@ -144,7 +154,6 @@ class RundownModule(BaseModule):
         t = t.strftime("%A %Y-%m-%d")
         self.parent().setWindowTitle("Rundown {}".format(t))
         self.channel_display.setText("<font{}>{}</font> - {}".format(s, t, ch))
-
 
     #
     # Actions
@@ -177,12 +186,13 @@ class RundownModule(BaseModule):
     def go_now(self):
         if not (self.start_time + 86400 > time.time() > self.start_time):
             #do not use day_start here. it will be used in the load method
-            self.load(start_time=int(time.time()))
+            self.load(start_time=int(time.time()), go_to_now=True)
+        else:
+            for i,r in enumerate(self.view.model().object_data):
+                if self.current_item == r.id and r.object_type=="item":
+                    self.view.scrollTo(self.view.model().index(i, 0, QModelIndex()), QAbstractItemView.PositionAtTop  )
+                    break
 
-        for i,r in enumerate(self.view.model().object_data):
-            if self.current_item == r.id and r.object_type=="item":
-                self.view.scrollTo(self.view.model().index(i, 0, QModelIndex()), QAbstractItemView.PositionAtTop  )
-                break
 
     def show_calendar(self):
         y, m, d = get_date()
@@ -299,11 +309,7 @@ class RundownModule(BaseModule):
                         self.load()
                         break
             elif message.data["object_type"] == "asset":
-                model = self.view.model()
-                for row, obj in enumerate(model.object_data):
-                    if obj.id in message.data["objects"]:
-                        model.object_data[row] = asset_cache[obj.id]
-                        model.dataChanged.emit(model.index(row, 0), model.index(row, len(model.header_data)-1))
+                self.refresh_assets(*message.data["objects"])
 
         elif message.method == "job_progress":
             if self.playout_config.get("send_action", 0) == message.data["id_action"]:
@@ -311,5 +317,10 @@ class RundownModule(BaseModule):
                 model = self.view.model()
                 for row, obj in enumerate(model.object_data):
                     if obj["id_asset"] == message.data["id_asset"]:
-                        model.object_data[row].transfer_progress = message.data["progress"]
+                        model.object_data[row]["transfer_progress"] = message.data["progress"]
                         model.dataChanged.emit(model.index(row, 0), model.index(row, len(model.header_data)-1))
+
+
+    def refresh_assets(self, *assets):
+        model = self.view.model()
+        model.refresh_assets(assets)

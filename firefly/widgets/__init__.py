@@ -69,17 +69,22 @@ meta_editors = {
 
 
 class MetaEditor(QWidget):
-    def __init__(self, parent, keys):
+    def __init__(self, parent, keys, **kwargs):
         super(MetaEditor, self).__init__(parent)
         self.inputs = {}
+        self.labels = {}
         self.defaults = {}
+        self._parent = parent
 
-        layout = QFormLayout()
+        layout = QGridLayout()
+        layout.setColumnStretch(0, 0)
+        layout.setColumnStretch(1, 3)
+
 
         i = 0
         for key, conf in keys:
-            key_label = meta_types[key].alias(config.get("language","en"))
-            key_description = meta_types[key].description(config.get("language", "en")) or key_label
+            key_label = meta_types[key].alias()
+            key_description = meta_types[key].description() or key_label
             key_class = meta_types[key]["class"]
             key_settings = copy.copy(meta_types[key].settings)
             key_settings.update(conf)
@@ -94,12 +99,44 @@ class MetaEditor(QWidget):
                     FireflyNotImplementedEditor
                 )(self, **key_settings)
 
-            self.inputs[key].meta_key = key
 
-            layout.addRow(key_label, self.inputs[key])
-            layout.labelForField(self.inputs[key]).setToolTip("<p>{}</p>".format(key_description))
+            label = QLabel(key_label, self)
+            label.setStyleSheet("padding-top:9px;")
+
+            label.setToolTip("<p>{}</p>".format(key_description))
+            if parent.__class__.__name__ == "DetailTabMain":
+                label.setContextMenuPolicy(Qt.CustomContextMenu)
+                label.customContextMenuRequested.connect(functools.partial(self.key_menu, key))
+
+            self.inputs[key].meta_key = key
+            self.labels[key] = label
+
+            layout.addWidget(self.labels[key], i, 0, Qt.AlignTop)
+            layout.addWidget(self.inputs[key], i, 1)
+
+
             i+=1
+
         self.setLayout(layout)
+
+
+    def key_menu(self, key, position):
+        menu = QMenu()
+        section = QAction("Search in...")
+        section.setEnabled(False)
+        menu.addAction(section)
+        for id_view in sorted(
+                    config["views"].keys(),
+                    key=lambda k: config["views"][k]["position"]
+                ):
+            view = config["views"][id_view]
+            if view.get("separator", False):
+                menu.addSeparator()
+            action = QAction(view["title"], self)
+            action.triggered.connect(functools.partial(self._parent.search_by_key, key, id_view))
+            menu.addAction(action)
+        menu.exec_(self.labels[key].mapToGlobal(position))
+
 
     def keys(self):
         return self.inputs.keys()

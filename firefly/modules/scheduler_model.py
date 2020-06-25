@@ -367,7 +367,7 @@ class SchedulerDayWidget(SchedulerVerticalBar):
                         ):
                     do_reload = True
             else:
-                QApplication.setOverrideCursor(Qt.WaitCursor)
+                self.calendar.setCursor(Qt.WaitCursor)
                 response = api.schedule(
                         id_channel=self.id_channel,
                         start_time=self.calendar.week_start_time,
@@ -379,7 +379,7 @@ class SchedulerDayWidget(SchedulerVerticalBar):
                             }]
 
                     )
-                QApplication.restoreOverrideCursor()
+                self.calendar.setCursor(Qt.ArrowCursor)
                 if not response:
                     logging.error(response.message)
 
@@ -417,14 +417,14 @@ class SchedulerDayWidget(SchedulerVerticalBar):
                         do_reload = True
                 else:
                     # Just dragging events around. Instant save
-                    QApplication.setOverrideCursor(Qt.WaitCursor)
+                    self.calendar.setCursor(Qt.ArrowCursor)
                     response = api.schedule(
                                 id_channel=self.id_channel,
                                 start_time=self.calendar.week_start_time,
                                 end_time=self.calendar.week_end_time,
                                 events=[event.meta]
                             )
-                    QApplication.restoreOverrideCursor()
+                    self.calendar.setCursor(Qt.ArrowCursor)
                     if not response:
                         logging.error(response.message)
                     else:
@@ -490,14 +490,14 @@ class SchedulerDayWidget(SchedulerVerticalBar):
             )
         if ret == QMessageBox.Yes:
             QApplication.processEvents()
-            QApplication.setOverrideCursor(Qt.WaitCursor)
+            self.calendar.setCursor(Qt.WaitCursor)
             response = api.schedule(
                     id_channel=self.id_channel,
                     start_time=self.calendar.week_start_time,
                     end_time=self.calendar.week_end_time,
                     delete=[cursor_event.id]
                 )
-            QApplication.restoreOverrideCursor()
+            self.calendar.setCursor(Qt.ArrowCursor)
             if response:
                 logging.info("{} deleted".format(cursor_event))
                 self.calendar.set_data(response.data)
@@ -671,7 +671,7 @@ class SchedulerCalendar(QWidget):
             self.week_end_time = self.week_start_time + SECS_PER_WEEK
 
         QApplication.processEvents()
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        self.setCursor(Qt.WaitCursor)
 
         response = api.schedule(
                 id_channel=self.id_channel,
@@ -691,7 +691,7 @@ class SchedulerCalendar(QWidget):
                 header_widget.set_time(start_time)
         else:
             logging.error(response.message)
-        QApplication.restoreOverrideCursor()
+        self.setCursor(Qt.ArrowCursor)
         self.on_zoom()
 
 

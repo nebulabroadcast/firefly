@@ -29,6 +29,12 @@ def create_menu(wnd):
     action_refresh.triggered.connect(wnd.refresh)
     menu_file.addAction(action_refresh)
 
+    action_load_settings = QAction('&Reload settings', wnd)
+    action_load_settings.setShortcut('Shift+F5')
+    action_load_settings.setStatusTip('Reload system settings')
+    action_load_settings.triggered.connect(wnd.load_settings)
+    menu_file.addAction(action_load_settings)
+
     menu_file.addSeparator()
 
     action_logout = QAction('L&ogout', wnd)
@@ -92,7 +98,8 @@ def create_menu(wnd):
 
     if config["playout_channels"]:
         wnd.menu_scheduler = menubar.addMenu('&Scheduler')
-        ag = QActionGroup(wnd, exclusive=True)
+        ag = QActionGroup(wnd)
+        ag.setExclusive(True)
 
         for id_channel in sorted(config["playout_channels"]):
             a = ag.addAction(

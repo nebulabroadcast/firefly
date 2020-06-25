@@ -94,4 +94,4 @@ class PlayoutPlugins(QTabWidget):
 
         for plugin in response.data or []:
             self.plugins.append(PlayoutPlugin(self, plugin))
-            self.addTab(self.plugins[-1], plugin["title"])
+            self.addTab(self.plugins[-1], plugin.get("title", "unknown"))

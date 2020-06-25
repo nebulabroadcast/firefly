@@ -31,7 +31,7 @@ class DetailTabMain(QWidget):
 
     def load(self, asset, **kwargs):
         id_folder = kwargs.get("id_folder", asset["id_folder"])
-        if id_folder != self.id_folder:
+        if id_folder != self.id_folder or kwargs.get("force"):
             if not id_folder:
                 self.keys = []
             else:
@@ -68,6 +68,24 @@ class DetailTabMain(QWidget):
         pass
 
 
+    def search_by_key(self, key, id_view=False):
+        b = self.parent().parent().parent().main_window.browser
+        id_view = id_view or b.tabs.widget(b.tabs.currentIndex()).id_view
+        b.new_tab(
+                "{}: {} ({})".format(
+                    config["views"][id_view]["title"],
+                    self.parent().parent().parent().asset.show(key),
+                    meta_types[key].alias(),
+                    ),
+                id_view=id_view,
+                conds=["'{}' = '{}'".format(key, self.form[key])]
+            )
+        b.redraw_tabs()
+
+
+
+
+
 class MetaList(QTextEdit):
     def __init__(self, parent):
         super(MetaList, self).__init__(parent)
@@ -101,7 +119,7 @@ class DetailTabExtended(MetaList):
             for tag in self.tag_groups[tag_group]:
                 if not tag in asset.meta:
                     continue
-                tag_title = meta_types[tag].alias(config.get("language","en"))
+                tag_title = meta_types[tag].alias()
                 value = asset.format_display(tag) or asset["tag"] or ""
                 if value:
                     data += "{:<40}: {}\n".format(tag_title, value)
@@ -130,7 +148,7 @@ class DetailTabTechnical(MetaList):
             for tag in self.tag_groups[tag_group]:
                 if not tag in asset.meta:
                     continue
-                tag_title = meta_types[tag].alias(config.get("language","en"))
+                tag_title = meta_types[tag].alias()
                 value = asset.format_display(tag) or asset["tag"] or ""
                 if value:
                     data += "{:<40}: {}\n".format(tag_title, value)
@@ -169,14 +187,13 @@ class DetailTabPreview(QWidget):
 
     def load_video(self):
         if self.current_asset and not self.loaded:
-            logging.debug("Opening {} preview".format(self.current_asset))
+            proxy_url = config["hub"] +  self.current_asset.proxy_url
+            logging.debug("[DETAIL] Opening {} preview: {}".format(self.current_asset, proxy_url))
             self.player.fps = self.current_asset.fps
             if self.current_asset["poster_frame"]:
                 markers = {"poster_frame" : {"position" : self.current_asset["poster_frame"]}}
             else:
                 markers = {}
-            proxy_url = config["hub"] +  self.current_asset.proxy_url
-            logging.debug("Opening", proxy_url)
             self.player.load(
                     proxy_url,
                     mark_in=self.current_asset["mark_in"],
@@ -336,7 +353,7 @@ class DetailModule(BaseModule):
                     "Save changes?",
                     "Following data has been changed in the {}\n\n{}".format(
                         self.asset, "\n".join(
-                            [meta_types[k].alias(config.get("language", "en")) for k in changed]
+                            [meta_types[k].alias() for k in changed]
                         )),
                     QMessageBox.Yes | QMessageBox.No
                     )
@@ -344,7 +361,7 @@ class DetailModule(BaseModule):
             if reply == QMessageBox.Yes:
                 self.on_apply()
 
-    def focus(self, asset, silent=False):
+    def focus(self, asset, silent=False, force=False):
         if not isinstance(asset, Asset):
             logging.debug("[DETAIL] Only assets can be focused. Is: {}".format(type(asset)))
             return
@@ -369,7 +386,7 @@ class DetailModule(BaseModule):
 
         self.asset = Asset(meta=asset.meta) # asset deep copy
         self.parent().setWindowTitle("Detail of {}".format(self.asset))
-        self.detail_tabs.load(self.asset)
+        self.detail_tabs.load(self.asset, force=force)
         self.folder_select.set_value(self.asset["id_folder"])
 
 
@@ -468,10 +485,12 @@ class DetailModule(BaseModule):
             if reply == QMessageBox.Yes:
                 pass
             else:
-                logging.info("Save aborted")
+                logging.debug("[DETAIL] Save aborted")
                 return
 
-        self.form.setEnabled(False) # reenable on seismic message with new data
+#        self.form.setEnabled(False) # reenable on seismic message with new data
+
+        self.setCursor(Qt.BusyCursor)
         response = api.set(objects=[self.asset.id], data=data)
         if not response:
             logging.error(response.message)
@@ -481,10 +500,10 @@ class DetailModule(BaseModule):
                 aid = response.data[0]
             except Exception:
                 aid = self.asset.id
+            self.asset["id"] = aid
             asset_cache.request([[aid, 0]])
-            self.focus(asset_cache[aid], silent=True)
-            self.main_window.browser.refresh_assets(aid)
-        self.form.setEnabled(True)
+
+        #self.form.setEnabled(True)
 
 
 
@@ -520,10 +539,15 @@ class DetailModule(BaseModule):
         except Exception:
             aid = self.asset.id
         asset_cache.request([[aid, 0]])
-        self.focus(asset_cache[aid], silent=True)
-        self.main_window.browser.refresh_assets(aid)
 
     def seismic_handler(self, data):
-        if data.method == "objects_changed" and data.data["object_type"] == "asset" and self.asset:
-            if self.asset.id in data.data["objects"] and self.asset.id:
-                self.focus(asset_cache[self.asset.id], silent=True)
+        pass
+
+    def refresh_assets(self, *objects):
+        self.setCursor(Qt.ArrowCursor)
+        try:
+            current_id = self.asset.id
+        except AttributeError:
+            return
+        if current_id in objects:
+            self.focus(asset_cache[self.asset.id], silent=True)

@@ -1,9 +1,11 @@
 import json
+import queue
 import time
 import websocket
 
 from .common import *
-from nx.connection import CLIENT_ID
+from nx import CLIENT_ID
+
 
 if config.get("debug"):
     websocket.enableTrace(True)
@@ -33,13 +35,13 @@ class SeismicListener(QThread):
         self.should_run = True
         self.active = False
         self.last_msg = time.time()
-        self.queue = []
+        self.queue = queue.Queue()
         self.start()
 
     def run(self):
         addr = config["hub"].replace("http", "ws", 1) + "/ws/" + config["site_name"]
         while self.should_run:
-            logging.debug("Connecting listener", handlers=False)
+            logging.debug("Connecting listener {}".format(addr), handlers=False)
             self.halted = False
             self.ws = websocket.WebSocketApp(
                     addr,
@@ -75,24 +77,7 @@ class SeismicListener(QThread):
         if message.data and message.data.get("initiator", None) == CLIENT_ID:
             return
 
-        if message.method == "objects_changed":
-            for i, m in enumerate(self.queue):
-                if m.method == "objects_changed" and m.data["object_type"] == message.data["object_type"]:
-                    r = list(set(m.data["objects"] + message.data["objects"] ))
-                    self.queue[i].data["objects"] = r
-                    break
-            else:
-                self.queue.append(message)
-
-        if message.method == "playout_status":
-            for i, m in enumerate(self.queue):
-                if m.method == "playout_status":
-                    self.queue[i] = message
-                    break
-            else:
-                self.queue.append(message)
-        else:
-            self.queue.append(message)
+        self.queue.put(message)
 
     def on_error(self, *args):
         error = args[-1]

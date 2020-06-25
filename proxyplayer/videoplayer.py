@@ -70,19 +70,6 @@ class VideoPlayer(QWidget):
         self.prev_mark_in  = 0
         self.prev_mark_out = 0
 
-
-        @self.player.property_observer('time-pos')
-        def time_observer(_name, value):
-            self.on_time_change(value)
-
-        @self.player.property_observer('duration')
-        def duration_observer(_name, value):
-            self.on_duration_change(value)
-
-        @self.player.property_observer('pause')
-        def duration_observer(_name, value):
-            self.on_pause_change(value)
-
         #
         # Displays
         #
@@ -143,6 +130,19 @@ class VideoPlayer(QWidget):
 
         self.setLayout(layout)
         self.navbar.setFocus(True)
+
+
+        @self.player.property_observer('time-pos')
+        def time_observer(_name, value):
+            self.on_time_change(value)
+
+        @self.player.property_observer('duration')
+        def duration_observer(_name, value):
+            self.on_duration_change(value)
+
+        @self.player.property_observer('pause')
+        def duration_observer(_name, value):
+            self.on_pause_change(value)
 
         # Displays updater
 

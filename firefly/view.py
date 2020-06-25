@@ -6,10 +6,10 @@ from pprint import pformat
 __all__ = ["FireflyViewModel", "FireflySortModel", "FireflyView", "format_header", "format_description"]
 
 def format_header(key):
-    return meta_types[key].header(config.get("language", "en"))
+    return meta_types[key].header()
 
 def format_description(key):
-    return meta_types[key].description(config.get("language", "en"))
+    return meta_types[key].description()
 
 class FireflyViewModel(QAbstractTableModel):
     def __init__(self, parent):
