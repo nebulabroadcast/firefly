@@ -228,6 +228,7 @@ class RundownView(FireflyView):
     def on_trim(self):
         item = self.selected_objects[0]
         trim_dialog(item)
+        self.model().load()
 
 
     def on_solve(self, solver):

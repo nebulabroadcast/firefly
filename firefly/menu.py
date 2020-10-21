@@ -11,14 +11,14 @@ def create_menu(wnd):
     action_new_asset.setShortcut('Ctrl+N')
     action_new_asset.setStatusTip('Create new asset from template')
     action_new_asset.triggered.connect(wnd.new_asset)
-    action_new_asset.setEnabled(has_right("asset_create"))
+    action_new_asset.setEnabled(has_right("asset_create") and config.get("ui_asset_create" , True))
     menu_file.addAction(action_new_asset)
 
     action_clone_asset = QAction('&Clone asset', wnd)
     action_clone_asset.setShortcut('Ctrl+Shift+N')
-    action_clone_asset.setStatusTip('Create new asset from current blabla')
+    action_clone_asset.setStatusTip('Clone current asset')
     action_clone_asset.triggered.connect(wnd.clone_asset)
-    action_clone_asset.setEnabled(has_right("asset_create"))
+    action_clone_asset.setEnabled(has_right("asset_create") and config.get("ui_asset_create" , True))
     menu_file.addAction(action_clone_asset)
 
     menu_file.addSeparator()

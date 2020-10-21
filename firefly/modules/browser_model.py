@@ -18,8 +18,8 @@ class BrowserModel(FireflyViewModel):
         response = api.get(
                 functools.partial(self.load_callback, callback),
                 **search_query,
-                count=True,
-                limit=RECORDS_PER_PAGE,
+                count=False,
+                limit=RECORDS_PER_PAGE + 1,
                 offset=(self.parent().current_page - 1) * RECORDS_PER_PAGE
             )
 
@@ -28,18 +28,35 @@ class BrowserModel(FireflyViewModel):
         self.beginResetModel()
         QApplication.setOverrideCursor(Qt.WaitCursor)
 
-        self.object_data = []
-
         if not response:
             logging.error(response.message)
         else:
-            page_count = int(math.ceil(response["count"] / RECORDS_PER_PAGE))
-            self.parent().set_num_pages(page_count)
             asset_cache.request(response.data)
-            self.object_data = [asset_cache.get(row[0]) for row in response.data]
 
+        # Pagination
+
+        current_page = self.parent().current_page
+
+        if len(response.data) > RECORDS_PER_PAGE:
+            page_count = current_page + 1
+        elif len(response.data) == 0:
+            page_count = max(1, current_page - 1)
+        else:
+            page_count = current_page
+
+        if current_page > page_count:
+            current_page = page_count
+
+        # Replace object data
+
+        if len(response.data) > RECORDS_PER_PAGE:
+            response.data.pop(-1)
+        self.object_data = [asset_cache.get(row[0]) for row in response.data]
+
+        self.parent().set_page(current_page, page_count)
         self.endResetModel()
         QApplication.restoreOverrideCursor()
+
         callback()
 
 
