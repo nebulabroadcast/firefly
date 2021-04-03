@@ -2,12 +2,13 @@ import math
 
 from firefly import *
 
-PROGRESS_BAR_RESOLUTION = 2000
+PROGRESS_BAR_RESOLUTION = 1000
 
 class MCRButton(QPushButton):
-    def __init__(self, title, parent=None, on_click=False):
+    def __init__(self, title, parent=None, on_click=False, checkable=False):
         super(MCRButton, self).__init__(parent)
         self.setText(title)
+        self.setCheckable(checkable)
         if title == "Freeze":
             bg_col = "#941010"
             self.setToolTip("Pause/unpause current clip")
@@ -24,6 +25,10 @@ class MCRButton(QPushButton):
                 height:30px;
                 border: 2px solid {};
                 text-transform: uppercase;
+            }}
+
+            MCRButton:checked {{
+                border: 2px solid #00a5c3;
             }}
 
             MCRButton:pressed {{
@@ -81,6 +86,7 @@ class MCR(QWidget):
         self.btn_freeze  = MCRButton("Freeze", self, self.on_freeze)
         self.btn_retake  = MCRButton("Retake", self, self.on_retake)
         self.btn_abort   = MCRButton("Abort",  self, self.on_abort)
+        self.btn_loop    = MCRButton("Loop",   self, self.on_loop, checkable=True)
         self.btn_cue_backward = MCRButton("<",  self, self.on_cue_backward)
         self.btn_cue_forward = MCRButton(">",  self, self.on_cue_forward)
 
@@ -106,6 +112,7 @@ class MCR(QWidget):
         btns_layout.addWidget(self.btn_freeze ,0)
         btns_layout.addWidget(self.btn_retake,0)
         btns_layout.addWidget(self.btn_abort,0)
+        btns_layout.addWidget(self.btn_loop,0)
         btns_layout.addWidget(self.btn_cue_backward,0)
         btns_layout.addWidget(self.btn_cue_forward,0)
         btns_layout.addStretch(1)
@@ -160,6 +167,9 @@ class MCR(QWidget):
     def on_abort(self):
         api.playout(timeout=1, action="abort", id_channel=self.id_channel)
 
+    def on_loop(self):
+        api.playout(timeout=1, action="set", id_channel=self.id_channel, key="loop", value=self.btn_loop.isChecked())
+
     def on_cue_forward(self):
         api.playout(timeout=1, action="cue_forward", id_channel=self.id_channel)
 
@@ -169,17 +179,31 @@ class MCR(QWidget):
 
     def seismic_handler(self, data):
         status = data.data
-        self.pos = status["position"] + (1/self.fps)
+        if status["fps"] != self.fps:
+            self.fps = status["fps"]
+
+        if status.get("time_unit", "f") == "f":
+            self.pos = (status["position"] + 1) / self.fps
+            dur = status["duration"] / self.fps
+        else:
+            self.pos = status["position"] + (1/self.fps)
+            dur = status["duration"]
+
+        if status.get("loop") != None: #TODO: remove this condition in 5.4 as it should be always present
+            self.btn_loop.setEnabled(True)
+            if status.get("loop") != self.btn_loop.isChecked():
+                print ("Loop", status.get("loop"))
+                self.btn_loop.setChecked(status.get("loop"))
+        else:
+            self.btn_loop.setEnabled(False)
+
         self.request_time = status["request_time"]
         self.paused = status["paused"]
         self.local_request_time = time.time()
 
-        if status["fps"] != self.fps:
-            self.fps = status["fps"]
-
-        if self.dur != status["duration"] or self.first_update:
-            self.dur = status["duration"]
-            self.display_dur.set_text(f2tc(self.dur, self.fps))
+        if self.dur != dur or self.first_update:
+            self.dur = dur
+            self.display_dur.set_text(s2tc(self.dur, self.fps))
             self.request_display_resize = True
             self.first_update = False
 
@@ -224,15 +248,15 @@ class MCR(QWidget):
         rpos = self.pos
 
         if not self.paused:
-            rpos += adv * self.fps
+            rpos += adv
 
-        clock = time.strftime("%H:%M:%S:{:02d}", time.localtime(rtime)).format(int(25*(rtime-math.floor(rtime))))
+        clock = time.strftime("%H:%M:%S:{:02d}", time.localtime(rtime)).format(int(self.fps*(rtime-math.floor(rtime))))
         self.display_clock.set_text(clock)
-        self.display_pos.set_text(f2tc(min(self.dur, rpos), self.fps))
+        self.display_pos.set_text(s2tc(min(self.dur, rpos), self.fps))
 
         rem = self.dur - rpos
-        t = f2tc(max(0, rem), self.fps)
-        if rem < 250:
+        t = s2tc(max(0, rem), self.fps)
+        if rem < 10:
             self.display_rem.set_text("<font color='red'>{}</font>".format(t))
         else:
             self.display_rem.set_text(t)
@@ -246,8 +270,10 @@ class MCR(QWidget):
             return
         else:
             oldval = self.progress_bar.value()
-            if ppos > oldval or abs(oldval-ppos) > (PROGRESS_BAR_RESOLUTION/self.dur)*self.fps:
+            if ppos > oldval or abs(oldval-ppos) > PROGRESS_BAR_RESOLUTION/self.dur:
                 self.progress_bar.setValue(ppos)
+                self.progress_bar.update()
+
 
         if self.request_display_resize:
             QApplication.processEvents()

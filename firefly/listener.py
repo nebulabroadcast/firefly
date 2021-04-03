@@ -29,9 +29,9 @@ class SeismicMessage(object):
         self.timestamp, self.site_name, self.host, self.method, self.data = packet
 
 class SeismicListener(QThread):
-    def __init__(self, site_name, addr, port):
+    def __init__(self):
         QThread.__init__(self, None)
-        self.site_name = site_name
+        self.site_name = config["site_name"]
         self.should_run = True
         self.active = False
         self.last_msg = time.time()
@@ -41,7 +41,7 @@ class SeismicListener(QThread):
     def run(self):
         addr = config["hub"].replace("http", "ws", 1) + "/ws/" + config["site_name"]
         while self.should_run:
-            logging.debug("Connecting listener {}".format(addr), handlers=False)
+            logging.debug(f"[LISTENER] Connecting to {addr}", handlers=False)
             self.halted = False
             self.ws = websocket.WebSocketApp(
                     addr,
@@ -52,7 +52,7 @@ class SeismicListener(QThread):
             self.ws.run_forever()
             self.active = False
 
-        logging.debug("Listener halted", handlers=False)
+        logging.debug("[LISTENER] halted", handlers=False)
         self.halted = True
 
 
@@ -60,13 +60,13 @@ class SeismicListener(QThread):
         data = args[-1]
 
         if not self.active:
-            logging.goodnews("Listener connected", handlers=False)
+            logging.goodnews("[LISTENER] connected", handlers=False)
             self.active = True
         try:
             message = SeismicMessage(json.loads(data))
         except Exception:
             log_traceback(handlers=False)
-            logging.debug("Malformed seismic message detected: {}".format(data), handlers=False)
+            logging.debug("[LISTENER] Malformed message: {}".format(data), handlers=False)
             return
 
         if message.site_name != self.site_name:
@@ -86,9 +86,9 @@ class SeismicListener(QThread):
     def on_close(self, *args):
         self.active = False
         if self.should_run:
-            logging.warning("WS connection interrupted", handlers=False)
+            logging.warning("[LISTENER] connection interrupted", handlers=False)
 
     def halt(self):
-        logging.debug("Shutting down listener")
+        logging.debug("[LISTENER] Shutting down")
         self.should_run = False
         self.ws.close()

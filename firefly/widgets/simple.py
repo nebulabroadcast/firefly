@@ -49,7 +49,11 @@ class FireflyInteger(QSpinBox):
         self.setFocusPolicy(Qt.StrongFocus)
         self.setMinimum(kwargs.get("min", 0))
         self.setMaximum(kwargs.get("max", 99999))
-        #TODO: set step to 1. disallow floats
+        if kwargs.get("hide_null"):
+            logging.info("HIDE NULL")
+            self.setMinimum(0)
+            self.setSpecialValueText(" ")
+        self.setSingleStep(1)
         self.default = self.get_value()
 
     def wheelEvent(self, event):
@@ -74,6 +78,10 @@ class FireflyNumeric(QSpinBox):
         self.setFocusPolicy(Qt.StrongFocus)
         self.setMinimum(kwargs.get("min", -99999))
         self.setMaximum(kwargs.get("max", 99999))
+        if kwargs.get("hide_null"):
+            logging.info("HIDE NULL")
+            self.setMinimum(0)
+            self.setSpecialValueText(" ")
         #TODO: custom step (default 1, allow floats)
         self.default = self.get_value()
 

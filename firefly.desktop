@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Nebula Firefly
+Comment=Nebula broadcast automation system client
+Exec=./firefly.py
+Terminal=false
+Categories=Multimedia

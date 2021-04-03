@@ -3,7 +3,7 @@
 try:
     import rex
 except ImportError:
-    # Freezed application does not need package manager
+    # Frozen application does not need package manager
     pass
 
 from nxtools import *

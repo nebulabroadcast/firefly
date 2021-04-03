@@ -315,28 +315,21 @@ class BrowserTab(QWidget):
         menu = QMenu(self)
         objs = self.view.selected_objects
 
-        statuses = []
-        for obj in objs:
-            status = obj["status"]
-            if not status in statuses:
-                statuses.append(status)
-        allstat = -1
-        if len(statuses) == 1:
-            allstat = statuses[0]
+        states = set([obj["status"] for obj in objs])
 
-        if allstat == TRASHED:
+        if states == set([TRASHED]):
             action_untrash = QAction('Untrash', self)
             action_untrash.setStatusTip('Take selected asset(s) from trash')
             action_untrash.triggered.connect(self.on_untrash)
             menu.addAction(action_untrash)
 
-        elif allstat == ARCHIVED:
+        if states == set([ARCHIVED]):
             action_unarchive = QAction('Unarchive', self)
             action_unarchive.setStatusTip('Take selected asset(s) from archive')
             action_unarchive.triggered.connect(self.on_unarchive)
             menu.addAction(action_unarchive)
 
-        elif allstat in [ONLINE, CREATING, OFFLINE]:
+        elif states.issubset([ONLINE, CREATING, OFFLINE]):
             action_move_to_trash = QAction('Move to trash', self)
             action_move_to_trash.setStatusTip('Move selected asset(s) to trash')
             action_move_to_trash.triggered.connect(self.on_trash)
