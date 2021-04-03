@@ -122,15 +122,11 @@ class FireflyMainWindow(MainWindow):
         title = "Firefly {}".format(FIREFLY_VERSION)
         if FIREFLY_STATUS:
             title += " " + FIREFLY_STATUS
-        title += " ({}@{})".format(user["login"], config["site_name"])
+        title += f" ({user['login']}@{config['site_name']})"
         self.setWindowTitle(title)
         self.setAttribute(Qt.WA_AlwaysShowToolTips)
         logging.handlers = [self.log_handler]
-        self.listener = SeismicListener(
-                config["site_name"],
-                config["seismic_addr"],
-                int(config["seismic_port"])
-            )
+        self.listener = SeismicListener()
 
         self.seismic_timer = QTimer(self)
         self.seismic_timer.timeout.connect(self.on_seismic_timer)
