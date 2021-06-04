@@ -1,8 +1,12 @@
 Firefly
 =======
 
-Firefly is a desktop client application for [Nebula](https://github.com/nebulabroadcast/nebula) broadcast automation system.
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/nebulabroadcast/firefly?style=for-the-badge)
+![Maintenance](https://img.shields.io/maintenance/yes/2021?style=for-the-badge)
+![Last commit](https://img.shields.io/github/last-commit/immstudios/nebula?style=for-the-badge)
+![Python version](https://img.shields.io/badge/python-3.7-blue?style=for-the-badge)
 
+Firefly is a desktop client application for [Nebula](https://github.com/nebulabroadcast/nebula) broadcast automation system.
 
 Installation
 ------------
@@ -23,9 +27,6 @@ For video playback, you will also need **libmpv1** package.
 Latest binary release is available on [nebulabroadcast/firefly](https://github.com/nebulabroadcast/firefly/releases)
 GitHub releases page.
 
-[Microsoft Visual C++ 2015 Redistributable](https://www.microsoft.com/en-us/download/details.aspx?id=52685)
-is required to run this application.
-
 Configuration
 -------------
 
@@ -41,10 +42,7 @@ Edit **settings.json** file to set your server address and site name.
 ```
 
 It is possible to specify more than one site in the `settings.json` file.
-In that case, a dialog window pops up when the application is started and a site may be selected for this session.
-
-`site_name` argument can be used as an identifier for different configurations of the same site and its value
-is updated when server settings are loaded.
+In that case, a dialog window pops up when the application starts and a you may select the site for this session.
 
 Usage
 -----

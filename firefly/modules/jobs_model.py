@@ -115,16 +115,17 @@ class JobsModel(FireflyViewModel):
         start_time = time.time()
         self.beginResetModel()
         QApplication.setOverrideCursor(Qt.WaitCursor)
-        self.object_data = []
+        data = []
         response = api.jobs(**self.request_data)
         if not response:
             logging.error(response.message)
         else:
             request_assets = []
             for row in response.data:
-                self.object_data.append(row)
+                data.append(row)
                 request_assets.append([row["id_asset"], 0])
             asset_cache.request(request_assets)
+        self.object_data = data
         self.endResetModel()
         QApplication.restoreOverrideCursor()
 
