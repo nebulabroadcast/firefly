@@ -5,20 +5,16 @@ from nx import *
 from firefly.widgets.simple import *
 from firefly.widgets.combo import *
 
-
 class ChannelDisplay(QLabel):
     pass
-
 
 class ToolBarStretcher(QWidget):
     def __init__(self, parent):
         super(ToolBarStretcher, self).__init__(parent)
         self.setSizePolicy(QSizePolicy.Expanding,QSizePolicy.Expanding)
 
-
 class ActionButton(QPushButton):
     pass
-
 
 class FireflyNotImplementedEditor(QLabel):
     def __init__(self, parent, **kwargs):
@@ -36,14 +32,7 @@ class FireflyNotImplementedEditor(QLabel):
     def setReadOnly(self, *args, **kwargs):
         pass
 
-
-
-
-
-
-
 #TODO
-
 class FireflyRegions(FireflyNotImplementedEditor):
     pass
 
@@ -80,7 +69,6 @@ class MetaEditor(QWidget):
         layout.setColumnStretch(0, 0)
         layout.setColumnStretch(1, 3)
 
-
         i = 0
         for key, conf in keys:
             key_label = meta_types[key].alias()
@@ -103,7 +91,7 @@ class MetaEditor(QWidget):
             label = QLabel(key_label, self)
             label.setStyleSheet("padding-top:9px;")
 
-            label.setToolTip("<p>{}</p>".format(key_description))
+            label.setToolTip(f"<p>{key_description}</p>")
             if parent.__class__.__name__ == "DetailTabMain":
                 label.setContextMenuPolicy(Qt.CustomContextMenu)
                 label.customContextMenuRequested.connect(functools.partial(self.key_menu, key))

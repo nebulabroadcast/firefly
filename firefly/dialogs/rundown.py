@@ -53,7 +53,7 @@ class SubclipSelectDialog(QDialog):
     def __init__(self,  parent, asset):
         super(SubclipSelectDialog, self).__init__(parent)
         self.setModal(True)
-        self.setWindowTitle("Select {} subclip to use".format(asset))
+        self.setWindowTitle(f"Select {asset} subclip to use")
         self.ok = False
         self.asset = asset
         self.subclips = asset.meta.get("subclips", [])

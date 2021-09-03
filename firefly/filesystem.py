@@ -19,7 +19,7 @@ def load_filesystem(handler=False):
         for letter in get_available_drives():
             if handler:
                 handler(letter)
-            base_path = "{}:\\".format(letter)
+            base_path = f"{letter}:\\"
             if not os.path.exists(base_path):
                 continue
 
@@ -40,4 +40,4 @@ def load_filesystem(handler=False):
                 if id_storage in config["storages"]:
                     config["storages"][id_storage]["protocol"] = "local"
                     config["storages"][id_storage]["path"] = base_path
-                    logging.debug("Mapped storage {} to {}".format(id_storage, base_path))
+                    logging.debug(f"Mapped storage {id_storage} to {base_path}")

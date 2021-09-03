@@ -1,10 +1,6 @@
 from nx import *
 from firefly.common import *
-
-
 from firefly.dialogs.text_editor import TextEditorDialog
-
-
 
 class FireflyString(QLineEdit):
     def __init__(self, parent, **kwargs):
@@ -195,7 +191,7 @@ class FireflyColorPicker(QPushButton):
 
     def set_value(self, value):
         self.color = value
-        self.setStyleSheet("background-color: #{:06x}".format(self.color))
+        self.setStyleSheet(f"background-color: #{self.color:06x}")
 
     def setReadOnly(self, stat):
         self.setEnabled(not stat)

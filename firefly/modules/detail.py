@@ -71,19 +71,14 @@ class DetailTabMain(QWidget):
     def search_by_key(self, key, id_view=False):
         b = self.parent().parent().parent().main_window.browser
         id_view = id_view or b.tabs.widget(b.tabs.currentIndex()).id_view
+        view_title = config["views"][id_view]["title"]
+        asset = self.parent().parent().parent().asset
         b.new_tab(
-                "{}: {} ({})".format(
-                    config["views"][id_view]["title"],
-                    self.parent().parent().parent().asset.show(key),
-                    meta_types[key].alias(),
-                    ),
+                f"{view_title}: {asset.show(key)} ({meta_types[key].alias})",
                 id_view=id_view,
-                conds=["'{}' = '{}'".format(key, self.form[key])]
+                conds=[f"'{key}' = '{self.form[key]}'"]
             )
         b.redraw_tabs()
-
-
-
 
 
 class MetaList(QTextEdit):
@@ -122,7 +117,7 @@ class DetailTabExtended(MetaList):
                 tag_title = meta_types[tag].alias()
                 value = asset.format_display(tag) or asset["tag"] or ""
                 if value:
-                    data += "{:<40}: {}\n".format(tag_title, value)
+                    data += f"{tag_title:<40}: {value}\n"
             data += "\n\n"
         self.setText(data)
 
@@ -130,10 +125,10 @@ class DetailTabExtended(MetaList):
 class DetailTabTechnical(MetaList):
     def load(self, asset, **kwargs):
         self.tag_groups = {
-                "File" : [],
-                "Format"  : [],
-                "QC"   : []
-            }
+            "File" : [],
+            "Format"  : [],
+            "QC"   : []
+        }
         for tag in sorted(meta_types):
             if tag.startswith("file") or tag in ["id_storage", "path", "origin"]:
                 self.tag_groups["File"].append(tag)
@@ -151,7 +146,7 @@ class DetailTabTechnical(MetaList):
                 tag_title = meta_types[tag].alias()
                 value = asset.format_display(tag) or asset["tag"] or ""
                 if value:
-                    data += "{:<40}: {}\n".format(tag_title, value)
+                    data += f"{tag_title:<40}: {value}\n"
             data += "\n\n"
         self.setText(data)
 
@@ -188,7 +183,7 @@ class DetailTabPreview(QWidget):
     def load_video(self):
         if self.current_asset and not self.loaded:
             proxy_url = config["hub"] +  self.current_asset.proxy_url
-            logging.debug("[DETAIL] Opening {} preview: {}".format(self.current_asset, proxy_url))
+            logging.debug(f"[DETAIL] Opening {self.current_asset} preview: {proxy_url}")
             self.player.fps = self.current_asset.fps
             if self.current_asset["poster_frame"]:
                 markers = {"poster_frame" : {"position" : self.current_asset["poster_frame"]}}
@@ -351,10 +346,9 @@ class DetailModule(BaseModule):
             reply = QMessageBox.question(
                     self,
                     "Save changes?",
-                    "Following data has been changed in the {}\n\n{}".format(
-                        self.asset, "\n".join(
-                            [meta_types[k].alias() for k in changed]
-                        )),
+                    f"Following data has been changed in the {self.asset}" + \
+                    "\n\n" + \
+                    "\n".join([meta_types[k].alias() for k in changed]),
                     QMessageBox.Yes | QMessageBox.No
                     )
 
@@ -363,10 +357,10 @@ class DetailModule(BaseModule):
 
     def focus(self, asset, silent=False, force=False):
         if not isinstance(asset, Asset):
-            logging.debug("[DETAIL] Only assets can be focused. Is: {}".format(type(asset)))
+            logging.debug(f"[DETAIL] Only assets can be focused. Is: {type(asset)}")
             return
 
-        logging.debug("[DETAIL] Focusing", asset)
+        logging.debug(f"[DETAIL] Focusing {asset}")
 
         if self._is_loading:
             self._load_queue = [asset]
@@ -385,7 +379,7 @@ class DetailModule(BaseModule):
         self.folder_select.setEnabled(True)
 
         self.asset = Asset(meta=asset.meta) # asset deep copy
-        self.parent().setWindowTitle("Detail of {}".format(self.asset))
+        self.parent().setWindowTitle(f"Detail of {self.asset}")
         self.detail_tabs.load(self.asset, force=force)
         self.folder_select.set_value(self.asset["id_folder"])
 
@@ -471,25 +465,6 @@ class DetailModule(BaseModule):
         if self.preview.changed:
             data.update(self.preview.changed)
 
-
-        if config.get("debug", False):
-            reply = QMessageBox.question(
-                    self,
-                    "Save changes?",
-                    "{}".format(
-                        "\n".join("{} : {}".format(k, data[k]) for k in data if data[k])
-                        ),
-                    QMessageBox.Yes | QMessageBox.No
-                    )
-
-            if reply == QMessageBox.Yes:
-                pass
-            else:
-                logging.debug("[DETAIL] Save aborted")
-                return
-
-#        self.form.setEnabled(False) # reenable on seismic message with new data
-
         self.setCursor(Qt.BusyCursor)
         response = api.set(objects=[self.asset.id], data=data)
         if not response:
@@ -505,32 +480,23 @@ class DetailModule(BaseModule):
 
         #self.form.setEnabled(True)
 
-
-
     def on_revert(self):
         if self.asset:
             self.focus(asset_cache[self.asset.id], silent=True)
 
     def on_set_qc(self, state):
-        report = "{} : {} flagged the asset as {}".format(
-                    format_time(time.time()),
-                    user["login"],
-                    {
-                        0 : "New",
-                        3 : "Rejected",
-                        4 : "Approved"
-                    }[state]
-                )
+        state_name = {0 : 'New', 3 : 'Rejected', 4 : 'Approved'}[state]
+        report = f"{format_time(time.time())} : {user['login']} flagged the asset as {state_name}"
         if self.asset["qc/report"]:
             report = self.asset["qc/report"] + "\n" + report
 
         response = api.set(
-                objects=[self.asset.id],
-                data={
-                    "qc/state" : state,
-                    "qc/report" : report
-                }
-            )
+            objects=[self.asset.id],
+            data={
+                "qc/state" : state,
+                "qc/report" : report
+            }
+        )
         if not response:
             logging.error(response.message)
             return

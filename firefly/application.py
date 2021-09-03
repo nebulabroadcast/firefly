@@ -1,8 +1,5 @@
 import sys
 import locale
-import copy
-
-from pprint import pprint
 
 from .common import *
 from .filesystem import load_filesystem
@@ -25,7 +22,7 @@ def check_login(wnd):
     if data["response"] > 403:
         QMessageBox.critical(
                 wnd,
-                "Error {}".format(data["response"]),
+                f"Error {data['response']}",
                 data["message"]
             )
         return False
@@ -34,9 +31,7 @@ def check_login(wnd):
 
 class FireflyApplication(Application):
     def __init__(self, **kwargs):
-        title = "Firefly {}".format(FIREFLY_VERSION)
-        if FIREFLY_STATUS:
-            title += " " + FIREFLY_STATUS
+        title = f"Firefly {FIREFLY_VERSION}"
         super(FireflyApplication, self).__init__(name="firefly", title=title)
         locale.setlocale(locale.LC_NUMERIC, 'C')
         self.splash = QSplashScreen(pix_lib['splash'])
@@ -55,8 +50,8 @@ class FireflyApplication(Application):
         config.update(config["sites"][i])
         del(config["sites"])
 
-        self.app_state_path = os.path.join(app_dir, "ffdata.{}.appstate".format(config["site_name"]))
-        self.auth_key_path = os.path.join(app_dir,  "ffdata.{}.key".format(config["site_name"]))
+        self.app_state_path = os.path.join(app_dir, f"ffdata.{config['site_name']}.appstate")
+        self.auth_key_path = os.path.join(app_dir,  f"ffdata.{config['site_name']}.key")
 
         # Login
 

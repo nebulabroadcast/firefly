@@ -8,7 +8,7 @@ class BatchOpsDialog(QDialog):
     def __init__(self,  parent, objects):
         super(BatchOpsDialog, self).__init__(parent)
         self.objects = sorted(objects, key=lambda obj: obj.id)
-        self.setWindowTitle("Batch modify: {} assets".format(len(self.objects)))
+        self.setWindowTitle(f"Batch modify: {len(self.objects)} assets")
         id_folder = self.objects[0]["id_folder"]
         self.keys = config["folders"][id_folder]["meta_set"]
         self.form = MetaEditor(self, self.keys)

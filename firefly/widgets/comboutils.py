@@ -2,7 +2,6 @@ __all__ = ["ComboMenuDelegate", "CheckComboBox"]
 
 from firefly.common import *
 
-
 class ComboMenuDelegate(QAbstractItemDelegate):
     def isSeparator(self, index):
         return str(index.data(Qt.AccessibleDescriptionRole)) == "separator"

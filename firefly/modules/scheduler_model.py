@@ -134,8 +134,6 @@ class SchedulerDayWidget(SchedulerVerticalBar):
             self.draw_dragging(qp)
 
 
-
-
     def drawBlock(self, qp, event, end):
         if type(self.calendar.dragging) == Event and self.calendar.dragging.id == event.id:
             if not self.drag_outside:
@@ -177,8 +175,6 @@ class SchedulerDayWidget(SchedulerVerticalBar):
             qp.drawText(6, base_t + TEXT_SIZE + 9, text)
 
 
-
-
     def draw_dragging(self, qp):
         if type(self.calendar.dragging) == Asset:
             exp_dur = suggested_duration(self.calendar.dragging.duration)
@@ -196,10 +192,10 @@ class SchedulerDayWidget(SchedulerVerticalBar):
         qp.setBrush(QColor(200,200,200,128))
         qp.drawRect(0, base_t, self.width(), base_h)
 
-        logging.debug("Start time: {} End time: {}".format(
-                time.strftime("%H:%M", time.localtime(drop_ts)),
-                time.strftime("%H:%M", time.localtime(drop_ts + max(300, exp_dur)))
-                ))
+
+        e_start_time = time.strftime("%H:%M", time.localtime(drop_ts)),
+        e_end_time = time.strftime("%H:%M", time.localtime(drop_ts + max(300, exp_dur)))
+        logging.debug(f"Start time: {e_start_time} End time: {e_end_time}")
 
 
     def mouseMoveEvent(self, e):
@@ -220,11 +216,7 @@ class SchedulerDayWidget(SchedulerVerticalBar):
                 else:
                     diff = "Over: " + s2tc(diff)
 
-                self.setToolTip("<b>{title}</b><br>Start: {start}<br>{diff}".format(
-                    title=event["title"],
-                    start=time.strftime("%H:%M",time.localtime(event["start"])),
-                    diff=diff
-                    ))
+                self.setToolTip(f"<b>{event['title']}</b><br>Start: {format_time(event['start'], '%H:%M')}<br>{diff}")
                 break
             self.cursor_event = False
         else:
@@ -341,9 +333,7 @@ class SchedulerDayWidget(SchedulerVerticalBar):
                     if event["duration"]:
                         ret = QMessageBox.question(self,
                             "Overwrite",
-                            "Do you really want to overwrite a non-empty event?\n{}".format(
-                                event
-                                ),
+                            f"Do you really want to overwrite a non-empty event?\n{event}",
                             QMessageBox.Yes | QMessageBox.No
                             )
                         if ret == QMessageBox.Yes:
@@ -356,10 +346,7 @@ class SchedulerDayWidget(SchedulerVerticalBar):
 
 
             if evt.keyboardModifiers() & Qt.AltModifier:
-                logging.info("Creating event from {} at time {}".format(
-                    self.calendar.dragging,
-                    time.strftime("%Y-%m-%d %H:%M", time.localtime(self.cursor_time))
-                    ))
+                logging.info(f"Creating event from {self.calendar.dragging} at time {format_time(self.cursor_time)}")
                 if event_dialog(
                         asset=self.calendar.dragging,
                         id_channel=self.id_channel,
@@ -393,11 +380,7 @@ class SchedulerDayWidget(SchedulerVerticalBar):
             if event.id and abs(event["start"] - drop_ts) > 7200:
                 ret = QMessageBox.question(self,
                     "Move event",
-                    "Do you really want to move {}?\n\nFrom: {}\nTo: {}".format(
-                            self.cursor_event,
-                            format_time(event["start"]),
-                            format_time(drop_ts)
-                        ),
+                    f"Do you really want to move {self.cursor_event}?\n\nFrom: {format_time(event['start'])}\nTo: {format_time(drop_ts)}",
                     QMessageBox.Yes | QMessageBox.No
                     )
                 if ret == QMessageBox.Yes:
@@ -485,7 +468,7 @@ class SchedulerDayWidget(SchedulerVerticalBar):
 
         ret = QMessageBox.question(self,
             "Delete event",
-            "Do you really want to delete {}?\nThis operation cannot be undone.".format(cursor_event),
+            f"Do you really want to delete {cursor_event}?\nThis operation cannot be undone.",
             QMessageBox.Yes | QMessageBox.No
             )
         if ret == QMessageBox.Yes:
@@ -499,7 +482,7 @@ class SchedulerDayWidget(SchedulerVerticalBar):
                 )
             self.calendar.setCursor(Qt.ArrowCursor)
             if response:
-                logging.info("{} deleted".format(cursor_event))
+                logging.info(f"{cursor_event} deleted")
                 self.calendar.set_data(response.data)
             else:
                 logging.error(response.message)
@@ -552,9 +535,9 @@ class SchedulerDayHeaderWidget(QLabel):
         self.start_time = start_time
         t = format_time(start_time, "%a %Y-%m-%d")
         if start_time < time.time() - SECS_PER_DAY:
-            self.setText("<font color='red'>{}</font>".format(t))
+            self.setText(f"<font color='red'>{t}</font>")
         elif start_time > time.time():
-            self.setText("<font color='green'>{}</font>".format(t))
+            self.setText(f"<font color='green'>{t}</font>")
         else:
             self.setText(t)
 

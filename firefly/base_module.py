@@ -17,7 +17,6 @@ class BaseModule(QWidget):
 
     @id_channel.setter
     def id_channel(self, value):
-        logging.info("Set id_channel to", value)
         self.main_window.id_channel = int(value)
 
     @property

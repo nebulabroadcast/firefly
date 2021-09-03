@@ -20,7 +20,8 @@ following command:
 sudo pip3 install PyQT5 websocket-client
 ```
 
-For video playback, you will also need **libmpv1** package.
+The following packages are also needed, in case you don't have them already installed,
+run `sudo apt install libmpv1 libxcb-util1` on Ubuntu or `sudo apt install libmpv1 libxcb-util0` on Debian.
 
 ### Windows
 
@@ -35,8 +36,8 @@ Edit **settings.json** file to set your server address and site name.
 ```json
 {
     "sites"  : [{
-        "site_name" : "nebulatv",
-        "hub" : "https://nebulatv.example.com"
+        "site_name" : "nebula",
+        "hub" : "https://nebula.example.com"
     }]
 }
 ```

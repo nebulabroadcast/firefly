@@ -61,21 +61,6 @@ class MCR(QWidget):
     def __init__(self, parent):
         super(MCR, self).__init__(parent)
 
-        self.pos = 0
-        self.dur = 0
-        self.current  = "(loading)"
-        self.cued     = "(loading)"
-        self.request_time = 0
-        self.paused = False
-        self.cueing = False
-        self.local_request_time = time.time()
-        self.updating = False
-        self.request_display_resize = False
-        self.first_update = True
-
-        self.fps = 25.0
-
-        self.parent().setWindowTitle("On air ctrl")
 
         self.progress_bar = QProgressBar(self)
         self.progress_bar.setTextVisible(False)
@@ -89,14 +74,6 @@ class MCR(QWidget):
         self.btn_loop    = MCRButton("Loop",   self, self.on_loop, checkable=True)
         self.btn_cue_backward = MCRButton("<",  self, self.on_cue_backward)
         self.btn_cue_forward = MCRButton(">",  self, self.on_cue_forward)
-
-        can_mcr = True #TODO: ACL
-        self.btn_take.setEnabled(can_mcr)
-        self.btn_freeze.setEnabled(can_mcr)
-        self.btn_retake.setEnabled(can_mcr)
-        self.btn_abort.setEnabled(can_mcr)
-        self.btn_cue_backward.setEnabled(can_mcr)
-        self.btn_cue_forward.setEnabled(can_mcr)
 
         self.btn_cue_backward.setShortcut('Ctrl+J')
         self.btn_take.setShortcut('Ctrl+K')
@@ -147,6 +124,8 @@ class MCR(QWidget):
         layout.addWidget(self.progress_bar, 0)
         layout.addLayout(btns_layout, 0)
         self.setLayout(layout)
+
+        self.on_channel_changed()
 
         self.display_timer = QTimer(self)
         self.display_timer.timeout.connect(self.update_display)
@@ -224,7 +203,7 @@ class MCR(QWidget):
         if self.cued != status["cued_title"] or self.cueing != cueing:
             self.cued = status["cued_title"]
             if cueing:
-                self.display_cued.set_text("<font color='yellow'>{}</font>".format(self.cued))
+                self.display_cued.set_text(f"<font color='yellow'>{self.cued}</font>")
             else:
                 self.display_cued.set_text(self.cued)
             self.cueing = cueing
@@ -240,6 +219,39 @@ class MCR(QWidget):
         self.display_timer.stop()
 
 
+    def on_channel_changed(self):
+        if hasattr(self, "id_channel"):
+            can_mcr = has_right("mcr", self.id_channel)
+            self.btn_take.setEnabled(can_mcr)
+            self.btn_freeze.setEnabled(can_mcr)
+            self.btn_retake.setEnabled(can_mcr)
+            self.btn_abort.setEnabled(can_mcr)
+            self.btn_loop.setEnabled(can_mcr)
+            self.btn_cue_backward.setEnabled(can_mcr)
+            self.btn_cue_forward.setEnabled(can_mcr)
+
+            if hasattr(self, "plugins"):
+                self.plugins.load()
+
+        self.pos = 0
+        self.dur = 0
+        self.current = "(loading)"
+        self.cued = "(loading)"
+        self.request_time = 0
+        self.paused = False
+        self.cueing = False
+        self.local_request_time = time.time()
+        self.updating = False
+        self.request_display_resize = False
+        self.first_update = True
+        self.fps = 25.0
+        self.parent().setWindowTitle("On air ctrl")
+
+        self.progress_bar.setValue(0)
+        self.progress_bar.setMaximum(0)
+        self.display_current.set_text(f"<font color='yellow'>{self.current}</font>")
+        self.display_cued.set_text(f"<font color='yellow'>{self.cued}</font>")
+
     def update_display(self):
         now = time.time()
         adv = now - self.local_request_time
@@ -250,14 +262,15 @@ class MCR(QWidget):
         if not self.paused:
             rpos += adv
 
-        clock = time.strftime("%H:%M:%S:{:02d}", time.localtime(rtime)).format(int(self.fps*(rtime-math.floor(rtime))))
+        frame = int(self.fps*(rtime-math.floor(rtime)))
+        clock = time.strftime(f"%H:%M:%S:{frame:02d}", time.localtime(rtime))
         self.display_clock.set_text(clock)
         self.display_pos.set_text(s2tc(min(self.dur, rpos), self.fps))
 
         rem = self.dur - rpos
         t = s2tc(max(0, rem), self.fps)
         if rem < 10:
-            self.display_rem.set_text("<font color='red'>{}</font>".format(t))
+            self.display_rem.set_text(f"<font color='red'>{t}</font>")
         else:
             self.display_rem.set_text(t)
 

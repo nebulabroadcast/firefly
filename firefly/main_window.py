@@ -12,7 +12,7 @@ class FireflyMainWidget(QWidget):
     def __init__(self, main_window):
         super(FireflyMainWidget, self).__init__(main_window)
         self.main_window = main_window
-        current_tab = self.main_window.app_state.get("current_module",0)
+        current_tab = self.main_window.app_state.get("current_module", 0)
         self.perform_on_switch_tab = True
 
         self.tabs = QTabWidget(self)
@@ -68,13 +68,11 @@ class FireflyMainWidget(QWidget):
 
         self.tabs.currentChanged.connect(self.on_switch_tab)
 
-
     def on_close(self):
         self.detail.check_changed()
         self.main_window.listener.halt()
         QApplication.quit()
         logging.debug("[MAIN WINDOW] Window closed")
-
 
     @property
     def app(self):
@@ -119,9 +117,7 @@ class FireflyMainWindow(MainWindow):
 
         super(FireflyMainWindow, self).__init__(parent, MainWidgetClass)
         self.setWindowIcon(QIcon(get_pix("icon")))
-        title = "Firefly {}".format(FIREFLY_VERSION)
-        if FIREFLY_STATUS:
-            title += " " + FIREFLY_STATUS
+        title = f"Firefly {FIREFLY_VERSION}"
         title += f" ({user['login']}@{config['site_name']})"
         self.setWindowTitle(title)
         self.setAttribute(Qt.WA_AlwaysShowToolTips)
@@ -143,11 +139,7 @@ class FireflyMainWindow(MainWindow):
                 self.set_channel(self.id_channel)
                 break
 
-
         logging.info("[MAIN WINDOW] Firefly is ready")
-
-
-
 
     def load_window_state(self):
         self.window_state = self.app_state.get("window_state", {})
@@ -250,11 +242,11 @@ class FireflyMainWindow(MainWindow):
             for action in self.menu_scheduler.actions():
                 if hasattr(action, "id_channel") and action.id_channel == id_channel:
                     action.setChecked(True)
-            if self.scheduler:
-                self.scheduler.set_channel(id_channel)
-            if self.rundown:
-                self.rundown.set_channel(id_channel)
             self.id_channel = id_channel
+            if self.scheduler:
+                self.scheduler.on_channel_changed()
+            if self.rundown:
+                self.rundown.on_channel_changed()
 
     def show_detail(self):
         if self.main_widget.tabs.currentIndex() == 0:
@@ -315,7 +307,7 @@ class FireflyMainWindow(MainWindow):
     def seismic_handler(self, message):
         if message.method == "objects_changed" and message.data["object_type"] == "asset":
             objects = message.data["objects"]
-            logging.debug("[MAIN WINDOW] {} asset(s) have been changed".format(len(objects)))
+            logging.debug(f"[MAIN WINDOW] {len(objects)} asset(s) have been changed")
             asset_cache.request([[aid, message.timestamp + 1] for aid in objects])
             return
 
@@ -327,9 +319,8 @@ class FireflyMainWindow(MainWindow):
             if message.method in methods:
                 module.seismic_handler(message)
 
-
     def on_assets_update(self, *assets):
-        logging.debug("[MAIN WINDOW] Updating {} assets in views".format(len(assets)))
+        logging.debug(f"[MAIN WINDOW] Updating {len(assets)} assets in views")
 
         self.browser.refresh_assets(*assets)
         self.detail.refresh_assets(*assets)

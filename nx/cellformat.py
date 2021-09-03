@@ -122,7 +122,7 @@ class FormatStatus(CellFormat):
             elif xfrp == 0:
                 xfr = " (STARTING)"
             elif xfrp < 100:
-                xfr = " ({:.01f}%)".format(xfrp)
+                xfr = f" ({xfrp:.01f}%)"
 
         return get_object_state_name(state).upper() + xfr
 

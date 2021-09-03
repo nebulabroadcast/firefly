@@ -50,16 +50,12 @@ class FireflyBrowserView(FireflyView):
                 tot_dur += obj.duration
 
         days = math.floor(tot_dur / (24*3600))
-        durstr = "{} days {}".format(days, s2time(tot_dur)) if days else s2time(tot_dur)
+        durstr = f"{days} days {s2time(tot_dur)}" if days else s2time(tot_dur)
 
         if self.selected_objects:
             self.main_window.focus(asset_cache[self.selected_objects[-1].id])
             if len(self.selected_objects) > 1 and tot_dur:
-                logging.debug(
-                        "[BROWSER] {} objects selected. Total duration {}".format(
-                            len(self.selected_objects), durstr
-                        )
-                    )
+                logging.debug(f"[BROWSER] {len(self.selected_objects)} objects selected. Total duration {durstr}")
         super(FireflyView, self).selectionChanged(selected, deselected)
 
     @property
@@ -79,7 +75,7 @@ class FireflyBrowserView(FireflyView):
                 trend = "asc"
         else:
             trend = "asc"
-        self.parent().search_query["order"] = "{} {}".format(value, trend)
+        self.parent().search_query["order"] = f"{value} {trend}"
         self.parent().load()
 
 
@@ -89,7 +85,7 @@ class FireflyBrowserView(FireflyView):
         val = obj.show(key)
 
         QApplication.clipboard().setText(str(val))
-        logging.info("Copied \"{}\" to clipboard".format(val))
+        logging.info(f"Copied \"{val}\" to clipboard")
 
     def set_page(self, current_page, page_count):
         self.current_page = current_page
@@ -109,7 +105,7 @@ class FireflyBrowserView(FireflyView):
         else:
             self.parent().pager.btn_next.setEnabled(True)
 
-        self.parent().pager.info.setText("Page {}".format(current_page))
+        self.parent().pager.info.setText(f"Page {current_page}")
 
 
 class PagerButton(QPushButton):
@@ -236,7 +232,7 @@ class BrowserTab(QWidget):
             action = QAction(view["title"], self)
             action.setCheckable(True)
             if i < 10:
-                action.setShortcut("ALT+{}".format(i))
+                action.setShortcut(f"ALT+{i}")
             action.id_view = id_view
             action.triggered.connect(functools.partial(self.set_view, id_view))
             self.action_search.addAction(action)
@@ -376,7 +372,7 @@ class BrowserTab(QWidget):
         self._parent.new_tab(
                 obj["title"],
                 id_view=kwargs["id_view"],
-                conds=["'{}' = '{}'".format(param, value)]
+                conds=[f"'{param}' = '{value}'"]
             )
         self._parent.redraw_tabs()
 
@@ -410,7 +406,7 @@ class BrowserTab(QWidget):
             return
         ret = QMessageBox.question(self,
                 "Trash",
-                "Do you really want to trash {} selected asset(s)?".format(len(objects)),
+                f"Do you really want to trash {len(objects)} selected asset(s)?",
                 QMessageBox.Yes | QMessageBox.No
             )
         if ret == QMessageBox.Yes:
@@ -444,7 +440,7 @@ class BrowserTab(QWidget):
             return
         ret = QMessageBox.question(self,
                 "Archive",
-                "Do you really want to move {} selected asset(s) to archive?".format(len(objects)),
+                f"Do you really want to move {len(objects)} selected asset(s) to archive?",
                 QMessageBox.Yes | QMessageBox.No
             )
         if ret == QMessageBox.Yes:

@@ -66,7 +66,7 @@ class SeismicListener(QThread):
             message = SeismicMessage(json.loads(data))
         except Exception:
             log_traceback(handlers=False)
-            logging.debug("[LISTENER] Malformed message: {}".format(data), handlers=False)
+            logging.debug(f"[LISTENER] Malformed message: {data}", handlers=False)
             return
 
         if message.site_name != self.site_name:

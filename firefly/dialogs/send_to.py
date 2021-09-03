@@ -13,9 +13,9 @@ class SendToDialog(QDialog):
         if len(self.objects) == 1:
             what = self.objects[0]["title"]
         else:
-            what = "{} objects".format(len(self.objects))
+            what = f"{len(self.objects)} objects"
 
-        self.setWindowTitle("Send {} to...".format(what))
+        self.setWindowTitle(f"Send {what} to...")
 
         self.actions = []
         response = api.actions(objects=self.assets)

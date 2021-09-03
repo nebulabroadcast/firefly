@@ -41,7 +41,7 @@ class NebulaAPI():
             )
         request.setHeader(
                 QNetworkRequest.UserAgentHeader,
-                QVariant("nebula-firefly/{}".format(FIREFLY_VERSION))
+                QVariant(f"nebula-firefly/{FIREFLY_VERSION}")
             )
 
         try:

@@ -79,14 +79,14 @@ class FireflySubclipsView(FireflyView):
 
 
     def create_subclip(self, mark_in, mark_out):
+        fps = self.parent().current_asset["video/fps_f"]
         if mark_in and mark_out and mark_in > mark_out:
             logging.error("Unable to create subclip. In point must precede out point")
             return
         text, ok = QInputDialog.getText(
                 self,
-                #TODO: use fps
-                'Create subclip {} to {}'.format(s2tc(mark_in), s2tc(mark_out)),
-                'Enter the subclip name:'
+                f"Create a subclip",
+                f"{s2tc(mark_in, fps)} - {s2tc(mark_out, fps)}\n\nEnter the subclip name:"
             )
         if not ok:
             return
@@ -180,9 +180,8 @@ class FireflySubclipsView(FireflyView):
         old_name = self.model.object_data[idx]["title"]
         text, ok = QInputDialog.getText(
                 self,
-                #TODO: use fps
-                'Rename subclip {}'.format(old_name),
-                'Enter the subclip name:'
+                "Rename the subclip",
+                f"Original name: {old_name}\n\nEnter the subclip name:"
             )
         if not ok:
             return

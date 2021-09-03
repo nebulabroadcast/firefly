@@ -48,7 +48,7 @@ class FireflyRadio(QWidget):
             self.cdata.append(row["value"])
 
             self.buttons.append(QPushButton(alias))
-            self.buttons[-1].setToolTip("<p>{}</p>".format(description))
+            self.buttons[-1].setToolTip(f"<p>{description}</p>")
             self.buttons[-1].setCheckable(row["role"] in ["option", "header"])
             self.buttons[-1].setAutoExclusive(True)
             self.buttons[-1].clicked.connect(functools.partial(self.switch, i))
@@ -131,7 +131,7 @@ class FireflySelect(QComboBox):
             self.cdata.append(value)
 
             self.setItemData(i, indent ,Qt.UserRole)
-            self.setItemData(i, "<p>{}</p>".format(description), Qt.ToolTipRole)
+            self.setItemData(i, f"<p>{description}</p>", Qt.ToolTipRole)
 
             if role == "header":
                 self.setItemData(i, fonts["bold"], Qt.FontRole)
@@ -201,7 +201,7 @@ class FireflyList(CheckComboBox):
 
             self.setItemData(i, indent, Qt.UserRole)
 
-            self.setItemData(i, "<p>{}</p>".format(description), Qt.ToolTipRole)
+            self.setItemData(i, f"<p>{description}</p>", Qt.ToolTipRole)
 
             if row["role"] == "label":
                 item = self.model().item(i)

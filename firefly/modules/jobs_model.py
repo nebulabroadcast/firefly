@@ -27,7 +27,7 @@ def job_format(data, key):
             id_service = data["id_service"]
             service = config["services"].get(id_service, None)
             if service:
-                return "{}@{}".format(service["title"], service["host"])
+                return f"{service['title']}@{service['host']}"
         return data["id_service"]
     elif key == "message":
         return data["message"]
@@ -35,7 +35,7 @@ def job_format(data, key):
         return str(data["id"])
     elif key == "progress":
         if data["status"] == 1:
-            return "{:.02f}%".format(data["progress"])
+            return f"{data['progress']:.02f}%"
         else:
             return({
                     0 : "Pending",
@@ -103,7 +103,7 @@ class JobsModel(FireflyViewModel):
         if role == Qt.DisplayRole:
             return job_format(obj, key)
         elif role == Qt.ToolTipRole:
-            return "{}\n\n{}".format(obj["message"], asset_cache[obj["id_asset"]])
+            return f"{obj['message']}\n\n{asset_cache[obj['id_asset']]}"
         elif role == Qt.ForegroundRole:
             return colors[obj["status"]]
 

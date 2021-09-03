@@ -62,9 +62,9 @@ class PlayoutPlugin(QWidget):
                 data=json.dumps(data)
             )
         if response:
-            logging.info("{} action '{}' executed succesfully.".format(self.title, name))
+            logging.info(f"{self.title} action '{name}' executed succesfully.")
         else:
-            logging.error("Plugin error {}\n\n{}".format(response.response, response.message))
+            logging.error(f"[PLUGINS] Plugin error {response.response}\n\n{response.message}")
 
 
 
@@ -81,7 +81,7 @@ class PlayoutPlugins(QTabWidget):
         if not user.has_right("mcr", self.id_channel):
             return
 
-        logging.debug("Loading playout plugins")
+        logging.debug("[PLUGINS] Loading playout plugins")
         for idx in reversed(range(self.count())):
             widget = self.widget(idx)
             self.removeTab(idx)
@@ -89,7 +89,7 @@ class PlayoutPlugins(QTabWidget):
 
         response = api.playout(action="plugin_list", id_channel=self.id_channel)
         if not response:
-            logging.error("Unable to load playout plugins:\n{}".format(response.message))
+            logging.error(f"[PLUGINS] Unable to load playout plugins:\n{response.message}")
             return
 
         for plugin in response.data or []:

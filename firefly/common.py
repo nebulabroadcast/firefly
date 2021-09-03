@@ -11,8 +11,6 @@ DEBUG, INFO, WARNING, ERROR, GOOD_NEWS = range(5)
 logging.user = ""
 logging.handlers = []
 
-
-
 class FontLib():
     def __init__(self):
         self.data = {}
@@ -72,9 +70,9 @@ def get_pix(name):
             color = 0xaaaaaa
         icn.fill(QColor(color))
         return icn
-    pixmap = QPixmap(":/images/{}.png".format(name))
+    pixmap = QPixmap(f":/images/{name}.png")
     if not pixmap.width():
-        pix_file = os.path.join(app_dir, "images", "{}.png".format(name))
+        pix_file = os.path.join(app_dir, "images", f"{name}.png")
         if os.path.exists(pix_file):
             return QPixmap(pix_file)
     return None
@@ -129,7 +127,7 @@ def notify_send(text, level=INFO):
             ERROR : ["error", 10],
             GOOD_NEWS : ["good news", 5]
         }[level]
-    caption = "Firefly {}".format(caption)
+    caption = f"Firefly {caption}"
     if level < WARNING:
         return
 

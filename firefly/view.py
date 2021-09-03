@@ -30,7 +30,7 @@ class FireflyViewModel(QAbstractTableModel):
                 return format_header(self.header_data[col])
             elif role == Qt.ToolTipRole:
                 desc = format_description(self.header_data[col])
-                return "<p>{}</p>".format(desc) if desc else None
+                return f"<p>{desc}</p>" if desc else None
         return None
 
     def data(self, index, role=Qt.DisplayRole):

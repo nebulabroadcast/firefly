@@ -85,7 +85,7 @@ class RundownModule(BaseModule):
                         self.view.model().object_data[idx.row()].id
                     ])
 
-        do_update_header = False
+        do_update_header = kwargs.get("do_update_header", False)
         if "id_channel" in kwargs and kwargs["id_channel"] != self.id_channel:
             do_update_header = True
             self.id_channel = kwargs["id_channel"]
@@ -152,29 +152,28 @@ class RundownModule(BaseModule):
         else:
             s = ""
         t = t.strftime("%A %Y-%m-%d")
-        self.parent().setWindowTitle("Rundown {}".format(t))
-        self.channel_display.setText("<font{}>{}</font> - {}".format(s, t, ch))
+        self.parent().setWindowTitle(f"Rundown {t}")
+        self.channel_display.setText(f"<font{s}>{t}</font> - {ch}")
+        logging.debug(f"[RUNDOWN] Header update ({ch})")
 
     #
     # Actions
     #
 
     def set_channel(self, id_channel):
-        if self.id_channel != id_channel or self.first_load:
+        if self.id_channel != id_channel:
             self.id_channel = id_channel
-            self.load()
 
-            if self.mcr:
-                can_mcr = has_right("mcr", self.id_channel)
-                self.plugins.load()
-                self.mcr.btn_take.setEnabled(can_mcr)
-                self.mcr.btn_freeze.setEnabled(can_mcr)
-                self.mcr.btn_retake.setEnabled(can_mcr)
-                self.mcr.btn_abort.setEnabled(can_mcr)
+    def on_channel_changed(self):
+        self.load(do_update_header=True)
+        self.plugins.load()
 
-            can_rundown_edit = has_right("rundown_edit", self.id_channel)
-            self.main_window.action_rundown_edit.setEnabled(can_rundown_edit)
-            self.toggle_rundown_edit(can_rundown_edit and self.edit_wanted)
+        if self.mcr:
+            self.mcr.on_channel_changed()
+
+        can_rundown_edit = has_right("rundown_edit", self.id_channel)
+        self.main_window.action_rundown_edit.setEnabled(can_rundown_edit)
+        self.toggle_rundown_edit(can_rundown_edit and self.edit_wanted)
 
 
     def go_day_prev(self):
@@ -260,7 +259,7 @@ class RundownModule(BaseModule):
                     selection = QItemSelection()
                     i1 = self.view.model().index(i + start_row, 0, QModelIndex())
                     i2 = self.view.model().index(i + start_row, len(self.view.model().header_data)-1, QModelIndex())
-                    self.view.scrollTo(i1 , QAbstractItemView.PositionAtTop  )
+                    self.view.scrollTo(i1 , QAbstractItemView.PositionAtTop)
                     selection.select(i1, i2)
                     self.view.selectionModel().select(selection, QItemSelectionModel.ClearAndSelect)
                     break

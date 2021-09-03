@@ -53,18 +53,18 @@ def dump_template(calendar):
         days[day].append(event)
 
     for i, day in enumerate(days):
-        result += "    <!-- {} -->\n".format(DAY_NAMES[i])
+        result += f"    <!-- {DAY_NAMES[i]} -->\n"
         result += "    <day>\n"
         for event in day:
             clock = format_time(event["start"], "%H:%M")
-            result += "        <event time=\"{}\"> <!-- {} -->\n".format(clock, event["title"])
+            result += f"        <event time=\"{clock}\"> <!-- {event['title']} -->\n"
             for key in event.meta:
                 if meta_types[key]["ns"] != "m":
                     continue
                 value = event[key]
                 if type(value) in string_types:
                     value = value.replace("&", "&amp;")
-                result += "            <meta key=\"{}\">{}</meta>\n".format(key, value)
+                result += f"            <meta key=\"{key}\">{value}</meta>\n"
             result += "        </event>\n"
         result += "    </day>\n"
 
