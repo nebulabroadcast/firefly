@@ -1,11 +1,14 @@
 import functools
-from firefly import *
 
-__all__ = ["send_to_dialog"]
+from nxtools import logging
+
+from firefly.api import api
+from firefly.widgets import ActionButton
+from firefly.qt import Qt, QDialog, QVBoxLayout, QCheckBox, QApplication
 
 
 class SendToDialog(QDialog):
-    def __init__(self,  parent, objects=[]):
+    def __init__(self, parent, objects=[]):
         super(SendToDialog, self).__init__(parent)
         self.objects = list(objects)
         self.setModal(True)
@@ -27,13 +30,13 @@ class SendToDialog(QDialog):
             for id_action, title in response.data:
                 btn_send = ActionButton(title)
                 btn_send.clicked.connect(functools.partial(self.on_send, id_action))
-                layout.addWidget(btn_send,1)
+                layout.addWidget(btn_send, 1)
 
-            self.restart_existing = QCheckBox('Restart existing actions', self)
+            self.restart_existing = QCheckBox("Restart existing actions", self)
             self.restart_existing.setChecked(True)
             layout.addWidget(self.restart_existing, 0)
 
-            self.restart_running = QCheckBox('Restart running actions', self)
+            self.restart_running = QCheckBox("Restart running actions", self)
             self.restart_running.setChecked(False)
             layout.addWidget(self.restart_running, 0)
 
@@ -54,11 +57,11 @@ class SendToDialog(QDialog):
         QApplication.processEvents()
         QApplication.setOverrideCursor(Qt.WaitCursor)
         response = api.send(
-                id_action=id_action,
-                objects=self.assets,
-                restart_existing=self.restart_existing.isChecked(),
-                restart_running=self.restart_running.isChecked()
-            )
+            id_action=id_action,
+            objects=self.assets,
+            restart_existing=self.restart_existing.isChecked(),
+            restart_running=self.restart_running.isChecked(),
+        )
         QApplication.restoreOverrideCursor()
         if not response:
             logging.error(response.message)
@@ -69,7 +72,6 @@ class SendToDialog(QDialog):
         QApplication.processEvents()
 
 
-
-def send_to_dialog(objects):
+def show_send_to_dialog(objects):
     dlg = SendToDialog(None, objects)
     dlg.exec_()

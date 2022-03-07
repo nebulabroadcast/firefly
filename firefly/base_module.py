@@ -1,6 +1,8 @@
-from .common import *
+from firefly.core.common import config
+from firefly.qt import QWidget
 
 __all__ = ["BaseModule"]
+
 
 class BaseModule(QWidget):
     def __init__(self, parent):

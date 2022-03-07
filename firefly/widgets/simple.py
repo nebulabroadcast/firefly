@@ -1,6 +1,20 @@
-from nx import *
-from firefly.common import *
-from firefly.dialogs.text_editor import TextEditorDialog
+import time
+
+from nxtools import logging, s2tc
+
+from firefly.qt import (
+    Qt,
+    QLineEdit,
+    QTextEdit,
+    QFontDatabase,
+    QFont,
+    QSpinBox,
+    QCheckBox,
+    QPushButton,
+    QColorDialog,
+    QColor,
+)
+
 
 class FireflyString(QLineEdit):
     def __init__(self, parent, **kwargs):
@@ -21,7 +35,7 @@ class FireflyText(QTextEdit):
     def __init__(self, parent, **kwargs):
         super(FireflyText, self).__init__(parent)
         fixed_font = QFontDatabase.systemFont(QFontDatabase.FixedFont)
-        fixed_font.setStyleHint(QFont.Monospace);
+        fixed_font.setStyleHint(QFont.Monospace)
         self.setCurrentFont(fixed_font)
         self.setTabChangesFocus(True)
         self.default = self.get_value()
@@ -35,13 +49,13 @@ class FireflyText(QTextEdit):
     def get_value(self):
         return self.toPlainText()
 
-    def insertFromMimeData(self,source):
+    def insertFromMimeData(self, source):
         self.insertPlainText(source.text())
 
 
 class FireflyInteger(QSpinBox):
     def __init__(self, parent, **kwargs):
-        super(FireflyInteger,self).__init__(parent)
+        super(FireflyInteger, self).__init__(parent)
         self.setFocusPolicy(Qt.StrongFocus)
         self.setMinimum(kwargs.get("min", 0))
         self.setMaximum(kwargs.get("max", 99999))
@@ -70,7 +84,7 @@ class FireflyInteger(QSpinBox):
 
 class FireflyNumeric(QSpinBox):
     def __init__(self, parent, **kwargs):
-        super(FireflyNumeric,self).__init__(parent)
+        super(FireflyNumeric, self).__init__(parent)
         self.setFocusPolicy(Qt.StrongFocus)
         self.setMinimum(kwargs.get("min", -99999))
         self.setMaximum(kwargs.get("max", 99999))
@@ -78,7 +92,7 @@ class FireflyNumeric(QSpinBox):
             logging.info("HIDE NULL")
             self.setMinimum(0)
             self.setSpecialValueText(" ")
-        #TODO: custom step (default 1, allow floats)
+        # TODO: custom step (default 1, allow floats)
         self.default = self.get_value()
 
     def wheelEvent(self, event):
@@ -99,11 +113,11 @@ class FireflyNumeric(QSpinBox):
 
 class FireflyDatetime(QLineEdit):
     def __init__(self, parent, **kwargs):
-        super(FireflyDatetime,self).__init__(parent)
+        super(FireflyDatetime, self).__init__(parent)
         mode = kwargs.get("mode", "datetime")
 
         if mode == "date":
-            self.mask   = "9999-99-99"
+            self.mask = "9999-99-99"
             self.format = "%Y-%m-%d"
 
         elif mode == "year":
@@ -111,7 +125,7 @@ class FireflyDatetime(QLineEdit):
             self.format = "%Y"
 
         elif mode == "datetime":
-            self.mask   = "9999-99-99 99:99"
+            self.mask = "9999-99-99 99:99"
             self.format = "%Y-%m-%d %H:%M"
 
             if kwargs.get("show_seconds", False):
@@ -127,12 +141,12 @@ class FireflyDatetime(QLineEdit):
             tt = time.localtime(timestamp)
             self.setText(time.strftime(self.format, tt))
         else:
-            self.setText(self.format.replace("9","-"))
+            self.setText(self.format.replace("9", "-"))
         self.setInputMask(self.mask)
         self.default = self.get_value()
 
     def get_value(self):
-        if not self.text().replace("-", "").replace(":","").strip():
+        if not self.text().replace("-", "").replace(":", "").strip():
             return float(0)
         t = time.strptime(self.text(), self.format)
         return float(time.mktime(t))
@@ -140,7 +154,7 @@ class FireflyDatetime(QLineEdit):
 
 class FireflyTimecode(QLineEdit):
     def __init__(self, parent, **kwargs):
-        super(FireflyTimecode,self).__init__(parent)
+        super(FireflyTimecode, self).__init__(parent)
         self.fps = kwargs.get("fps", 25.0)
         self.setInputMask("99:99:99:99")
         self.setText("00:00:00:00")
@@ -158,7 +172,7 @@ class FireflyTimecode(QLineEdit):
 
     def get_value(self):
         hh, mm, ss, ff = [int(i) for i in self.text().split(":")]
-        return (hh*3600) + (mm*60) + ss + (ff/self.fps)
+        return (hh * 3600) + (mm * 60) + ss + (ff / self.fps)
 
 
 class FireflyBoolean(QCheckBox):

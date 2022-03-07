@@ -1,8 +1,24 @@
+import time
 import math
 
-from firefly import *
+from nxtools import s2tc
+
+from firefly.api import api
+from firefly.objects import has_right
+from firefly.qt import (
+    QApplication,
+    QPushButton,
+    QLabel,
+    QWidget,
+    QProgressBar,
+    QHBoxLayout,
+    QGridLayout,
+    QVBoxLayout,
+    QTimer,
+)
 
 PROGRESS_BAR_RESOLUTION = 1000
+
 
 class MCRButton(QPushButton):
     def __init__(self, title, parent=None, on_click=False, checkable=False):
@@ -17,7 +33,8 @@ class MCRButton(QPushButton):
             self.setToolTip("Start cued clip")
         else:
             bg_col = "#565656"
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
             MCRButton {{
                 font-size:14px;
                 color: #eeeeee;
@@ -33,7 +50,10 @@ class MCRButton(QPushButton):
 
             MCRButton:pressed {{
                 border: 2px solid #00a5c3;
-            }}""".format(bg_col))
+            }}""".format(
+                bg_col
+            )
+        )
 
         if on_click:
             self.clicked.connect(on_click)
@@ -41,19 +61,23 @@ class MCRButton(QPushButton):
 
 class MCRLabel(QLabel):
     def __init__(self, head, default, parent=None, tcolor="#eeeeee"):
-        super(MCRLabel,self).__init__(parent)
+        super(MCRLabel, self).__init__(parent)
         self.head = head
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
                 background-color: #161616;
                 padding:5px;
                 margin:3px;
                 font:16px;
                 font-weight: bold;
                 color : {};
-            """.format(tcolor))
+            """.format(
+                tcolor
+            )
+        )
         self.set_text(default)
 
-    def set_text(self,text):
+    def set_text(self, text):
         self.setText(self.head + ": " + text)
 
 
@@ -61,63 +85,61 @@ class MCR(QWidget):
     def __init__(self, parent):
         super(MCR, self).__init__(parent)
 
-
         self.progress_bar = QProgressBar(self)
         self.progress_bar.setTextVisible(False)
         self.progress_bar.setValue(0)
         self.progress_bar.setMaximum(PROGRESS_BAR_RESOLUTION)
 
-        self.btn_take    = MCRButton("Take",   self, self.on_take)
-        self.btn_freeze  = MCRButton("Freeze", self, self.on_freeze)
-        self.btn_retake  = MCRButton("Retake", self, self.on_retake)
-        self.btn_abort   = MCRButton("Abort",  self, self.on_abort)
-        self.btn_loop    = MCRButton("Loop",   self, self.on_loop, checkable=True)
-        self.btn_cue_backward = MCRButton("<",  self, self.on_cue_backward)
-        self.btn_cue_forward = MCRButton(">",  self, self.on_cue_forward)
+        self.btn_take = MCRButton("Take", self, self.on_take)
+        self.btn_freeze = MCRButton("Freeze", self, self.on_freeze)
+        self.btn_retake = MCRButton("Retake", self, self.on_retake)
+        self.btn_abort = MCRButton("Abort", self, self.on_abort)
+        self.btn_loop = MCRButton("Loop", self, self.on_loop, checkable=True)
+        self.btn_cue_backward = MCRButton("<", self, self.on_cue_backward)
+        self.btn_cue_forward = MCRButton(">", self, self.on_cue_forward)
 
-        self.btn_cue_backward.setShortcut('Ctrl+J')
-        self.btn_take.setShortcut('Ctrl+K')
-        self.btn_cue_forward.setShortcut('Ctrl+L')
-        self.btn_retake.setShortcut('Alt+J')
-        self.btn_freeze.setShortcut('Alt+K')
-        self.btn_abort.setShortcut('Alt+L')
+        self.btn_cue_backward.setShortcut("Ctrl+J")
+        self.btn_take.setShortcut("Ctrl+K")
+        self.btn_cue_forward.setShortcut("Ctrl+L")
+        self.btn_retake.setShortcut("Alt+J")
+        self.btn_freeze.setShortcut("Alt+K")
+        self.btn_abort.setShortcut("Alt+L")
 
         btns_layout = QHBoxLayout()
 
         btns_layout.addStretch(1)
-        btns_layout.addWidget(self.btn_take ,0)
-        btns_layout.addWidget(self.btn_freeze ,0)
-        btns_layout.addWidget(self.btn_retake,0)
-        btns_layout.addWidget(self.btn_abort,0)
-        btns_layout.addWidget(self.btn_loop,0)
-        btns_layout.addWidget(self.btn_cue_backward,0)
-        btns_layout.addWidget(self.btn_cue_forward,0)
+        btns_layout.addWidget(self.btn_take, 0)
+        btns_layout.addWidget(self.btn_freeze, 0)
+        btns_layout.addWidget(self.btn_retake, 0)
+        btns_layout.addWidget(self.btn_abort, 0)
+        btns_layout.addWidget(self.btn_loop, 0)
+        btns_layout.addWidget(self.btn_cue_backward, 0)
+        btns_layout.addWidget(self.btn_cue_forward, 0)
         btns_layout.addStretch(1)
 
-        self.display_clock   = MCRLabel("CLK", "--:--:--:--")
-        self.display_pos     = MCRLabel("POS", "--:--:--:--")
+        self.display_clock = MCRLabel("CLK", "--:--:--:--")
+        self.display_pos = MCRLabel("POS", "--:--:--:--")
 
         self.display_current = MCRLabel("CUR", "(no clip)", tcolor="#cc0000")
-        self.display_cued    = MCRLabel("NXT", "(no clip)", tcolor="#00cc00")
+        self.display_cued = MCRLabel("NXT", "(no clip)", tcolor="#00cc00")
 
-        self.display_rem     = MCRLabel("REM", "(unknown)")
-        self.display_dur     = MCRLabel("DUR", "--:--:--:--")
-
+        self.display_rem = MCRLabel("REM", "(unknown)")
+        self.display_dur = MCRLabel("DUR", "--:--:--:--")
 
         info_layout = QGridLayout()
-        info_layout.setContentsMargins(0,0,0,0)
+        info_layout.setContentsMargins(0, 0, 0, 0)
         info_layout.setSpacing(2)
 
-        info_layout.addWidget(self.display_clock,   0, 0)
-        info_layout.addWidget(self.display_pos,     1, 0)
+        info_layout.addWidget(self.display_clock, 0, 0)
+        info_layout.addWidget(self.display_pos, 1, 0)
 
         info_layout.addWidget(self.display_current, 0, 1)
-        info_layout.addWidget(self.display_cued,    1, 1)
+        info_layout.addWidget(self.display_cued, 1, 1)
 
-        info_layout.addWidget(self.display_rem,     0, 2)
-        info_layout.addWidget(self.display_dur,     1, 2)
+        info_layout.addWidget(self.display_rem, 0, 2)
+        info_layout.addWidget(self.display_dur, 1, 2)
 
-        info_layout.setColumnStretch(1,1)
+        info_layout.setColumnStretch(1, 1)
 
         layout = QVBoxLayout()
         layout.addLayout(info_layout, 0)
@@ -147,14 +169,19 @@ class MCR(QWidget):
         api.playout(timeout=1, action="abort", id_channel=self.id_channel)
 
     def on_loop(self):
-        api.playout(timeout=1, action="set", id_channel=self.id_channel, key="loop", value=self.btn_loop.isChecked())
+        api.playout(
+            timeout=1,
+            action="set",
+            id_channel=self.id_channel,
+            key="loop",
+            value=self.btn_loop.isChecked(),
+        )
 
     def on_cue_forward(self):
         api.playout(timeout=1, action="cue_forward", id_channel=self.id_channel)
 
     def on_cue_backward(self):
         api.playout(timeout=1, action="cue_backward", id_channel=self.id_channel)
-
 
     def seismic_handler(self, data):
         status = data.data
@@ -165,14 +192,13 @@ class MCR(QWidget):
             self.pos = (status["position"] + 1) / self.fps
             dur = status["duration"] / self.fps
         else:
-            self.pos = status["position"] + (1/self.fps)
+            self.pos = status["position"] + (1 / self.fps)
             dur = status["duration"]
 
-        if status.get("loop") != None: #TODO: remove this condition in 5.4 as it should be always present
-            self.btn_loop.setEnabled(True)
-            if status.get("loop") != self.btn_loop.isChecked():
-                print ("Loop", status.get("loop"))
-                self.btn_loop.setChecked(status.get("loop"))
+        self.btn_loop.setEnabled(True)
+        if status.get("loop") != self.btn_loop.isChecked():
+            print("Loop", status.get("loop"))
+            self.btn_loop.setChecked(status.get("loop"))
         else:
             self.btn_loop.setEnabled(False)
 
@@ -209,7 +235,6 @@ class MCR(QWidget):
             self.cueing = cueing
             self.request_display_resize = True
 
-
     def show(self, *args, **kwargs):
         super(MCR, self).show(*args, **kwargs)
         self.display_timer.start(40)
@@ -217,7 +242,6 @@ class MCR(QWidget):
     def hide(self, *args, **kwargs):
         super(MCR, self).hide(*args, **kwargs)
         self.display_timer.stop()
-
 
     def on_channel_changed(self):
         if hasattr(self, "id_channel"):
@@ -256,13 +280,13 @@ class MCR(QWidget):
         now = time.time()
         adv = now - self.local_request_time
 
-        rtime = self.request_time+adv
+        rtime = self.request_time + adv
         rpos = self.pos
 
         if not self.paused:
             rpos += adv
 
-        frame = int(self.fps*(rtime-math.floor(rtime)))
+        frame = int(self.fps * (rtime - math.floor(rtime)))
         clock = time.strftime(f"%H:%M:%S:{frame:02d}", time.localtime(rtime))
         self.display_clock.set_text(clock)
         self.display_pos.set_text(s2tc(min(self.dur, rpos), self.fps))
@@ -278,15 +302,14 @@ class MCR(QWidget):
             self.progress_bar.setValue(0)
 
         try:
-            ppos = int((rpos/self.dur) * PROGRESS_BAR_RESOLUTION)
+            ppos = int((rpos / self.dur) * PROGRESS_BAR_RESOLUTION)
         except ZeroDivisionError:
             return
         else:
             oldval = self.progress_bar.value()
-            if ppos > oldval or abs(oldval-ppos) > PROGRESS_BAR_RESOLUTION/self.dur:
+            if ppos > oldval or abs(oldval - ppos) > PROGRESS_BAR_RESOLUTION / self.dur:
                 self.progress_bar.setValue(ppos)
                 self.progress_bar.update()
-
 
         if self.request_display_resize:
             QApplication.processEvents()

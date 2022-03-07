@@ -1,19 +1,37 @@
-from firefly.common import *
-from firefly.widgets import *
-from firefly.view import *
+import functools
 
-__all__ = ["FireflyJobsView"]
+from nxtools import format_time, logging
+
+from firefly.api import api
+from firefly.core.common import config
+from firefly.core.enum import JobState
+from firefly.common import Colors
+from firefly.objects import asset_cache
+from firefly.view import FireflyViewModel, FireflyView
+from firefly.qt import (
+    Qt,
+    QColor,
+    QApplication,
+    QMenu,
+    QAction,
+)
+
+# from firefly.common import *
+# from firefly.widgets import *
+# from firefly.view import *
+
 
 DEFAULT_HEADER_DATA = [
-        "id",
-        "title",
-        "action",
-        "service",
-        "ctime",
-        "stime",
-        "etime",
-        "progress",
-    ]
+    "id",
+    "title",
+    "action",
+    "service",
+    "ctime",
+    "stime",
+    "etime",
+    "progress",
+]
+
 
 def job_format(data, key):
     if key in ["ctime", "stime", "etime"]:
@@ -37,57 +55,56 @@ def job_format(data, key):
         if data["status"] == 1:
             return f"{data['progress']:.02f}%"
         else:
-            return({
-                    0 : "Pending",
-                    1 : "In progress",
-                    2 : "Completed",
-                    3 : "Failed",
-                    4 : "Aborted",
-                    5 : "Restarted",
-                    6 : "Skipped"
-                }[data["status"]])
+            return {
+                0: "Pending",
+                1: "In progress",
+                2: "Completed",
+                3: "Failed",
+                4: "Aborted",
+                5: "Restarted",
+                6: "Skipped",
+            }[data["status"]]
     return "-"
 
 
 header_format = {
-        "id" : "#",
-        "title" : "Title",
-        "action" : "Action",
-        "service" : "Service",
-        "ctime" : "Created",
-        "stime" : "Started",
-        "etime" : "Ended",
-        "progress" : "Progress",
-    }
+    "id": "#",
+    "title": "Title",
+    "action": "Action",
+    "service": "Service",
+    "ctime": "Created",
+    "stime": "Started",
+    "etime": "Ended",
+    "progress": "Progress",
+}
 
 colw = {
-        "id" : 50,
-        "title" : 200,
-        "action" : 80,
-        "service" : 160,
-        "ctime" : 150,
-        "stime" : 150,
-        "etime" : 150,
-        "progress" : 100,
-    }
+    "id": 50,
+    "title": 200,
+    "action": 80,
+    "service": 160,
+    "ctime": 150,
+    "stime": 150,
+    "etime": 150,
+    "progress": 100,
+}
 
 colors = {
-        PENDING     : QColor(COLOR_TEXT_NORMAL),
-        IN_PROGRESS : QColor(COLOR_TEXT_HIGHLIGHT),
-        COMPLETED   : QColor(COLOR_TEXT_GREEN),
-        FAILED      : QColor(COLOR_TEXT_RED),
-        ABORTED     : QColor(COLOR_TEXT_RED),
-        RESTART     : QColor(COLOR_TEXT_NORMAL),
-        SKIPPED     : QColor(COLOR_TEXT_FADED),
-    }
+    JobState.PENDING: QColor(Colors.TEXT_NORMAL.value),
+    JobState.IN_PROGRESS: QColor(Colors.TEXT_HIGHLIGHT.value),
+    JobState.COMPLETED: QColor(Colors.TEXT_GREEN.value),
+    JobState.FAILED: QColor(Colors.TEXT_RED.value),
+    JobState.ABORTED: QColor(Colors.TEXT_RED.value),
+    JobState.RESTART: QColor(Colors.TEXT_NORMAL.value),
+    JobState.SKIPPED: QColor(Colors.TEXT_FADED.value),
+}
 
 
 class JobsModel(FireflyViewModel):
     def __init__(self, *args, **kwargs):
         super(JobsModel, self).__init__(*args, **kwargs)
-        self.request_data = {
-                    "view" : "active"
-                }
+        self.request_data = {"view": "active"}
+
     def headerData(self, col, orientation=Qt.Horizontal, role=Qt.DisplayRole):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
             return header_format[self.header_data[col]]
@@ -109,10 +126,8 @@ class JobsModel(FireflyViewModel):
 
         return None
 
-
     def load(self, **kwargs):
         self.request_data.update(kwargs)
-        start_time = time.time()
         self.beginResetModel()
         QApplication.setOverrideCursor(Qt.WaitCursor)
         data = []
@@ -137,7 +152,7 @@ class FireflyJobsView(FireflyView):
         self.model.header_data = DEFAULT_HEADER_DATA
         self.setModel(self.model)
         for i, h in enumerate(self.model.header_data):
-            if h in colw :
+            if h in colw:
                 self.horizontalHeader().resizeSection(i, colw[h])
 
     def selectionChanged(self, selected, deselected):
@@ -146,15 +161,13 @@ class FireflyJobsView(FireflyView):
         if len(sel) == 1:
             self.parent().main_window.focus(asset_cache[sel[0]["id_asset"]])
 
-
-
     @property
     def selected_jobs(self):
         used = []
         result = []
         for idx in self.selectionModel().selectedIndexes():
             i = idx.row()
-            if not i in used:
+            if i not in used:
                 used.append(i)
                 result.append(self.model.object_data[i])
         return result
@@ -166,18 +179,17 @@ class FireflyJobsView(FireflyView):
 
         menu = QMenu(self)
 
-        action_restart = QAction('Restart', self)
-        action_restart.setStatusTip('Restart selected jobs')
+        action_restart = QAction("Restart", self)
+        action_restart.setStatusTip("Restart selected jobs")
         action_restart.triggered.connect(functools.partial(self.on_restart, jobs))
         menu.addAction(action_restart)
 
-        action_abort = QAction('Abort', self)
-        action_abort.setStatusTip('Abort selected jobs')
+        action_abort = QAction("Abort", self)
+        action_abort.setStatusTip("Abort selected jobs")
         action_abort.triggered.connect(functools.partial(self.on_abort, jobs))
         menu.addAction(action_abort)
 
         menu.exec_(event.globalPos())
-
 
     def on_restart(self, jobs):
         response = api.jobs(restart=jobs)
@@ -186,7 +198,6 @@ class FireflyJobsView(FireflyView):
         else:
             logging.info(response.message)
         self.model.load()
-
 
     def on_abort(self, jobs):
         response = api.jobs(abort=jobs)

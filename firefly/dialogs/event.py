@@ -1,21 +1,24 @@
-import time
-import datetime
+from nxtools import logging
 
-from firefly import *
-
-__all__ = ["event_dialog"]
+from firefly.api import api
+from firefly.core.common import config
+from firefly.core.metadata import meta_types
+from firefly.objects import user, Event
+from firefly.widgets import MetaEditor
+from firefly.qt import Qt, QDialog, QDialogButtonBox, QVBoxLayout, app_skin
 
 
 default_meta_set = [
-        ["start", {}],
-        ["title", {}],
-        ["subtitle", {}],
-        ["description", {}],
-        ["color", {}]
-    ]
+    ["start", {}],
+    ["title", {}],
+    ["subtitle", {}],
+    ["description", {}],
+    ["color", {}],
+]
+
 
 class EventDialog(QDialog):
-    def __init__(self,  parent, **kwargs):
+    def __init__(self, parent, **kwargs):
         super(EventDialog, self).__init__(parent)
         self.setWindowTitle("Scheduler")
         self.kwargs = kwargs
@@ -29,12 +32,14 @@ class EventDialog(QDialog):
             if kwargs.get(key, False):
                 self.event[key] = kwargs[key]
 
-        keys = config["playout_channels"][self.event["id_channel"]].get("meta_set", default_meta_set)
+        keys = config["playout_channels"][self.event["id_channel"]].get(
+            "meta_set", default_meta_set
+        )
 
         if "asset" in self.kwargs:
             asset = self.kwargs["asset"]
             for key in [k for k in meta_types if meta_types[k]["ns"] == "m"]:
-                if not key in asset.meta:
+                if key not in asset.meta:
                     continue
                 self.event[key] = asset[key]
 
@@ -45,10 +50,9 @@ class EventDialog(QDialog):
         if not self.can_edit:
             self.form.setEnabled(False)
 
-
         buttons = QDialogButtonBox(
-            QDialogButtonBox.Ok | QDialogButtonBox.Cancel,
-            Qt.Horizontal, self)
+            QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self
+        )
         buttons.accepted.connect(self.on_accept)
         buttons.rejected.connect(self.on_cancel)
 
@@ -56,7 +60,6 @@ class EventDialog(QDialog):
         layout.addWidget(self.form, 2)
         layout.addWidget(buttons)
         self.setLayout(layout)
-
 
     def closeEvent(self, event):
         event.accept()
@@ -71,18 +74,15 @@ class EventDialog(QDialog):
 
         meta = self.form.meta
         for key in ["id_channel", "start", "id"]:
-            if not key in meta:
+            if key not in meta:
                 meta[key] = self.event[key]
 
         for key in meta:
             value = meta[key]
-            self.event[key] = value     # use event as a validator
+            self.event[key] = value  # use event as a validator
             meta[key] = self.event[key]
 
-        response = api.schedule(
-                id_channel=self.event["id_channel"],
-                events=[meta]
-            )
+        response = api.schedule(id_channel=self.event["id_channel"], events=[meta])
 
         if not response:
             logging.error(response.message)
@@ -91,9 +91,7 @@ class EventDialog(QDialog):
         self.close()
 
 
-
-def event_dialog(**kwargs):
+def show_event_dialog(**kwargs):
     dlg = EventDialog(None, **kwargs)
     dlg.exec_()
     return dlg.accepted
-

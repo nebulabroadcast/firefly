@@ -1,11 +1,17 @@
 import functools
 
-from nx import *
-from firefly.common import *
+from firefly.core.meta_format import format_select, format_list
+from firefly.common import fontlib
+from firefly.qt import (
+    Qt,
+    QWidget,
+    QHBoxLayout,
+    QPushButton,
+    QComboBox,
+)
 
-from nebulacore.meta_format import format_select, format_list
 
-from .comboutils import *
+from .comboutils import ComboMenuDelegate, CheckComboBox
 
 
 class FireflyRadio(QWidget):
@@ -15,12 +21,11 @@ class FireflyRadio(QWidget):
         self.current_index = -1
         self.buttons = []
         self.layout = QHBoxLayout()
-        self.layout.setContentsMargins(0,0,0,0)
+        self.layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self.layout)
         if kwargs.get("data", []):
             self.set_data(kwargs["data"])
         self.default = self.get_value()
-
 
     def clear(self):
         for i, button in enumerate(self.buttons):
@@ -38,7 +43,6 @@ class FireflyRadio(QWidget):
         self.current_index = -1
         i = 0
         for row in data:
-            value = row["value"]
             alias = row.get("alias", row["value"])
             description = row.get("description") or alias or "(No value)"
             if not row.get("value"):
@@ -53,8 +57,7 @@ class FireflyRadio(QWidget):
             self.buttons[-1].setAutoExclusive(True)
             self.buttons[-1].clicked.connect(functools.partial(self.switch, i))
             self.layout.addWidget(self.buttons[-1])
-            i+= 1
-
+            i += 1
 
     def switch(self, index):
         self.current_index = index
@@ -73,9 +76,9 @@ class FireflyRadio(QWidget):
         else:
             self.current_index = -1
             for button in self.buttons:
-                button.setAutoExclusive(False);
-                button.setChecked(False);
-                button.setAutoExclusive(True);
+                button.setAutoExclusive(False)
+                button.setChecked(False)
+                button.setAutoExclusive(True)
         self.default = self.get_value()
 
     def get_value(self):
@@ -130,20 +133,20 @@ class FireflySelect(QComboBox):
             self.addItem(alias)
             self.cdata.append(value)
 
-            self.setItemData(i, indent ,Qt.UserRole)
+            self.setItemData(i, indent, Qt.UserRole)
             self.setItemData(i, f"<p>{description}</p>", Qt.ToolTipRole)
 
             if role == "header":
-                self.setItemData(i, fonts["bold"], Qt.FontRole)
+                self.setItemData(i, fontlib["bold"], Qt.FontRole)
 
             elif role == "label":
                 item = self.model().item(i)
                 item.setEnabled(False)
-                self.setItemData(i, fonts["boldunderline"], Qt.FontRole)
+                self.setItemData(i, fontlib["boldunderline"], Qt.FontRole)
 
             if row.get("selected"):
                 self.setCurrentIndex(i)
-            i+=1
+            i += 1
 
     def set_value(self, value):
         if value == self.get_value():
@@ -205,14 +208,14 @@ class FireflyList(CheckComboBox):
 
             if row["role"] == "label":
                 item = self.model().item(i)
-                self.setItemData(i, fonts["boldunderline"], Qt.FontRole)
+                self.setItemData(i, fontlib["boldunderline"], Qt.FontRole)
                 item.setEnabled(False)
             else:
                 self.model().item(i).setCheckable(True)
                 if row["role"] == "header":
-                    self.setItemData(i, fonts["bold"], Qt.FontRole)
+                    self.setItemData(i, fontlib["bold"], Qt.FontRole)
                 self.setItemCheckState(i, row.get("selected"))
-            i+=1
+            i += 1
 
     def set_value(self, value):
         if type(value) == str:

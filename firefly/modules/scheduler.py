@@ -1,66 +1,116 @@
+import os
 import datetime
 
-from firefly import *
+from nxtools import log_traceback, xml, logging
 
-from .scheduler_model import *
+from firefly.api import api
+from firefly.core.enum import ObjectStatus, ContentType, MediaType, JobState
+from firefly.common import pixlib
+from firefly.objects import Event, Item
+from firefly.base_module import BaseModule
+from firefly.widgets import ToolBarStretcher, ChannelDisplay
+from firefly.qt import (
+    Qt,
+    QToolButton,
+    QIcon,
+    QDrag,
+    QMimeData,
+    QToolBar,
+    QAction,
+    QVBoxLayout,
+    QFileDialog,
+    QApplication,
+)
+
+from .scheduler_model import SchedulerCalendar
 from .scheduler_utils import dump_template
 
 
+# Backwards compatibility
+OFFLINE = 0
+ONLINE = 1
+CREATING = 2  # File exists, but was changed recently.
+TRASHED = 3  # File has been moved to trash location.
+ARCHIVED = 4  # File has been moved to archive location.
+RESET = 5  # Reset metadata action has been invoked.
+CORRUPTED = 6
+REMOTE = 7
+UNKNOWN = 8
+AIRED = 9  # Auxiliary value.
+ONAIR = 10
+RETRIEVING = 11
+AUDIO = 1
+VIDEO = 2
+IMAGE = 3
+TEXT = 4
+DATABROADCASTING = 5
+INTERSTITIAL = 6
+EDUCATION = 7
+APPLICATION = 8
+GAME = 9
+PACKAGE = 10
+PENDING = 0
+IN_PROGRESS = 1
+COMPLETED = 2
+FAILED = 3
+ABORTED = 4
+RESTART = 5
+SKIPPED = 6
+VIRTUAL = 0
+FILE = 1
+URI = 2
+
+
 EMPTY_EVENT_DATA = '[{"id" : 0, "title" : "Empty event"}]'.encode("ascii")
+
 
 class EmptyEventButton(QToolButton):
     def __init__(self, parent):
         super(EmptyEventButton, self).__init__()
         self.pressed.connect(self.startDrag)
-        self.setIcon(QIcon(pix_lib["empty-event"]))
+        self.setIcon(QIcon(pixlib["empty-event"]))
         self.setToolTip("Drag this to scheduler to create empty event.")
 
     def startDrag(self):
-        drag = QDrag(self);
+        drag = QDrag(self)
         mimeData = QMimeData()
-        mimeData.setData(
-           "application/nx.event",
-           EMPTY_EVENT_DATA
-           )
+        mimeData.setData("application/nx.event", EMPTY_EVENT_DATA)
         drag.setMimeData(mimeData)
         if drag.exec_(Qt.CopyAction):
-            pass # nejak to rozumne ukoncit
+            pass  # nejak to rozumne ukoncit
 
 
 def scheduler_toolbar(wnd):
     toolbar = QToolBar(wnd)
 
-    action_week_prev = QAction(QIcon(pix_lib["previous"]), '&Previous week', wnd)
-    action_week_prev.setShortcut('Alt+Left')
-    action_week_prev.setStatusTip('Go to previous week')
+    action_week_prev = QAction(QIcon(pixlib["previous"]), "&Previous week", wnd)
+    action_week_prev.setShortcut("Alt+Left")
+    action_week_prev.setStatusTip("Go to previous week")
     action_week_prev.triggered.connect(wnd.on_week_prev)
     toolbar.addAction(action_week_prev)
 
-    action_refresh = QAction(QIcon(pix_lib["refresh"]), '&Refresh', wnd)
-    action_refresh.setStatusTip('Refresh scheduler')
+    action_refresh = QAction(QIcon(pixlib["refresh"]), "&Refresh", wnd)
+    action_refresh.setStatusTip("Refresh scheduler")
     action_refresh.triggered.connect(wnd.load)
     toolbar.addAction(action_refresh)
 
-    action_week_next = QAction(QIcon(pix_lib["next"]), '&Next week', wnd)
-    action_week_next.setShortcut('Alt+Right')
-    action_week_next.setStatusTip('Go to next week')
+    action_week_next = QAction(QIcon(pixlib["next"]), "&Next week", wnd)
+    action_week_next.setShortcut("Alt+Right")
+    action_week_next.setStatusTip("Go to next week")
     action_week_next.triggered.connect(wnd.on_week_next)
     toolbar.addAction(action_week_next)
 
-#TODO
-#    toolbar.addSeparator()
-#
-#    wnd.action_show_runs = QAction(QIcon(pix_lib["show-runs"]), '&Show runs', wnd)
-#    wnd.action_show_runs.setStatusTip('Show runs')
-#    wnd.action_show_runs.setCheckable(True)
-#    toolbar.addAction(wnd.action_show_runs)
+    # TODO
+    #    toolbar.addSeparator()
+    #
+    #    wnd.action_show_runs = QAction(QIcon(pixlib["show-runs"]), '&Show runs', wnd)
+    #    wnd.action_show_runs.setStatusTip('Show runs')
+    #    wnd.action_show_runs.setCheckable(True)
+    #    toolbar.addAction(wnd.action_show_runs)
 
     toolbar.addSeparator()
-
     toolbar.addWidget(EmptyEventButton(wnd))
-
     toolbar.addWidget(ToolBarStretcher(wnd))
-
     wnd.channel_display = ChannelDisplay()
     toolbar.addWidget(wnd.channel_display)
 
@@ -74,7 +124,7 @@ class SchedulerModule(BaseModule):
         self.calendar = SchedulerCalendar(self)
 
         layout = QVBoxLayout()
-        layout.setContentsMargins(0,0,0,0)
+        layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(2)
         layout.addWidget(toolbar, 0)
         layout.addWidget(self.calendar, 1)
@@ -89,16 +139,16 @@ class SchedulerModule(BaseModule):
         except Exception:
             log_traceback()
         save_file_path = QFileDialog.getSaveFileName(
-                    self,
-                    'Save scheduler template',
-                    os.path.abspath("templates"),
-                    "Templates (*.xml)"
-                )[0]
+            self,
+            "Save scheduler template",
+            os.path.abspath("templates"),
+            "Templates (*.xml)",
+        )[0]
         if os.path.splitext(save_file_path)[1].lower() != ".xml":
             save_file_path += ".xml"
         try:
-            with open(save_file_path, 'wb') as save_file:
-                save_file.write(encode_if_py3(data))
+            with open(save_file_path, "wb") as save_file:
+                save_file.write(data.encode("utf-8"))
         except Exception:
             log_traceback()
 
@@ -109,18 +159,15 @@ class SchedulerModule(BaseModule):
         except Exception:
             log_traceback()
         file_path = QFileDialog.getOpenFileName(
-                self,
-                "Open template",
-                os.path.abspath("templates"),
-                "Templates (*.xml)"
-            )[0]
+            self, "Open template", os.path.abspath("templates"), "Templates (*.xml)"
+        )[0]
 
         if not file_path:
             return
 
         QApplication.setOverrideCursor(Qt.WaitCursor)
         try:
-            feed = decode_if_py3(open(file_path, "rb").read())
+            feed = open(file_path, "rb").read().decode("utf-8")
             data = xml(feed)
         except Exception:
             QApplication.restoreOverrideCursor()
@@ -130,17 +177,17 @@ class SchedulerModule(BaseModule):
         events = []
         try:
             for day_index, day in enumerate(data.findall("day")):
-                day_start = self.calendar.week_start_time + (3600*24*day_index)
+                day_start = self.calendar.week_start_time + (3600 * 24 * day_index)
                 for event_data in day.findall("event"):
                     hh, mm = [int(x) for x in event_data.attrib["time"].split(":")]
 
-                    clock_offset = (hh*3600) + (mm*60) - (ch*3600) - (cm*60)
-                    if (hh*3600) + (mm*60) < (ch*3600) - (cm*60):
-                        clock_offset += 24*3600
+                    clock_offset = (hh * 3600) + (mm * 60) - (ch * 3600) - (cm * 60)
+                    if (hh * 3600) + (mm * 60) < (ch * 3600) - (cm * 60):
+                        clock_offset += 24 * 3600
 
-                    start_time = day_start + clock_offset + (day_offset*3600*24)
+                    start_time = day_start + clock_offset + (day_offset * 3600 * 24)
 
-                    event = Event(meta={"start" : start_time})
+                    event = Event(meta={"start": start_time})
                     for m in event_data.findall("meta"):
                         key = m.attrib["key"]
                         value = m.text
@@ -158,7 +205,7 @@ class SchedulerModule(BaseModule):
                             event.meta["_items"].append(item.meta)
 
                     events.append(event.meta)
-                if day_offset: # Importing single day.
+                if day_offset:  # Importing single day.
                     break
         except Exception:
             QApplication.restoreOverrideCursor()
@@ -167,10 +214,7 @@ class SchedulerModule(BaseModule):
         if not events:
             QApplication.restoreOverrideCursor()
             return
-        response = api.schedule(
-                id_channel=self.id_channel,
-                events=events
-            )
+        response = api.schedule(id_channel=self.id_channel, events=events)
         QApplication.restoreOverrideCursor()
         if not response:
             logging.error(response.message)
@@ -186,29 +230,34 @@ class SchedulerModule(BaseModule):
         self.channel_display.setText(header)
 
     def on_week_prev(self):
-        self.load(self.calendar.week_start_time - (3600*24*7))
+        self.load(self.calendar.week_start_time - (3600 * 24 * 7))
 
     def on_week_next(self):
-        self.load(self.calendar.week_start_time + (3600*24*7))
+        self.load(self.calendar.week_start_time + (3600 * 24 * 7))
 
     def focus(self, objects):
         return
-        #TODO
+        # TODO
         if self.action_show_runs.isChecked():
-            asset_ids = [obj.id for obj in objects if obj.object_type == "asset"]
-            if not asset_ids:
-                return
-            res, data = query("get_runs", id_channel=self.id_channel, asset_ids=asset_ids )
-            if success(res):
-                self.calendar.focus_data = data["data"]
-                self.calendar.update()
+            ...
+            # asset_ids = [obj.id for obj in objects if obj.object_type == "asset"]
+            # if not asset_ids:
+            #    return
+            # res, data = query(
+            #     "get_runs", id_channel=self.id_channel, asset_ids=asset_ids
+            # )
+            # if success(res):
+            #    self.calendar.focus_data = data["data"]
+            #     self.calendar.update()
 
     def open_rundown(self, ts, event=False):
         self.main_window.main_widget.rundown.load(start_time=ts, event=event)
-        self.main_window.main_widget.switch_tab(self.main_window.main_widget.rundown, perform_on_switch_tab=False)
+        self.main_window.main_widget.switch_tab(
+            self.main_window.main_widget.rundown, perform_on_switch_tab=False
+        )
 
     def set_channel(self, id_channel):
-        #TODO: is this used? may be removed?
+        # TODO: is this used? may be removed?
         pass
 
     def on_channel_changed(self):
@@ -218,10 +267,13 @@ class SchedulerModule(BaseModule):
     def refresh_events(self, events):
         for id_event in events:
             if id_event in self.calendar.event_ids:
-                logging.debug(f"[SCHEDULER] Event id {id_event} has been changed. Reloading calendar")
+                logging.debug(
+                    f"[SCHEDULER] Event id {id_event} has been changed."
+                    "Reloading calendar"
+                )
                 self.load()
                 break
 
     def seismic_handler(self, data):
-       if data.method == "objects_changed" and data.data["object_type"] == "event":
-           self.refresh_events(data.data["objects"])
+        if data.method == "objects_changed" and data.data["object_type"] == "event":
+            self.refresh_events(data.data["objects"])

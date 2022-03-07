@@ -1,6 +1,25 @@
 __all__ = ["ComboMenuDelegate", "CheckComboBox"]
 
-from firefly.common import *
+
+from firefly.qt import (
+    Qt,
+    QAbstractItemDelegate,
+    QApplication,
+    QStyle,
+    QStyleOptionMenuItem,
+    QBrush,
+    QColor,
+    QPixmap,
+    QPalette,
+    QIcon,
+    QFontMetrics,
+    QComboBox,
+    QTimer,
+    QStyleOptionComboBox,
+    QStylePainter,
+    QEvent,
+)
+
 
 class ComboMenuDelegate(QAbstractItemDelegate):
     def isSeparator(self, index):
@@ -12,8 +31,7 @@ class ComboMenuDelegate(QAbstractItemDelegate):
             style = option.widget.style()
         else:
             style = QApplication.style()
-        style.drawControl(QStyle.CE_MenuItem, menuopt, painter,
-                          option.widget)
+        style.drawControl(QStyle.CE_MenuItem, menuopt, painter, option.widget)
 
     def sizeHint(self, option, index):
         menuopt = self._getMenuStyleOption(option, index)
@@ -22,8 +40,7 @@ class ComboMenuDelegate(QAbstractItemDelegate):
         else:
             style = QApplication.style()
         return style.sizeFromContents(
-            QStyle.CT_MenuItem, menuopt, menuopt.rect.size(),
-            option.widget
+            QStyle.CT_MenuItem, menuopt, menuopt.rect.size(), option.widget
         )
 
     def _getMenuStyleOption(self, option, index):
@@ -47,7 +64,6 @@ class ComboMenuDelegate(QAbstractItemDelegate):
         if isinstance(decoration, QIcon):
             menuoption.icon = decoration
 
-
         if self.isSeparator(index):
             menuoption.menuItemType = QStyleOptionMenuItem.Separator
         else:
@@ -66,7 +82,6 @@ class ComboMenuDelegate(QAbstractItemDelegate):
         else:
             menuoption.font = QApplication.font("QMenu")
 
-
         if index.data(Qt.FontRole):
             menuoption.font = index.data(Qt.FontRole)
 
@@ -78,7 +93,7 @@ class ComboMenuDelegate(QAbstractItemDelegate):
 
         if idt is not None:
             idt = int(idt)
-            menuoption.rect.adjust(idt*16, 0, 0, 0)
+            menuoption.rect.adjust(idt * 16, 0, 0, 0)
 
         menuoption.menuHasCheckableItems = True
         menuoption.tabWidth = 0
@@ -86,9 +101,9 @@ class ComboMenuDelegate(QAbstractItemDelegate):
         menuoption.text = display
 
         menuoption.fontMetrics = QFontMetrics(menuoption.font)
-        state = option.state & (QStyle.State_MouseOver |
-                                QStyle.State_Selected |
-                                QStyle.State_Active)
+        state = option.state & (
+            QStyle.State_MouseOver | QStyle.State_Selected | QStyle.State_Active
+        )
 
         if index.flags() & Qt.ItemIsEnabled:
             state = state | QStyle.State_Enabled
@@ -125,8 +140,7 @@ class CheckComboBox(QComboBox):
         super(CheckComboBox, self).mousePressEvent(event)
         if self.__popupIsShown:
             self.__initialMousePos = self.mapToGlobal(event.pos())
-            self.__blockMouseReleaseTimer.start(
-                QApplication.doubleClickInterval())
+            self.__blockMouseReleaseTimer.start(QApplication.doubleClickInterval())
 
     def changeEvent(self, event):
         """Reimplemented."""
@@ -153,31 +167,37 @@ class CheckComboBox(QComboBox):
 
     def eventFilter(self, obj, event):
         """Reimplemented."""
-        if self.__popupIsShown and \
-                event.type() == QEvent.MouseMove and \
-                self.view().isVisible() and self.__initialMousePos is not None:
+        if (
+            self.__popupIsShown
+            and event.type() == QEvent.MouseMove
+            and self.view().isVisible()
+            and self.__initialMousePos is not None
+        ):
             diff = obj.mapToGlobal(event.pos()) - self.__initialMousePos
-            if diff.manhattanLength() > 9 and \
-                    self.__blockMouseReleaseTimer.isActive():
+            if diff.manhattanLength() > 9 and self.__blockMouseReleaseTimer.isActive():
                 self.__blockMouseReleaseTimer.stop()
             # pass through
 
-        if self.__popupIsShown and \
-                event.type() == QEvent.MouseButtonRelease and \
-                self.view().isVisible() and \
-                self.view().rect().contains(event.pos()) and \
-                self.view().currentIndex().isValid() and \
-                self.view().currentIndex().flags() & Qt.ItemIsSelectable and \
-                self.view().currentIndex().flags() & Qt.ItemIsEnabled and \
-                self.view().currentIndex().flags() & Qt.ItemIsUserCheckable and \
-                self.view().visualRect(self.view().currentIndex()).contains(event.pos()) and \
-                not self.__blockMouseReleaseTimer.isActive():
+        if (
+            self.__popupIsShown
+            and event.type() == QEvent.MouseButtonRelease
+            and self.view().isVisible()
+            and self.view().rect().contains(event.pos())
+            and self.view().currentIndex().isValid()
+            and self.view().currentIndex().flags() & Qt.ItemIsSelectable
+            and self.view().currentIndex().flags() & Qt.ItemIsEnabled
+            and self.view().currentIndex().flags() & Qt.ItemIsUserCheckable
+            and self.view().visualRect(self.view().currentIndex()).contains(event.pos())
+            and not self.__blockMouseReleaseTimer.isActive()
+        ):
             model = self.model()
             index = self.view().currentIndex()
             state = model.data(index, Qt.CheckStateRole)
-            model.setData(index,
-                          Qt.Checked if state == Qt.Unchecked else Qt.Unchecked,
-                          Qt.CheckStateRole)
+            model.setData(
+                index,
+                Qt.Checked if state == Qt.Unchecked else Qt.Unchecked,
+                Qt.CheckStateRole,
+            )
             self.view().update(index)
             return True
 
@@ -188,8 +208,7 @@ class CheckComboBox(QComboBox):
                 index = self.view().currentIndex()
                 flags = model.flags(index)
                 state = model.data(index, Qt.CheckStateRole)
-                if flags & Qt.ItemIsUserCheckable and \
-                        flags & Qt.ItemIsTristate:
+                if flags & Qt.ItemIsUserCheckable and flags & Qt.ItemIsTristate:
                     state = Qt.CheckState((int(state) + 1) % 3)
                 elif flags & Qt.ItemIsUserCheckable:
                     state = Qt.Checked if state != Qt.Checked else Qt.Unchecked
@@ -229,8 +248,7 @@ class CheckComboBox(QComboBox):
         self.setItemData(index, state, Qt.CheckStateRole)
 
     def checkedIndices(self):
-        return [i for i in range(self.count())
-                if self.itemCheckState(i)]
+        return [i for i in range(self.count()) if self.itemCheckState(i)]
 
     def setPlaceholderText(self, text):
         if self.__placeholderText != text:
@@ -251,9 +269,14 @@ class CheckComboBox(QComboBox):
             self.showPopup()
             return
 
-        ignored = {Qt.Key_Up, Qt.Key_Down,
-                   Qt.Key_PageDown, Qt.Key_PageUp,
-                   Qt.Key_Home, Qt.Key_End}
+        ignored = {
+            Qt.Key_Up,
+            Qt.Key_Down,
+            Qt.Key_PageDown,
+            Qt.Key_PageUp,
+            Qt.Key_Home,
+            Qt.Key_End,
+        }
 
         if event.key() in ignored:
             event.ignore()
@@ -266,4 +289,3 @@ class CheckComboBox(QComboBox):
         opt.initFrom(self)
         delegate = ComboMenuDelegate(self)
         self.setItemDelegate(delegate)
-

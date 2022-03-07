@@ -1,6 +1,7 @@
 import os
 
-from .common import *
+from nxtools import PLATFORM, logging
+from firefly.core.common import config
 
 
 if PLATFORM == "windows":
@@ -10,8 +11,12 @@ if PLATFORM == "windows":
 
     def get_available_drives():
         drive_bitmask = ctypes.cdll.kernel32.GetLogicalDrives()
-        return list(itertools.compress(string.ascii_uppercase,
-            map(lambda x:ord(x) - ord('0'), bin(drive_bitmask)[:1:-1])))
+        return list(
+            itertools.compress(
+                string.ascii_uppercase,
+                map(lambda x: ord(x) - ord("0"), bin(drive_bitmask)[:1:-1]),
+            )
+        )
 
 
 def load_filesystem(handler=False):
@@ -31,7 +36,7 @@ def load_filesystem(handler=False):
                 try:
                     site, id_storage = line.split(":")
                     id_storage = int(id_storage)
-                except:
+                except Exception:
                     continue
 
                 if site != config["site_name"]:

@@ -1,20 +1,27 @@
-import functools
+import json
+import time
 
-from firefly import *
-from firefly.dialogs.rundown import *
+from nxtools import logging
+
+from firefly.api import api
+from firefly.core.common import config
+from firefly.dialogs.rundown import PlaceholderDialog, SubclipSelectDialog
+from firefly.objects import Asset, Item, Event, asset_cache
+from firefly.view import FireflyViewModel
+from firefly.qt import Qt, QApplication, QUrl, QMimeData
 
 DEFAULT_COLUMNS = [
-        "title",
-        "id/main",
-        "duration",
-        "status",
-        "run_mode",
-        "rundown_scheduled",
-        "rundown_broadcast",
-        "rundown_difference",
-        "mark_in",
-        "mark_out",
-    ]
+    "title",
+    "id/main",
+    "duration",
+    "status",
+    "run_mode",
+    "rundown_scheduled",
+    "rundown_broadcast",
+    "rundown_difference",
+    "mark_in",
+    "mark_out",
+]
 
 
 class RundownModel(FireflyViewModel):
@@ -42,9 +49,10 @@ class RundownModel(FireflyViewModel):
     def load(self, callback=None):
         self.load_start_time = time.time()
         self.parent().setCursor(Qt.BusyCursor)
-        self.current_callback=callback
-        api.rundown(self.load_callback, id_channel=self.id_channel, start_time=self.start_time)
-
+        self.current_callback = callback
+        api.rundown(
+            self.load_callback, id_channel=self.id_channel, start_time=self.start_time
+        )
 
     def load_callback(self, response):
         self.parent().setCursor(Qt.ArrowCursor)
@@ -57,10 +65,11 @@ class RundownModel(FireflyViewModel):
         self.beginResetModel()
         logging.info("Loading rundown. Please wait...")
 
-        reset = True
         required_assets = []
 
-        self.header_data = config["playout_channels"][self.id_channel].get("rundown_columns", DEFAULT_COLUMNS)
+        self.header_data = config["playout_channels"][self.id_channel].get(
+            "rundown_columns", DEFAULT_COLUMNS
+        )
         self.object_data = []
         self.event_ids = []
 
@@ -72,10 +81,9 @@ class RundownModel(FireflyViewModel):
                 i += 1
                 self.event_ids.append(row["id"])
                 if row["is_empty"]:
-                    self.object_data.append(Item(meta={
-                            "title" : "(Empty event)",
-                            "id_bin" : row["id_bin"]
-                        }))
+                    self.object_data.append(
+                        Item(meta={"title": "(Empty event)", "id_bin": row["id_bin"]})
+                    )
                     i += 1
             elif row["object_type"] == "item":
                 item = Item(meta=row)
@@ -94,32 +102,45 @@ class RundownModel(FireflyViewModel):
 
         self.endResetModel()
         self.parent().setCursor(Qt.ArrowCursor)
-        logging.goodnews("Rundown loaded in {:.03f}s".format(time.time() - self.load_start_time))
+        logging.goodnews(
+            "Rundown loaded in {:.03f}s".format(time.time() - self.load_start_time)
+        )
 
         if self.current_callback:
             self.current_callback()
 
     def refresh_assets(self, assets):
         for row in range(len(self.object_data)):
-            if self.object_data[row].object_type == "item" and self.object_data[row]["id_asset"] in assets:
-                self.object_data[row]._asset = asset_cache.get(self.object_data[row]["id_asset"])
-                self.dataChanged.emit(self.index(row, 0), self.index(row, len(self.header_data)-1))
+            if (
+                self.object_data[row].object_type == "item"
+                and self.object_data[row]["id_asset"] in assets
+            ):
+                self.object_data[row]._asset = asset_cache.get(
+                    self.object_data[row]["id_asset"]
+                )
+                self.dataChanged.emit(
+                    self.index(row, 0), self.index(row, len(self.header_data) - 1)
+                )
 
     def refresh_items(self, items):
         for row, obj in enumerate(self.object_data):
-            if self.object_data[row].id in items and self.object_data[row].object_type == "item":
-                self.dataChanged.emit(self.index(row, 0), self.index(row, len(self.header_data)-1))
+            if (
+                self.object_data[row].id in items
+                and self.object_data[row].object_type == "item"
+            ):
+                self.dataChanged.emit(
+                    self.index(row, 0), self.index(row, len(self.header_data) - 1)
+                )
                 break
 
-
-    def flags(self,index):
+    def flags(self, index):
         flags = super(RundownModel, self).flags(index)
         if index.isValid():
             obj = self.object_data[index.row()]
             if obj.id and obj.object_type == "item":
-                flags |= Qt.ItemIsDragEnabled # Itemy se daji dragovat
+                flags |= Qt.ItemIsDragEnabled  # Itemy se daji dragovat
         else:
-            flags = Qt.ItemIsDropEnabled # Dropovat se da jen mezi rowy
+            flags = Qt.ItemIsDropEnabled  # Dropovat se da jen mezi rowy
         return flags
 
     def mimeTypes(self):
@@ -138,7 +159,11 @@ class RundownModel(FireflyViewModel):
             rows.append(index.row())
 
         data = [self.object_data[row].meta for row in rows]
-        urls = [QUrl.fromLocalFile(self.object_data[row].file_path) for row in rows if self.object_data[row].file_path]
+        urls = [
+            QUrl.fromLocalFile(self.object_data[row].file_path)
+            for row in rows
+            if self.object_data[row].file_path
+        ]
 
         try:
             mimeData = QMimeData()
@@ -147,9 +172,6 @@ class RundownModel(FireflyViewModel):
         except Exception:
             return
         return mimeData
-
-
-
 
     def dropMimeData(self, data, action, row, column, parent):
         if action == Qt.IgnoreAction:
@@ -165,7 +187,7 @@ class RundownModel(FireflyViewModel):
         if data.hasFormat("application/nx.item"):
             d = data.data("application/nx.item").data()
             items = json.loads(d.decode("ascii"))
-            if not items or items[0].get("rundown_row","") in [row, row-1]:
+            if not items or items[0].get("rundown_row", "") in [row, row - 1]:
                 return False
             else:
                 for obj in items:
@@ -196,93 +218,94 @@ class RundownModel(FireflyViewModel):
             return False
 
         sorted_items = []
-        i = row-1
+        i = row - 1
         to_bin = self.object_data[i]["id_bin"]
 
         # Apend heading items
 
         while i >= 1:
             current_object = self.object_data[i]
-            if current_object.object_type != "item" or current_object["id_bin"] != to_bin:
+            if (
+                current_object.object_type != "item"
+                or current_object["id_bin"] != to_bin
+            ):
                 break
             p_item = current_object.id
-            if not p_item in [item.id for item in drop_objects]:
+            if p_item not in [item.id for item in drop_objects]:
                 if p_item:
-                    sorted_items.append({
-                            "object_type" : "item",
-                            "id_object" : p_item,
-                            "meta" : {}
-                        })
-            i-=1
+                    sorted_items.append(
+                        {"object_type": "item", "id_object": p_item, "meta": {}}
+                    )
+            i -= 1
         sorted_items.reverse()
 
         # Append drop
 
         for obj in drop_objects:
             if data.hasFormat("application/nx.item"):
-                sorted_items.append({
-                        "object_type" : "item",
-                        "id_object" : obj.id,
-                        "meta" : obj.meta
-                    })
+                sorted_items.append(
+                    {"object_type": "item", "id_object": obj.id, "meta": obj.meta}
+                )
 
             elif data.hasFormat("application/nx.asset"):
-                metas = []
                 if obj["subclips"]:
                     dlg = SubclipSelectDialog(self.parent(), obj)
                     dlg.exec_()
                     if dlg.ok:
                         for meta in dlg.result:
-                            sorted_items.append({
-                                    "object_type" : "asset",
-                                    "id_object" : obj.id,
-                                    "meta" : meta
-                                })
+                            sorted_items.append(
+                                {
+                                    "object_type": "asset",
+                                    "id_object": obj.id,
+                                    "meta": meta,
+                                }
+                            )
 
-                else: # Asset does not have subclips
+                else:  # Asset does not have subclips
                     meta = {}
                     if obj["mark_in"]:
                         meta["mark_in"] = obj["mark_in"]
                         meta["mark_out"] = obj["mark_out"]
 
-                    sorted_items.append({"object_type" : "asset", "id_object" : obj.id, "meta" : meta})
-
+                    sorted_items.append(
+                        {"object_type": "asset", "id_object": obj.id, "meta": meta}
+                    )
 
         # Append trailing items
 
         i = row
         while i < len(self.object_data):
             current_object = self.object_data[i]
-            if current_object.object_type != "item" or current_object["id_bin"] != to_bin:
+            if (
+                current_object.object_type != "item"
+                or current_object["id_bin"] != to_bin
+            ):
                 break
             p_item = current_object.id
-            if not p_item in [item.id for item in drop_objects]:
+            if p_item not in [item.id for item in drop_objects]:
                 if p_item:
-                    sorted_items.append({
-                            "object_type" : "item",
-                            "id_object" : p_item,
-                            "meta" : {}
-                        })
-            i+=1
+                    sorted_items.append(
+                        {"object_type": "item", "id_object": p_item, "meta": {}}
+                    )
+            i += 1
 
         #
         # Send order query
         #
 
-        sorted_items = [item for item in sorted_items]# if item["id_object"]]
+        sorted_items = [item for item in sorted_items]  # if item["id_object"]]
 
         if not sorted_items:
             return
         self.parent().setCursor(Qt.BusyCursor)
         QApplication.processEvents()
-        response = api.order(
-                self.order_callback,
-                id_channel=self.id_channel,
-                id_bin=to_bin,
-                order=sorted_items
-            )
+        api.order(
+            self.order_callback,
+            id_channel=self.id_channel,
+            id_bin=to_bin,
+            order=sorted_items,
+        )
         return False
-
 
     def order_callback(self, response):
         self.parent().setCursor(Qt.ArrowCursor)

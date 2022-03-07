@@ -1,12 +1,6 @@
 #!/usr/bin/env python3
 
-try:
-    import rex
-except ImportError:
-    # Frozen application does not need package manager
-    pass
-
-from nxtools import *
+from nxtools import log_traceback
 from firefly.application import FireflyApplication
 
 if __name__ == "__main__":

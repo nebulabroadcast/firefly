@@ -1,17 +1,31 @@
-from nxtools import *
-from pyqtbs import *
-from .version import *
+import os
+import enum
 
-from .api import api
+from nxtools import logging, get_guid
 
-from nx import *
+from firefly.core.common import config
+from firefly.qt import QFont, QPixmap, QColor, app_dir
 
-DEBUG, INFO, WARNING, ERROR, GOOD_NEWS = range(5)
 
 logging.user = ""
 logging.handlers = []
 
-class FontLib():
+CLIENT_ID = get_guid()
+
+
+class Colors(enum.Enum):
+    TEXT_NORMAL = "#f0f0f0"
+    TEXT_FADED = "#a0a0a0"
+    TEXT_FADED2 = "#707070"
+    TEXT_HIGHLIGHT = "#ffffff"
+    TEXT_GREEN = "#15f015"
+    TEXT_YELLOW = "#e0f015"
+    TEXT_RED = "#f01515"
+    TEXT_BLUE = "#1515f0"
+    LIVE_BACKGROUND = "#500000"
+
+
+class FontLib:
     def __init__(self):
         self.data = {}
 
@@ -38,25 +52,19 @@ class FontLib():
         font_strikeout.setStrikeOut(True)
 
         self.data = {
-                "bold" : font_bold,
-                "italic" : font_italic,
-                "bolditalic" : font_bolditalic,
-                "underline" : font_underline,
-                "boldunderline" : font_boldunderline,
-                "strikeout" : font_strikeout
-           }
+            "bold": font_bold,
+            "italic": font_italic,
+            "bolditalic": font_bolditalic,
+            "underline": font_underline,
+            "boldunderline": font_boldunderline,
+            "strikeout": font_strikeout,
+        }
 
     def __getitem__(self, key):
         if not self.data:
             self.load()
         return self.data.get(key)
 
-fonts = FontLib()
-
-
-#
-# pix library
-#
 
 def get_pix(name):
     if not name:
@@ -67,7 +75,7 @@ def get_pix(name):
         try:
             color = config["folders"][id_folder]["color"]
         except KeyError:
-            color = 0xaaaaaa
+            color = 0xAAAAAA
         icn.fill(QColor(color))
         return icn
     pixmap = QPixmap(f":/images/{name}.png")
@@ -77,58 +85,16 @@ def get_pix(name):
             return QPixmap(pix_file)
     return None
 
+
 class PixLib(dict):
+    def __call__(self, key):
+        return self[key]
+
     def __getitem__(self, key):
-        if not key in self:
+        if key not in self:
             self[key] = get_pix(key)
         return self.get(key, None)
 
 
-ABOUT_TEXT = \
-    "<b>Firefly - Nebula broadcast automation system client application</b>" \
-    "<br><br>" \
-    "Named after American space Western drama television series which ran from 2002–2003, " \
-    "created by writer and director Joss Whedon" \
-    "<br><br>" \
-    "Firefly is free software; " \
-    "you can redistribute it and/or modify it under the terms of the GNU General Public " \
-    "License as published by the Free Software Foundation; " \
-    "either version 3 of the License, or (at your option) any later version." \
-    "<br><br>" \
-    "For more information visit <a href=\"https://nebulabroadcast.com\" style=\"color: #009fbc;\">https://nebulabroadcast.com</a>"
-
-def about_dialog(parent):
-    QMessageBox.about(parent, "Firefly {}".format(FIREFLY_VERSION), ABOUT_TEXT)
-
-
-pix_lib = PixLib()
-
-
-def has_right(*args, **kwargs):
-    return user.has_right(*args, **kwargs)
-
-
-if PLATFORM == "unix":
-    import subprocess
-
-    def notify(text, header, expire):
-        subprocess.Popen([
-                "notify-send",
-                "-t", str(expire),
-                header,
-                text
-            ])
-
-def notify_send(text, level=INFO):
-    caption, expire = {
-            DEBUG : ["debug", 1],
-            INFO : ["info", 3],
-            WARNING : ["warning", 5],
-            ERROR : ["error", 10],
-            GOOD_NEWS : ["good news", 5]
-        }[level]
-    caption = f"Firefly {caption}"
-    if level < WARNING:
-        return
-
-    notify(text, caption, expire)
+fontlib = FontLib()
+pixlib = PixLib()

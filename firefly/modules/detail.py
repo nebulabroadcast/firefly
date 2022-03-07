@@ -1,7 +1,35 @@
-from firefly.modules.detail_toolbars import *
-from firefly.modules.detail_subclips import *
+import time
+
+from nxtools import logging, format_time
+
+from firefly.api import api
+from firefly.common import pixlib
+from firefly.core.common import config
+from firefly.core.metadata import meta_types
+from firefly.core.enum import MetaClass, ObjectStatus
+from firefly.base_module import BaseModule
+from firefly.modules.detail_toolbars import detail_toolbar, preview_toolbar
+from firefly.modules.detail_subclips import FireflySubclipsView
+from firefly.widgets import MetaEditor, FireflySelect, FireflyTimecode
+from firefly.objects import has_right, Asset, asset_cache, user
+
+from firefly.qt import (
+    Qt,
+    QWidget,
+    QApplication,
+    QVBoxLayout,
+    QScrollArea,
+    QFrame,
+    QTextEdit,
+    QFontDatabase,
+    QTabWidget,
+    QHBoxLayout,
+    QMessageBox,
+    QIcon,
+)
 
 from proxyplayer import VideoPlayer
+
 
 class DetailTabMain(QWidget):
     def __init__(self, parent):
@@ -17,7 +45,7 @@ class DetailTabMain(QWidget):
         self.scroll_area = QScrollArea(self)
         self.scroll_area.setFrameStyle(QFrame.NoFrame)
         self.scroll_area.setWidgetResizable(True)
-        self.scroll_area.setContentsMargins(0,0,0,0)
+        self.scroll_area.setContentsMargins(0, 0, 0, 0)
         self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
 
         mwidget = QWidget()
@@ -27,7 +55,6 @@ class DetailTabMain(QWidget):
         scroll_layout = QVBoxLayout()
         scroll_layout.addWidget(self.scroll_area)
         self.setLayout(scroll_layout)
-
 
     def load(self, asset, **kwargs):
         id_folder = kwargs.get("id_folder", asset["id_folder"])
@@ -55,7 +82,7 @@ class DetailTabMain(QWidget):
 
         if self.form:
             for key, conf in self.keys:
-                if meta_types[key]["class"] in [SELECT, LIST]:
+                if meta_types[key]["class"] in [MetaClass.SELECT, MetaClass.LIST]:
                     self.form.inputs[key].set_data(asset.show(key, result="full"))
                 self.form[key] = asset[key]
             self.form.set_defaults()
@@ -67,17 +94,16 @@ class DetailTabMain(QWidget):
     def on_focus(self):
         pass
 
-
     def search_by_key(self, key, id_view=False):
         b = self.parent().parent().parent().main_window.browser
         id_view = id_view or b.tabs.widget(b.tabs.currentIndex()).id_view
         view_title = config["views"][id_view]["title"]
         asset = self.parent().parent().parent().asset
         b.new_tab(
-                f"{view_title}: {asset.show(key)} ({meta_types[key].alias})",
-                id_view=id_view,
-                conds=[f"'{key}' = '{self.form[key]}'"]
-            )
+            f"{view_title}: {asset.show(key)} ({meta_types[key].alias})",
+            id_view=id_view,
+            conds=[f"'{key}' = '{self.form[key]}'"],
+        )
         b.redraw_tabs()
 
 
@@ -97,9 +123,9 @@ class MetaList(QTextEdit):
 class DetailTabExtended(MetaList):
     def load(self, asset, **kwargs):
         self.tag_groups = {
-                "core" :  [],
-                "other"  : [],
-            }
+            "core": [],
+            "other": [],
+        }
         if not asset["id_folder"]:
             return
         for tag in sorted(meta_types):
@@ -107,12 +133,14 @@ class DetailTabExtended(MetaList):
                 self.tag_groups["core"].append(tag)
             elif meta_types[tag]["ns"] in ("f", "q"):
                 continue
-            elif tag not in [r[0] for r in config["folders"][asset["id_folder"]]["meta_set"]]:
+            elif tag not in [
+                r[0] for r in config["folders"][asset["id_folder"]]["meta_set"]
+            ]:
                 self.tag_groups["other"].append(tag)
         data = ""
         for tag_group in ["core", "other"]:
             for tag in self.tag_groups[tag_group]:
-                if not tag in asset.meta:
+                if tag not in asset.meta:
                     continue
                 tag_title = meta_types[tag].alias()
                 value = asset.format_display(tag) or asset["tag"] or ""
@@ -124,11 +152,7 @@ class DetailTabExtended(MetaList):
 
 class DetailTabTechnical(MetaList):
     def load(self, asset, **kwargs):
-        self.tag_groups = {
-            "File" : [],
-            "Format"  : [],
-            "QC"   : []
-        }
+        self.tag_groups = {"File": [], "Format": [], "QC": []}
         for tag in sorted(meta_types):
             if tag.startswith("file") or tag in ["id_storage", "path", "origin"]:
                 self.tag_groups["File"].append(tag)
@@ -141,7 +165,7 @@ class DetailTabTechnical(MetaList):
             return
         for tag_group in ["File", "Format", "QC"]:
             for tag in self.tag_groups[tag_group]:
-                if not tag in asset.meta:
+                if tag not in asset.meta:
                     continue
                 tag_title = meta_types[tag].alias()
                 value = asset.format_display(tag) or asset["tag"] or ""
@@ -149,7 +173,6 @@ class DetailTabTechnical(MetaList):
                     data += f"{tag_title:<40}: {value}\n"
             data += "\n\n"
         self.setText(data)
-
 
 
 class DetailTabPreview(QWidget):
@@ -182,19 +205,21 @@ class DetailTabPreview(QWidget):
 
     def load_video(self):
         if self.current_asset and not self.loaded:
-            proxy_url = config["hub"] +  self.current_asset.proxy_url
+            proxy_url = config["hub"] + self.current_asset.proxy_url
             logging.debug(f"[DETAIL] Opening {self.current_asset} preview: {proxy_url}")
             self.player.fps = self.current_asset.fps
             if self.current_asset["poster_frame"]:
-                markers = {"poster_frame" : {"position" : self.current_asset["poster_frame"]}}
+                markers = {
+                    "poster_frame": {"position": self.current_asset["poster_frame"]}
+                }
             else:
                 markers = {}
             self.player.load(
-                    proxy_url,
-                    mark_in=self.current_asset["mark_in"],
-                    mark_out=self.current_asset["mark_out"],
-                    markers=markers,
-                )
+                proxy_url,
+                mark_in=self.current_asset["mark_in"],
+                mark_out=self.current_asset["mark_out"],
+                markers=markers,
+            )
             self.loaded = True
 
     def on_focus(self):
@@ -202,16 +227,20 @@ class DetailTabPreview(QWidget):
 
     def set_poster(self):
         self.changed["poster_frame"] = self.player.position
-        self.player.markers["poster_frame"] = {"position" : self.player.position}
+        self.player.markers["poster_frame"] = {"position": self.player.position}
         self.player.region_bar.update()
 
     def go_to_poster(self):
-        pos = self.player.markers.get("poster_frame",{}).get("position", 0)
+        pos = self.player.markers.get("poster_frame", {}).get("position", 0)
         if pos:
             self.player.seek(pos)
 
     def save_marks(self):
-        if self.player.mark_in and self.player.mark_out and self.player.mark_in >= self.player.mark_out:
+        if (
+            self.player.mark_in
+            and self.player.mark_out
+            and self.player.mark_in >= self.player.mark_out
+        ):
             logging.error("Unable to save marks. In point must precede out point")
         else:
             self.changed["mark_in"] = self.player.mark_in
@@ -223,7 +252,9 @@ class DetailTabPreview(QWidget):
     def create_subclip(self):
         if not self.subclips.isVisible():
             self.subclips.show()
-        if (not (self.player.mark_in and self.player.mark_out)) or self.player.mark_in >= self.player.mark_out:
+        if (
+            not (self.player.mark_in and self.player.mark_out)
+        ) or self.player.mark_in >= self.player.mark_out:
             logging.error("Unable to create subclip. Invalid region selected.")
             return
         self.subclips.create_subclip(self.player.mark_in, self.player.mark_out)
@@ -251,17 +282,13 @@ class DetailTabs(QTabWidget):
 
         self.currentChanged.connect(self.on_switch)
         self.setCurrentIndex(0)
-        self.tabs = [
-                self.tab_main,
-                self.tab_extended,
-                self.tab_technical
-            ]
+        self.tabs = [self.tab_main, self.tab_extended, self.tab_technical]
         self.tabs.append(self.tab_preview)
 
     def on_switch(self, *args):
         try:
             index = int(args[0])
-        except:
+        except IndexError:
             index = self.currentIndex()
 
         if index == -1:
@@ -278,8 +305,6 @@ class DetailTabs(QTabWidget):
             tab.load(asset, **kwargs)
 
 
-
-
 class DetailModule(BaseModule):
     def __init__(self, parent):
         super(DetailModule, self).__init__(parent)
@@ -288,24 +313,31 @@ class DetailModule(BaseModule):
 
         fdata = []
         for id_folder in sorted(config["folders"].keys()):
-            fdata.append({"value" : id_folder, "alias" : config["folders"][id_folder]["title"], "role" : "option"})
+            fdata.append(
+                {
+                    "value": id_folder,
+                    "alias": config["folders"][id_folder]["title"],
+                    "role": "option",
+                }
+            )
 
         self.folder_select = FireflySelect(self, data=fdata)
         for i, fd in enumerate(fdata):
-            self.folder_select.setItemIcon(i, QIcon(pix_lib["folder_"+str(fd["value"])]))
+            self.folder_select.setItemIcon(
+                i, QIcon(pixlib["folder_" + str(fd["value"])])
+            )
         self.folder_select.currentIndexChanged.connect(self.on_folder_changed)
         self.folder_select.setEnabled(False)
         toolbar_layout.addWidget(self.folder_select, 0)
 
-        self.duration =  FireflyTimecode(self)
+        self.duration = FireflyTimecode(self)
         toolbar_layout.addWidget(self.duration, 0)
-
 
         self.toolbar = detail_toolbar(self)
         toolbar_layout.addWidget(self.toolbar)
         self.detail_tabs = DetailTabs(self)
         layout = QVBoxLayout()
-        layout.setContentsMargins(0,0,0,0)
+        layout.setContentsMargins(0, 0, 0, 0)
         layout.addLayout(toolbar_layout, 1)
         layout.addWidget(self.detail_tabs)
         self.setLayout(layout)
@@ -330,9 +362,8 @@ class DetailModule(BaseModule):
 
     def switch_tabs(self, idx=-1):
         if idx == -1:
-            idx = (self.detail_tabs.currentIndex()+1) % self.detail_tabs.count()
+            idx = (self.detail_tabs.currentIndex() + 1) % self.detail_tabs.count()
         self.detail_tabs.setCurrentIndex(idx)
-
 
     def check_changed(self):
         changed = []
@@ -344,13 +375,13 @@ class DetailModule(BaseModule):
 
         if changed:
             reply = QMessageBox.question(
-                    self,
-                    "Save changes?",
-                    f"Following data has been changed in the {self.asset}" + \
-                    "\n\n" + \
-                    "\n".join([meta_types[k].alias() for k in changed]),
-                    QMessageBox.Yes | QMessageBox.No
-                    )
+                self,
+                "Save changes?",
+                f"Following data has been changed in the {self.asset}"
+                + "\n\n"
+                + "\n".join([meta_types[k].alias() for k in changed]),
+                QMessageBox.Yes | QMessageBox.No,
+            )
 
             if reply == QMessageBox.Yes:
                 self.on_apply()
@@ -378,20 +409,18 @@ class DetailModule(BaseModule):
 
         self.folder_select.setEnabled(True)
 
-        self.asset = Asset(meta=asset.meta) # asset deep copy
+        self.asset = Asset(meta=asset.meta)  # asset deep copy
         self.parent().setWindowTitle(f"Detail of {self.asset}")
         self.detail_tabs.load(self.asset, force=force)
         self.folder_select.set_value(self.asset["id_folder"])
 
-
         self.duration.fps = self.asset.fps
         self.duration.set_value(self.asset.duration)
         self.duration.show()
-        if self.asset["status"] == OFFLINE or not self.asset.id:
+        if (self.asset["status"] == ObjectStatus.OFFLINE) or (not self.asset.id):
             self.duration.setEnabled(True)
         else:
             self.duration.setEnabled(False)
-
 
         enabled = (not asset.id) or has_right("asset_edit", self.asset["id_folder"])
         self.folder_select.setEnabled(enabled)
@@ -414,8 +443,7 @@ class DetailModule(BaseModule):
             if key in self.form.inputs:
                 self.form[key] = data[key]
             else:
-                pass #TODO: Delete from metadata? How?
-
+                pass  # TODO: Delete from metadata? How?
 
     def new_asset(self):
         new_asset = Asset()
@@ -449,9 +477,15 @@ class DetailModule(BaseModule):
         data = {}
 
         if self.asset.id:
-            if self.asset["id_folder"] != self.folder_select.get_value() and self.folder_select.isEnabled():
+            if (
+                self.asset["id_folder"] != self.folder_select.get_value()
+                and self.folder_select.isEnabled()
+            ):
                 data["id_folder"] = self.folder_select.get_value()
-            if self.asset["True"] != self.duration.get_value() and self.duration.isEnabled():
+            if (
+                self.asset["True"] != self.duration.get_value()
+                and self.duration.isEnabled()
+            ):
                 data["duration"] = self.duration.get_value()
 
             for key in self.form.changed:
@@ -478,24 +512,24 @@ class DetailModule(BaseModule):
             self.asset["id"] = aid
             asset_cache.request([[aid, 0]])
 
-        #self.form.setEnabled(True)
+        # self.form.setEnabled(True)
 
     def on_revert(self):
         if self.asset:
             self.focus(asset_cache[self.asset.id], silent=True)
 
     def on_set_qc(self, state):
-        state_name = {0 : 'New', 3 : 'Rejected', 4 : 'Approved'}[state]
-        report = f"{format_time(time.time())} : {user['login']} flagged the asset as {state_name}"
+        state_name = {0: "New", 3: "Rejected", 4: "Approved"}[state]
+        report = (
+            f"{format_time(time.time())} : {user['login']} "
+            f"flagged the asset as {state_name}"
+        )
+
         if self.asset["qc/report"]:
             report = self.asset["qc/report"] + "\n" + report
 
         response = api.set(
-            objects=[self.asset.id],
-            data={
-                "qc/state" : state,
-                "qc/report" : report
-            }
+            objects=[self.asset.id], data={"qc/state": state, "qc/report": report}
         )
         if not response:
             logging.error(response.message)
