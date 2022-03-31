@@ -62,6 +62,8 @@ def dump_template(calendar):
     for event in calendar.events:
         week_offset = event["start"] - calendar.week_start_time
         day = int(week_offset / (3600 * 24))
+        if day < 0 or day > 6:
+            continue
         days[day].append(event)
 
     for i, day in enumerate(days):

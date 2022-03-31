@@ -388,7 +388,6 @@ class DetailModule(BaseModule):
 
     def focus(self, asset, silent=False, force=False):
         if not isinstance(asset, Asset):
-            logging.debug(f"[DETAIL] Only assets can be focused. Is: {type(asset)}")
             return
 
         logging.debug(f"[DETAIL] Focusing {asset}")

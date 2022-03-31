@@ -97,7 +97,7 @@ class ItemButton(QToolButton):
                 item_data[key] = self.button_config[key]
         drag = QDrag(self)
         mimeData = QMimeData()
-        mimeData.setData("application/nx.item", bytes(json.dumps([item_data])))
+        mimeData.setData("application/nx.item", json.dumps([item_data]).encode("utf-8"))
         drag.setMimeData(mimeData)
         if drag.exec_(Qt.CopyAction):
             pass  # nejak to rozumne ukonc
