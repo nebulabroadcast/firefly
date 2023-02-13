@@ -50,7 +50,7 @@ Usage
 
 ### Troubleshooting
 
-> Have you tried turning it off and on again?
+*Have you tried turning it off and on again?*
 
 In most cases, this helps. If the application worked and suddenly it is not possible
 to start, try to delete `ffdata` files in its directory and start it again.
