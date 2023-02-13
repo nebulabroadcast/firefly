@@ -18,8 +18,10 @@ templates/
 # Other
 
 .vscode/
+.mypy_cache/
 _res/
-_old/
-templates/
+templates/*.xml
 mpv-1.dll
 poetry.lock
+linux/
+firefly.dist-info

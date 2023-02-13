@@ -3,16 +3,17 @@ import functools
 
 from nxtools import logging, log_traceback
 
+import firefly
+
+from firefly.objects import Asset
 from firefly.api import api
-from firefly.common import pixlib
-from firefly.core.common import config
-from firefly.objects import asset_cache
 from firefly.view import FireflyViewModel, format_header, format_description
 from firefly.qt import (
     Qt,
     QApplication,
     QUrl,
     QMimeData,
+    pixlib,
 )
 
 DEFAULT_HEADER_DATA = ["title", "duration", "id_folder"]
@@ -23,28 +24,28 @@ class BrowserModel(FireflyViewModel):
     def load(self, callback, **kwargs):
 
         try:
-            self.header_data = config["views"][kwargs["id_view"]]["columns"]
+            id_view = kwargs["id_view"]
+            self.header_data = firefly.settings.get_view(id_view).columns
         except KeyError:
             self.header_data = DEFAULT_HEADER_DATA
 
-        search_query = kwargs
-        search_query["result"] = ["id", "mtime"]
-        api.get(
+        api.browse(
             functools.partial(self.load_callback, callback),
-            **search_query,
-            count=False,
+            # TODO: V6
+            view=kwargs["id_view"],
+            query=kwargs["fulltext"],
             limit=RECORDS_PER_PAGE + 1,
-            offset=(self.parent().current_page - 1) * RECORDS_PER_PAGE
+            order_by=kwargs["order_by"],
+            order_dir=kwargs["order_dir"],
+            offset=(self.parent().current_page - 1) * RECORDS_PER_PAGE,
         )
 
     def load_callback(self, callback, response):
         self.beginResetModel()
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
 
         if not response:
             logging.error(response.message)
-        else:
-            asset_cache.request(response.data)
 
         # Pagination
 
@@ -64,7 +65,7 @@ class BrowserModel(FireflyViewModel):
 
         if len(response.data) > RECORDS_PER_PAGE:
             response.data.pop(-1)
-        self.object_data = [asset_cache.get(row[0]) for row in response.data]
+        self.object_data = [Asset(meta=m) for m in response.data]
 
         self.parent().set_page(current_page, page_count)
         self.endResetModel()
@@ -72,18 +73,25 @@ class BrowserModel(FireflyViewModel):
 
         callback()
 
-    def headerData(self, col, orientation=Qt.Horizontal, role=Qt.DisplayRole):
-        if orientation == Qt.Horizontal:
-            if role == Qt.DisplayRole:
+    def headerData(
+        self,
+        col,
+        orientation=Qt.Orientation.Horizontal,
+        role=Qt.ItemDataRole.DisplayRole,
+    ):
+        if orientation == Qt.Orientation.Horizontal:
+            if role == Qt.ItemDataRole.DisplayRole:
                 return format_header(self.header_data[col])
-            elif role == Qt.ToolTipRole:
+            elif role == Qt.ItemDataRole.ToolTipRole:
                 desc = format_description(self.header_data[col])
                 return "<p>{}</p>".format(desc) if desc else None
-            elif role == Qt.DecorationRole:
-                order, trend = self.parent().current_order
-                if self.header_data[col] == order:
+            elif role == Qt.ItemDataRole.DecorationRole:
+                sq = self.parent().parent().search_query
+                if self.header_data[col] == sq["order_by"]:
                     return pixlib[
-                        ["smallarrow-up", "smallarrow-down"][int(trend == "desc")]
+                        ["smallarrow-up", "smallarrow-down"][
+                            int(sq["order_dir"] == "desc")
+                        ]
                     ]
         return None
 
@@ -91,7 +99,7 @@ class BrowserModel(FireflyViewModel):
         flags = super(BrowserModel, self).flags(index)
         if index.isValid():
             if self.object_data[index.row()].id:
-                flags |= Qt.ItemIsDragEnabled
+                flags |= Qt.ItemFlag.ItemIsDragEnabled
         return flags
 
     def mimeTypes(self):

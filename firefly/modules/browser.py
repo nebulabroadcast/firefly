@@ -3,13 +3,12 @@ import functools
 
 from nxtools import logging, log_traceback
 
+import firefly
+
 from firefly.api import api
-from firefly.common import pixlib
-from firefly.core.common import config
-from firefly.core.enum import ObjectStatus
+from firefly.enum import ObjectStatus
 from firefly.dialogs.send_to import show_send_to_dialog
 from firefly.dialogs.batch_ops import show_batch_ops_dialog
-
 from firefly.base_module import BaseModule
 from firefly.objects import asset_cache
 from firefly.view import FireflyView
@@ -30,6 +29,7 @@ from firefly.qt import (
     QMessageBox,
     QTabWidget,
     app_skin,
+    pixlib,
 )
 
 from .browser_model import BrowserModel
@@ -37,15 +37,16 @@ from .browser_model import BrowserModel
 
 class SearchWidget(QLineEdit):
     def __init__(self, parent):
-        super(QLineEdit, self).__init__()
+        super(SearchWidget, self).__init__(parent)
+        self.browser = parent
 
     def keyPressEvent(self, event):
-        if event.key() in [Qt.Key_Return, Qt.Key_Enter]:
-            self.parent().load()
-        elif event.key() == Qt.Key_Escape:
+        if event.key() in [Qt.Key.Key_Return, Qt.Key.Key_Enter]:
+            self.browser.load()
+        elif event.key() == Qt.Key.Key_Escape:
             self.line_edit.setText("")
-        elif event.key() in [Qt.Key_Down, Qt.Key_Up]:
-            self.parent().view.setFocus()
+        elif event.key() in [Qt.Key.Key_Down, Qt.Key.Key_Up]:
+            self.browser.view.setFocus()
         QLineEdit.keyPressEvent(self, event)
 
 
@@ -54,7 +55,7 @@ class FireflyBrowserView(FireflyView):
         super(FireflyBrowserView, self).__init__(parent)
         self.current_page = 1
         self.page_count = 1
-        self.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.activated.connect(self.on_activate)
         self.setModel(BrowserModel(self))
         self.horizontalHeader().sectionClicked.connect(self.on_header_clicked)
@@ -75,7 +76,13 @@ class FireflyBrowserView(FireflyView):
                 tot_dur += obj.duration
 
         if self.selected_objects:
-            self.main_window.focus(asset_cache[self.selected_objects[-1].id])
+            asset_id = self.selected_objects[-1].id
+            asset = asset_cache[asset_id]
+            if not asset:
+                asset_cache.wait()
+                asset = asset_cache[asset_id]
+            self.main_window.focus(asset)
+
             if len(self.selected_objects) > 1 and tot_dur:
                 logging.debug(
                     f"[BROWSER] {len(self.selected_objects)} objects selected. "
@@ -83,24 +90,20 @@ class FireflyBrowserView(FireflyView):
                 )
         super(FireflyView, self).selectionChanged(selected, deselected)
 
-    @property
-    def current_order(self):
-        try:
-            return self.parent().search_query.get("order", "ctime desc").split(" ")
-        except Exception:
-            return ["ctime", "desc"]
-
     def on_header_clicked(self, index):
-        old_order, old_trend = self.current_order
-        value = self.model().header_data[index]
-        if value == old_order:
-            if old_trend == "asc":
-                trend = "desc"
+        old_order_by = self.parent().search_query.get("order_by", "ctime")
+        old_order_dir = self.parent().search_query.get("order_dir", "ctime")
+
+        order_by = self.model().header_data[index]
+        if order_by == old_order_by:
+            if old_order_dir == "asc":
+                order_dir = "desc"
             else:
-                trend = "asc"
+                order_dir = "asc"
         else:
-            trend = "asc"
-        self.parent().search_query["order"] = f"{value} {trend}"
+            order_dir = "asc"
+        self.parent().search_query["order_by"] = order_by
+        self.parent().search_query["order_dir"] = order_dir
         self.parent().load()
 
     def on_activate(self, mi):
@@ -148,7 +151,7 @@ class Pager(QWidget):
         layout.addWidget(self.btn_prev, 0)
 
         self.info = QLabel("Page 1")
-        self.info.setAlignment(Qt.AlignCenter)
+        self.info.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.info, 1)
 
         self.btn_next = PagerButton()
@@ -179,9 +182,10 @@ class BrowserTab(QWidget):
         # Search query
 
         self.search_query = {
-            "id_view": kwargs.get("id_view", min(config["views"])),
+            "id_view": kwargs.get("id_view", firefly.settings.views[0].id),
             "fulltext": kwargs.get("fulltext", ""),
-            "order": kwargs.get("order", "ctime desc"),
+            "order_by": kwargs.get("order_by", "ctime"),
+            "order_dir": kwargs.get("order_dir", "desc"),
             "conds": kwargs.get("conds", []),
         }
 
@@ -213,12 +217,14 @@ class BrowserTab(QWidget):
         self.addAction(action_copy)
 
         toolbar = QToolBar(self)
+        toolbar.setContentsMargins(0, 0, 0, 0)
+
+        toolbar.addWidget(self.search_box)
         toolbar.addAction(action_clear)
         toolbar.addAction(self.action_search.menuAction())
 
         search_layout = QHBoxLayout()
         search_layout.setContentsMargins(0, 0, 0, 0)
-        search_layout.addWidget(self.search_box)
         search_layout.addWidget(toolbar)
 
         self.pager = Pager(self)
@@ -247,18 +253,16 @@ class BrowserTab(QWidget):
 
     def load_view_menu(self):
         i = 1
-        for id_view in sorted(
-            config["views"].keys(), key=lambda k: config["views"][k]["position"]
-        ):
-            view = config["views"][id_view]
-            if view.get("separator", False):
-                self.action_search.addSeparator()
-            action = QAction(view["title"], self)
+        for view in firefly.settings.views:
+            # TODO
+            # if view.get("separator", False):
+            #     self.action_search.addSeparator()
+            action = QAction(view.name, self)
             action.setCheckable(True)
             if i < 10:
                 action.setShortcut(f"ALT+{i}")
-            action.id_view = id_view
-            action.triggered.connect(functools.partial(self.set_view, id_view))
+            action.id_view = view.id
+            action.triggered.connect(functools.partial(self.set_view, view.id))
             self.action_search.addAction(action)
             i += 1
 
@@ -375,7 +379,7 @@ class BrowserTab(QWidget):
 
         if len(objs) == 1:
             menu.addSeparator()
-            for link in config["folders"][objs[0]["id_folder"]].get("links", []):
+            for link in firefly.settings.get_folder(objs[0]["id_folder"]).links:
                 action_link = QAction(link["title"])
                 action_link.triggered.connect(
                     functools.partial(self.link_exec, objs[0], **link)
@@ -389,7 +393,7 @@ class BrowserTab(QWidget):
         action_send_to.triggered.connect(self.on_send_to)
         menu.addAction(action_send_to)
 
-        menu.exec_(event.globalPos())
+        menu.exec(event.globalPos())
 
     def link_exec(self, obj, **kwargs):
         param = kwargs["target_key"]
@@ -402,12 +406,12 @@ class BrowserTab(QWidget):
     def on_send_to(self):
         objs = self.view.selected_objects
         if objs:
-            show_send_to_dialog(objs)
+            show_send_to_dialog(self, objs)
 
     def on_batch_ops(self):
         objs = self.view.selected_objects
         if objs:
-            if show_batch_ops_dialog(objs):
+            if show_batch_ops_dialog(self, objs):
                 self.load()
 
     def on_reset(self):
@@ -419,7 +423,12 @@ class BrowserTab(QWidget):
         ]
         if not objects:
             return
-        response = api.set(objects=objects, data={"status": ObjectStatus.RESET})
+
+        response = api.ops(
+            operations=[
+                {"id": id, "data": {"status": ObjectStatus.RESET}} for id in objects
+            ]
+        )
         if not response:
             return
         self.refresh_assets(*objects, request_data=True)
@@ -436,10 +445,15 @@ class BrowserTab(QWidget):
             self,
             "Trash",
             f"Do you really want to trash {len(objects)} selected asset(s)?",
-            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
-        if ret == QMessageBox.Yes:
-            response = api.set(objects=objects, data={"status": ObjectStatus.TRASHED})
+        if ret == QMessageBox.StandardButton.Yes:
+            response = api.ops(
+                operations=[
+                    {"id": id, "data": {"status": ObjectStatus.TRASHED}}
+                    for id in objects
+                ]
+            )
         else:
             return
         if not response:
@@ -455,7 +469,11 @@ class BrowserTab(QWidget):
         ]
         if not objects:
             return
-        response = api.set(objects=objects, data={"status": ObjectStatus.CREATING})
+        response = api.ops(
+            operations=[
+                {"id": id, "data": {"status": ObjectStatus.CREATING}} for id in objects
+            ]
+        )
         if not response:
             logging.error("Unable to untrash:\n\n" + response.message)
             return
@@ -473,10 +491,15 @@ class BrowserTab(QWidget):
             self,
             "Archive",
             f"Do you really want to move {len(objects)} selected asset(s) to archive?",
-            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
-        if ret == QMessageBox.Yes:
-            response = api.set(objects=objects, data={"status": ObjectStatus.ARCHIVED})
+        if ret == QMessageBox.StandardButton.Yes:
+            response = api.ops(
+                operations=[
+                    {"id": id, "data": {"status": ObjectStatus.ARCHIVED}}
+                    for id in objects
+                ]
+            )
         else:
             return
         if not response:
@@ -492,7 +515,12 @@ class BrowserTab(QWidget):
         ]
         if not objects:
             return
-        response = api.set(objects=objects, data={"status": ObjectStatus.RETRIEVING})
+        response = api.ops(
+            operations=[
+                {"id": id, "data": {"status": ObjectStatus.RETRIEVING}}
+                for id in objects
+            ]
+        )
         if not response:
             logging.error("Unable to unarchive:\n\n" + response.message)
             return
@@ -548,7 +576,7 @@ class BrowserModule(BaseModule):
         current_index = 0
         for tabcfg in tabscfg:
             try:
-                if tabcfg["id_view"] not in config["views"]:
+                if tabcfg["id_view"] not in [k.id for k in firefly.settings.views]:
                     continue
                 if tabcfg.get("active"):
                     current_index = self.tabs.count()
@@ -639,7 +667,7 @@ class BrowserModule(BaseModule):
         views = []
         for i, b in enumerate(self.browsers):
             id_view = b.id_view
-            self.tabs.setTabText(i, b.title or config["views"][id_view]["title"])
+            self.tabs.setTabText(i, b.title or firefly.settings.get_view(id_view).name)
             sq = copy.copy(b.search_query)
             if self.tabs.currentIndex() == i:
                 sq["active"] = True

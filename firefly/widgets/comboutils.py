@@ -23,7 +23,7 @@ from firefly.qt import (
 
 class ComboMenuDelegate(QAbstractItemDelegate):
     def isSeparator(self, index):
-        return str(index.data(Qt.AccessibleDescriptionRole)) == "separator"
+        return str(index.data(Qt.ItemDataRole.AccessibleDescriptionRole)) == "separator"
 
     def paint(self, painter, option, index):
         menuopt = self._getMenuStyleOption(option, index)
@@ -31,7 +31,9 @@ class ComboMenuDelegate(QAbstractItemDelegate):
             style = option.widget.style()
         else:
             style = QApplication.style()
-        style.drawControl(QStyle.CE_MenuItem, menuopt, painter, option.widget)
+        style.drawControl(
+            QStyle.ControlElement.CE_MenuItem, menuopt, painter, option.widget
+        )
 
     def sizeHint(self, option, index):
         menuopt = self._getMenuStyleOption(option, index)
@@ -40,82 +42,84 @@ class ComboMenuDelegate(QAbstractItemDelegate):
         else:
             style = QApplication.style()
         return style.sizeFromContents(
-            QStyle.CT_MenuItem, menuopt, menuopt.rect.size(), option.widget
+            QStyle.ContentsType.CT_MenuItem, menuopt, menuopt.rect.size(), option.widget
         )
 
     def _getMenuStyleOption(self, option, index):
         menuoption = QStyleOptionMenuItem()
         palette = option.palette.resolve(QApplication.palette("QMenu"))
-        foreground = index.data(Qt.ForegroundRole)
+        foreground = index.data(Qt.ItemDataRole.ForegroundRole)
         if isinstance(foreground, (QBrush, QColor, QPixmap)):
             foreground = QBrush(foreground)
-            palette.setBrush(QPalette.Text, foreground)
-            palette.setBrush(QPalette.ButtonText, foreground)
-            palette.setBrush(QPalette.WindowText, foreground)
+            palette.setBrush(QPalette.ColorRole.Text, foreground)
+            palette.setBrush(QPalette.ColorRole.ButtonText, foreground)
+            palette.setBrush(QPalette.ColorRole.WindowText, foreground)
 
-        background = index.data(Qt.BackgroundRole)
+        background = index.data(Qt.ItemDataRole.BackgroundRole)
         if isinstance(background, (QBrush, QColor, QPixmap)):
             background = QBrush(background)
             palette.setBrush(QPalette.Background, background)
 
         menuoption.palette = palette
 
-        decoration = index.data(Qt.DecorationRole)
+        decoration = index.data(Qt.ItemDataRole.DecorationRole)
         if isinstance(decoration, QIcon):
             menuoption.icon = decoration
 
         if self.isSeparator(index):
-            menuoption.menuItemType = QStyleOptionMenuItem.Separator
+            menuoption.menuItemType = QStyleOptionMenuItem.MenuItemType.Separator
         else:
-            menuoption.menuItemType = QStyleOptionMenuItem.Normal
+            menuoption.menuItemType = QStyleOptionMenuItem.MenuItemType.Normal
 
-        if index.flags() & Qt.ItemIsUserCheckable:
-            menuoption.checkType = QStyleOptionMenuItem.NonExclusive
+        if index.flags() & Qt.ItemFlag.ItemIsUserCheckable:
+            menuoption.checkType = QStyleOptionMenuItem.CheckType.NonExclusive
         else:
-            menuoption.checkType = QStyleOptionMenuItem.NotCheckable
+            menuoption.checkType = QStyleOptionMenuItem.CheckType.NotCheckable
 
-        check = index.data(Qt.CheckStateRole)
-        menuoption.checked = check == Qt.Checked
+        check = index.data(Qt.ItemDataRole.CheckStateRole)
+        menuoption.checked = check == Qt.CheckState.Checked
 
         if option.widget is not None:
             menuoption.font = option.widget.font()
         else:
             menuoption.font = QApplication.font("QMenu")
 
-        if index.data(Qt.FontRole):
-            menuoption.font = index.data(Qt.FontRole)
+        if index.data(Qt.ItemDataRole.FontRole):
+            menuoption.font = index.data(Qt.ItemDataRole.FontRole)
 
         menuoption.maxIconWidth = option.decorationSize.width() + 4
         menuoption.rect = option.rect
         menuoption.menuRect = option.rect
 
-        idt = index.data(Qt.UserRole)
+        idt = index.data(Qt.ItemDataRole.UserRole)
 
         if idt is not None:
             idt = int(idt)
-            menuoption.rect.adjust(idt * 16, 0, 0, 0)
+            menuoption.rect.adjust(idt * 24, 0, 0, 0)
 
         menuoption.menuHasCheckableItems = True
         menuoption.tabWidth = 0
-        display = str(index.data(Qt.DisplayRole))
+        display = str(index.data(Qt.ItemDataRole.DisplayRole))
         menuoption.text = display
 
         menuoption.fontMetrics = QFontMetrics(menuoption.font)
         state = option.state & (
-            QStyle.State_MouseOver | QStyle.State_Selected | QStyle.State_Active
+            QStyle.StateFlag.State_MouseOver
+            | QStyle.StateFlag.State_Selected
+            | QStyle.StateFlag.State_Active
         )
 
-        if index.flags() & Qt.ItemIsEnabled:
-            state = state | QStyle.State_Enabled
-            menuoption.palette.setCurrentColorGroup(QPalette.Active)
+        if index.flags() & Qt.ItemFlag.ItemIsEnabled:
+            state = state | QStyle.StateFlag.State_Enabled
+            menuoption.palette.setCurrentColorGroup(QPalette.ColorGroup.Active)
         else:
-            state = state & ~QStyle.State_Enabled
-            menuoption.palette.setCurrentColorGroup(QPalette.Disabled)
+            state = state & ~QStyle.StateFlag.State_Enabled
+            menuoption.palette.setCurrentColorGroup(QPalette.ColorGroup.Disabled)
 
         if menuoption.checked:
-            state = state | QStyle.State_On
+            state = state | QStyle.StateFlag.State_On
         else:
-            state = state | QStyle.State_Off
+            state = state | QStyle.StateFlag.State_Off
 
         menuoption.state = state
         return menuoption
@@ -124,7 +128,7 @@ class ComboMenuDelegate(QAbstractItemDelegate):
 class CheckComboBox(QComboBox):
     def __init__(self, parent=None, placeholderText="", separator=", ", **kwargs):
         super(CheckComboBox, self).__init__(parent, **kwargs)
-        self.setFocusPolicy(Qt.StrongFocus)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
         self.__popupIsShown = False
         self.__supressPopupHide = False
@@ -144,7 +148,7 @@ class CheckComboBox(QComboBox):
 
     def changeEvent(self, event):
         """Reimplemented."""
-        if event.type() == QEvent.StyleChange:
+        if event.type() == QEvent.Type.StyleChange:
             self.__updateItemDelegate()
         super(CheckComboBox, self).changeEvent(event)
 
@@ -169,7 +173,7 @@ class CheckComboBox(QComboBox):
         """Reimplemented."""
         if (
             self.__popupIsShown
-            and event.type() == QEvent.MouseMove
+            and event.type() == QEvent.Type.MouseMove
             and self.view().isVisible()
             and self.__initialMousePos is not None
         ):
@@ -180,41 +184,50 @@ class CheckComboBox(QComboBox):
 
         if (
             self.__popupIsShown
-            and event.type() == QEvent.MouseButtonRelease
+            and event.type() == QEvent.Type.MouseButtonRelease
             and self.view().isVisible()
             and self.view().rect().contains(event.pos())
             and self.view().currentIndex().isValid()
-            and self.view().currentIndex().flags() & Qt.ItemIsSelectable
-            and self.view().currentIndex().flags() & Qt.ItemIsEnabled
-            and self.view().currentIndex().flags() & Qt.ItemIsUserCheckable
+            and self.view().currentIndex().flags() & Qt.ItemFlag.ItemIsSelectable
+            and self.view().currentIndex().flags() & Qt.ItemFlag.ItemIsEnabled
+            and self.view().currentIndex().flags() & Qt.ItemFlag.ItemIsUserCheckable
             and self.view().visualRect(self.view().currentIndex()).contains(event.pos())
             and not self.__blockMouseReleaseTimer.isActive()
         ):
             model = self.model()
             index = self.view().currentIndex()
-            state = model.data(index, Qt.CheckStateRole)
+            state = model.data(index, Qt.ItemDataRole.CheckStateRole)
             model.setData(
                 index,
-                Qt.Checked if state == Qt.Unchecked else Qt.Unchecked,
-                Qt.CheckStateRole,
+                Qt.CheckState.Checked
+                if state == Qt.CheckState.Unchecked
+                else Qt.CheckState.Unchecked,
+                Qt.ItemDataRole.CheckStateRole,
             )
             self.view().update(index)
             return True
 
-        if self.__popupIsShown and event.type() == QEvent.KeyPress:
-            if event.key() == Qt.Key_Space:
+        if self.__popupIsShown and event.type() == QEvent.Type.KeyPress:
+            if event.key() == Qt.Key.Key_Space:
                 # toogle the current items check state
                 model = self.model()
                 index = self.view().currentIndex()
                 flags = model.flags(index)
-                state = model.data(index, Qt.CheckStateRole)
-                if flags & Qt.ItemIsUserCheckable and flags & Qt.ItemIsTristate:
+                state = model.data(index, Qt.ItemDataRole.CheckStateRole)
+                if (
+                    flags & Qt.ItemFlag.ItemIsUserCheckable
+                    and flags & Qt.ItemIsTristate
+                ):
                     state = Qt.CheckState((int(state) + 1) % 3)
-                elif flags & Qt.ItemIsUserCheckable:
-                    state = Qt.Checked if state != Qt.Checked else Qt.Unchecked
-                model.setData(index, state, Qt.CheckStateRole)
+                elif flags & Qt.ItemFlag.ItemIsUserCheckable:
+                    state = (
+                        Qt.CheckState.Checked
+                        if state != Qt.CheckState.Checked
+                        else Qt.CheckState.Unchecked
+                    )
+                model.setData(index, state, Qt.ItemDataRole.CheckStateRole)
                 return True
-            # TODO: handle Qt.Key_Enter, Key_Return?
+            # TODO: handle Qt.Key.Key_Enter, Key_Return?
 
         return super(CheckComboBox, self).eventFilter(obj, event)
 
@@ -223,7 +236,7 @@ class CheckComboBox(QComboBox):
         painter = QStylePainter(self)
         option = QStyleOptionComboBox()
         self.initStyleOption(option)
-        painter.drawComplexControl(QStyle.CC_ComboBox, option)
+        painter.drawComplexControl(QStyle.ComplexControl.CC_ComboBox, option)
         # draw the icon and text
         checked = self.checkedIndices()
         if checked:
@@ -231,21 +244,21 @@ class CheckComboBox(QComboBox):
             option.currentText = self.__separator.join(items)
         else:
             option.currentText = self.__placeholderText
-            option.palette.setCurrentColorGroup(QPalette.Disabled)
+            option.palette.setCurrentColorGroup(QPalette.ColorGroup.Disabled)
 
         option.currentIcon = QIcon()
-        painter.drawControl(QStyle.CE_ComboBoxLabel, option)
+        painter.drawControl(QStyle.ControlElement.CE_ComboBoxLabel, option)
 
     def itemCheckState(self, index):
-        state = self.itemData(index, role=Qt.CheckStateRole)
+        state = self.itemData(index, role=Qt.ItemDataRole.CheckStateRole)
         if isinstance(state, int):
             return Qt.CheckState(state)
         else:
-            return Qt.Unchecked
+            return Qt.CheckState.Unchecked
 
     def setItemCheckState(self, index, state):
-        state = Qt.Checked if state else Qt.Unchecked
-        self.setItemData(index, state, Qt.CheckStateRole)
+        state = Qt.CheckState.Checked if state else Qt.CheckState.Unchecked
+        self.setItemData(index, state, Qt.ItemDataRole.CheckStateRole)
 
     def checkedIndices(self):
         return [i for i in range(self.count()) if self.itemCheckState(i)]
@@ -265,17 +278,20 @@ class CheckComboBox(QComboBox):
     def keyPressEvent(self, event):
         """Reimplemented."""
         # Override the default QComboBox behavior
-        if event.key() == Qt.Key_Down and event.modifiers() & Qt.AltModifier:
+        if (
+            event.key() == Qt.Key.Key_Down
+            and event.modifiers() & Qt.KeyboardModifier.AltModifier
+        ):
             self.showPopup()
             return
 
         ignored = {
-            Qt.Key_Up,
-            Qt.Key_Down,
-            Qt.Key_PageDown,
-            Qt.Key_PageUp,
-            Qt.Key_Home,
-            Qt.Key_End,
+            Qt.Key.Key_Up,
+            Qt.Key.Key_Down,
+            Qt.Key.Key_PageDown,
+            Qt.Key.Key_PageUp,
+            Qt.Key.Key_Home,
+            Qt.Key.Key_End,
         }
 
         if event.key() in ignored:

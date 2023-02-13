@@ -1,12 +1,18 @@
 from functools import partial
 
-from firefly.core.common import config
+import firefly
+
+from firefly.config import config
 from firefly.dialogs.about import show_about_dialog
-from firefly.objects import has_right
 from firefly.qt import (
     QAction,
     QActionGroup,
 )
+
+
+# FAKE DICT for the settings originally stored in config,
+# but should be eventually moved to the settings
+fake_config = {}
 
 
 def create_menu(wnd):
@@ -18,7 +24,7 @@ def create_menu(wnd):
     action_new_asset.setStatusTip("Create new asset from template")
     action_new_asset.triggered.connect(wnd.new_asset)
     action_new_asset.setEnabled(
-        has_right("asset_create") and config.get("ui_asset_create", True)
+        firefly.user.can("asset_create") and fake_config.get("ui_asset_create", True)
     )
     menu_file.addAction(action_new_asset)
 
@@ -27,7 +33,7 @@ def create_menu(wnd):
     action_clone_asset.setStatusTip("Clone current asset")
     action_clone_asset.triggered.connect(wnd.clone_asset)
     action_clone_asset.setEnabled(
-        has_right("asset_create") and config.get("ui_asset_create", True)
+        firefly.user.can("asset_create") and fake_config.get("ui_asset_create", True)
     )
     menu_file.addAction(action_clone_asset)
 
@@ -104,24 +110,20 @@ def create_menu(wnd):
     # Scheduling
     #
 
-    if config["playout_channels"]:
+    if firefly.settings.playout_channels:
         wnd.menu_scheduler = menubar.addMenu("&Scheduler")
         ag = QActionGroup(wnd)
         ag.setExclusive(True)
 
-        for id_channel in sorted(config["playout_channels"]):
-            a = ag.addAction(
-                QAction(
-                    config["playout_channels"][id_channel]["title"], wnd, checkable=True
-                )
-            )
-            a.id_channel = id_channel
-            a.triggered.connect(partial(wnd.set_channel, id_channel))
+        for playout_channel in firefly.settings.playout_channels:
+            a = ag.addAction(QAction(playout_channel.name, wnd, checkable=True))
+            a.id_channel = playout_channel.id
+            a.triggered.connect(partial(wnd.set_channel, playout_channel.id))
             if (
-                has_right("rundown_view", a.id_channel)
-                or has_right("rundown_edit", a.id_channel)
-                or has_right("scheduler_view", a.id_channel)
-                or has_right("scheduler_edit", a.id_channel)
+                firefly.user.can("rundown_view", a.id_channel)
+                or firefly.user.can("rundown_edit", a.id_channel)
+                or firefly.user.can("scheduler_view", a.id_channel)
+                or firefly.user.can("scheduler_edit", a.id_channel)
             ):
                 a.setEnabled(True)
             else:
@@ -149,7 +151,7 @@ def create_menu(wnd):
         action_now = QAction("Now", wnd)
         action_now.setShortcut("F1")
         action_now.setStatusTip("Open current position in rundown")
-        action_now.setEnabled(has_right("rundown_view"))
+        action_now.setEnabled(firefly.user.can("rundown_view"))
         action_now.triggered.connect(wnd.now)
         menu_rundown.addAction(action_now)
 
@@ -157,7 +159,7 @@ def create_menu(wnd):
         wnd.action_rundown_edit.setShortcut("Ctrl+R")
         wnd.action_rundown_edit.setStatusTip("Toggle rundown edit mode")
         wnd.action_rundown_edit.setCheckable(True)
-        wnd.action_rundown_edit.setEnabled(has_right("rundown_edit"))
+        wnd.action_rundown_edit.setEnabled(firefly.user.can("rundown_edit"))
         wnd.action_rundown_edit.triggered.connect(wnd.toggle_rundown_edit)
         menu_rundown.addAction(wnd.action_rundown_edit)
 
@@ -177,7 +179,7 @@ def create_menu(wnd):
     wnd.action_debug = QAction("Debug mode", wnd)
     wnd.action_debug.setStatusTip("Toggle debug mode")
     wnd.action_debug.setCheckable(True)
-    wnd.action_debug.setChecked(config.get("debug", False))
+    wnd.action_debug.setChecked(config.debug)
     wnd.action_debug.triggered.connect(wnd.toggle_debug_mode)
 
     menu_help.addAction(wnd.action_debug)

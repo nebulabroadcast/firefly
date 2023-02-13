@@ -7,9 +7,9 @@ class ColumnsSelectDialog(QDialog):
     def __init__(self, parent, available=[], current=[]):
         super(ColumnsSelectDialog, self).__init__(parent)
         self.list_available = QListWidget(self)
-        self.list_available.setDragDropMode(QAbstractItemView.DragDrop)
+        self.list_available.setDragDropMode(QAbstractItemView.DragDropMode.DragDrop)
         self.list_current = QListWidget(self)
-        self.list_current.setDragDropMode(QAbstractItemView.DragDrop)
+        self.list_current.setDragDropMode(QAbstractItemView.DragDropMode.DragDrop)
 
         for i in range(5):
             self.list_available.addItem("Item {}".format(i))

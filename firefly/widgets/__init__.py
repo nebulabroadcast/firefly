@@ -1,9 +1,8 @@
-import copy
 import functools
 
-from firefly.core.common import config
-from firefly.core.enum import MetaClass
-from firefly.core.metadata import meta_types
+import firefly
+
+from firefly.metadata import meta_types
 
 from firefly.qt import (
     Qt,
@@ -41,7 +40,7 @@ class ChannelDisplay(QLabel):
 class ToolBarStretcher(QWidget):
     def __init__(self, parent):
         super(ToolBarStretcher, self).__init__(parent)
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
 
 class ActionButton(QPushButton):
@@ -57,6 +56,9 @@ class FireflyNotImplementedEditor(QLabel):
         self.setText(str(value))
         self.val = value
         self.default = value
+
+    def set_options(self, *args, **kwargs):
+        pass
 
     def get_value(self):
         return self.val
@@ -75,18 +77,18 @@ class FireflyFraction(FireflyNotImplementedEditor):
 
 
 meta_editors = {
-    MetaClass.STRING: FireflyString,
-    MetaClass.TEXT: FireflyText,
-    MetaClass.INTEGER: FireflyInteger,
-    MetaClass.NUMERIC: FireflyNumeric,
-    MetaClass.BOOLEAN: FireflyBoolean,
-    MetaClass.DATETIME: FireflyDatetime,
-    MetaClass.TIMECODE: FireflyTimecode,
-    MetaClass.OBJECT: FireflyRegions,
-    MetaClass.FRACTION: FireflyFraction,
-    MetaClass.SELECT: FireflySelect,
-    MetaClass.LIST: FireflyList,
-    MetaClass.COLOR: FireflyColorPicker,
+    "string": FireflyString,
+    "text": FireflyText,
+    "integer": FireflyInteger,
+    "numeric": FireflyNumeric,
+    "boolean": FireflyBoolean,
+    "datetime": FireflyDatetime,
+    "timecode": FireflyTimecode,
+    "object": FireflyRegions,
+    "fraction": FireflyFraction,
+    "select": FireflySelect,
+    # "list": FireflyList,
+    "color": FireflyColorPicker,
     "radio": FireflyRadio,
 }
 
@@ -102,64 +104,62 @@ class MetaEditor(QWidget):
         layout = QGridLayout()
         layout.setColumnStretch(0, 0)
         layout.setColumnStretch(1, 3)
+        layout.setColumnMinimumWidth(0, 150)
 
         i = 0
-        for key, conf in keys:
-            key_label = meta_types[key].alias()
-            key_description = meta_types[key].description() or key_label
-            key_class = meta_types[key]["class"]
-            key_settings = copy.copy(meta_types[key].settings)
-            key_settings.update(conf)
+        for field in keys:
+            key_label = meta_types[field.name].title
+            key_description = meta_types[field.name].description or key_label
+            key_class = meta_types[field.name].type
 
-            if (
-                key_settings.get("mode") == "radio"
-                or key_settings.get("widget") == "radio"
-            ):
+            key_settings = meta_types[field.name].dict()
+            key_settings.update(field.dict(exclude_none=True, exclude_unset=True))
+
+            if key_settings.get("mode") == "radio":
                 widget = "radio"
             else:
                 widget = key_settings.get("widget", key_class)
 
-            self.inputs[key] = meta_editors.get(widget, FireflyNotImplementedEditor)(
-                self, **key_settings
-            )
+            self.inputs[field.name] = meta_editors.get(
+                widget,
+                FireflyNotImplementedEditor,
+            )(self, **key_settings)
 
             label = QLabel(key_label, self)
             label.setStyleSheet("padding-top:9px;")
 
             label.setToolTip(f"<p>{key_description}</p>")
             if parent.__class__.__name__ == "DetailTabMain":
-                label.setContextMenuPolicy(Qt.CustomContextMenu)
+                label.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
                 label.customContextMenuRequested.connect(
-                    functools.partial(self.key_menu, key)
+                    functools.partial(self.key_menu, field.name)
                 )
 
-            self.inputs[key].meta_key = key
-            self.labels[key] = label
+            self.inputs[field.name].meta_key = field.name
+            self.labels[field.name] = label
 
-            layout.addWidget(self.labels[key], i, 0, Qt.AlignTop)
-            layout.addWidget(self.inputs[key], i, 1)
+            layout.addWidget(self.labels[field.name], i, 0, Qt.AlignmentFlag.AlignTop)
+            layout.addWidget(self.inputs[field.name], i, 1)
 
             i += 1
 
         self.setLayout(layout)
+        self.set_defaults()
 
     def key_menu(self, key, position):
         menu = QMenu()
         section = QAction("Search in...")
         section.setEnabled(False)
         menu.addAction(section)
-        for id_view in sorted(
-            config["views"].keys(), key=lambda k: config["views"][k]["position"]
-        ):
-            view = config["views"][id_view]
-            if view.get("separator", False):
+        for view in firefly.settings.views:
+            if view.separator:
                 menu.addSeparator()
-            action = QAction(view["title"], self)
+            action = QAction(view.name, self)
             action.triggered.connect(
-                functools.partial(self._parent.search_by_key, key, id_view)
+                functools.partial(self._parent.search_by_key, key, view.id)
             )
             menu.addAction(action)
-        menu.exec_(self.labels[key].mapToGlobal(position))
+        menu.exec(self.labels[key].mapFromGlobal(position))
 
     def keys(self):
         return self.inputs.keys()

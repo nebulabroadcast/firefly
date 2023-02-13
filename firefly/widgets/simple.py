@@ -34,8 +34,8 @@ class FireflyString(QLineEdit):
 class FireflyText(QTextEdit):
     def __init__(self, parent, **kwargs):
         super(FireflyText, self).__init__(parent)
-        fixed_font = QFontDatabase.systemFont(QFontDatabase.FixedFont)
-        fixed_font.setStyleHint(QFont.Monospace)
+        fixed_font = QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont)
+        fixed_font.setStyleHint(QFont.StyleHint.Monospace)
         self.setCurrentFont(fixed_font)
         self.setTabChangesFocus(True)
         self.default = self.get_value()
@@ -56,7 +56,7 @@ class FireflyText(QTextEdit):
 class FireflyInteger(QSpinBox):
     def __init__(self, parent, **kwargs):
         super(FireflyInteger, self).__init__(parent)
-        self.setFocusPolicy(Qt.StrongFocus)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.setMinimum(kwargs.get("min", 0))
         self.setMaximum(kwargs.get("max", 99999))
         if kwargs.get("hide_null"):
@@ -85,7 +85,7 @@ class FireflyInteger(QSpinBox):
 class FireflyNumeric(QSpinBox):
     def __init__(self, parent, **kwargs):
         super(FireflyNumeric, self).__init__(parent)
-        self.setFocusPolicy(Qt.StrongFocus)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.setMinimum(kwargs.get("min", -99999))
         self.setMaximum(kwargs.get("max", 99999))
         if kwargs.get("hide_null"):
@@ -114,7 +114,7 @@ class FireflyNumeric(QSpinBox):
 class FireflyDatetime(QLineEdit):
     def __init__(self, parent, **kwargs):
         super(FireflyDatetime, self).__init__(parent)
-        mode = kwargs.get("mode", "datetime")
+        mode = kwargs.get("mode")
 
         if mode == "date":
             self.mask = "9999-99-99"
@@ -124,7 +124,7 @@ class FireflyDatetime(QLineEdit):
             self.mask = "9999"
             self.format = "%Y"
 
-        elif mode == "datetime":
+        else:
             self.mask = "9999-99-99 99:99"
             self.format = "%Y-%m-%d %H:%M"
 

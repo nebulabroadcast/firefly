@@ -1,8 +1,10 @@
 import pprint
+import functools
 
-from firefly.core.metadata import meta_types
-from firefly.core.common import config
-from firefly.common import pixlib, fontlib, Colors
+import firefly
+
+from firefly.enum import Colors
+from firefly.metadata import meta_types
 from firefly.qt import (
     Qt,
     QColor,
@@ -10,23 +12,23 @@ from firefly.qt import (
     QAbstractItemView,
     QSortFilterProxyModel,
     QTableView,
+    pixlib,
+    fontlib,
 )
 
-__all__ = [
-    "FireflyViewModel",
-    "FireflySortModel",
-    "FireflyView",
-    "format_header",
-    "format_description",
-]
 
-
+@functools.lru_cache(maxsize=100)
 def format_header(key):
-    return meta_types[key].header()
+    if key in meta_types:
+        return meta_types[key].header
+    return key.replace('_', ' ').title()
 
 
+@functools.lru_cache(maxsize=100)
 def format_description(key):
-    return meta_types[key].description()
+    if key in meta_types:
+        return meta_types[key].description
+    return ""
 
 
 class FireflyViewModel(QAbstractTableModel):
@@ -42,45 +44,48 @@ class FireflyViewModel(QAbstractTableModel):
     def columnCount(self, parent):
         return len(self.header_data)
 
-    def headerData(self, col, orientation=Qt.Horizontal, role=Qt.DisplayRole):
-        if orientation == Qt.Horizontal:
-            if role == Qt.DisplayRole:
+    def headerData(
+        self,
+        col,
+        orientation=Qt.Orientation.Horizontal,
+        role=Qt.ItemDataRole.DisplayRole,
+    ):
+        if orientation == Qt.Orientation.Horizontal:
+            if role == Qt.ItemDataRole.DisplayRole:
                 return format_header(self.header_data[col])
-            elif role == Qt.ToolTipRole:
+            elif role == Qt.ItemDataRole.ToolTipRole:
                 desc = format_description(self.header_data[col])
                 return f"<p>{desc}</p>" if desc else None
         return None
 
-    def data(self, index, role=Qt.DisplayRole):
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
         if not index.isValid():
             return None
         row = index.row()
         obj = self.object_data[row]
         key = self.header_data[index.column()]
 
-        if role == Qt.DisplayRole:
+        if role == Qt.ItemDataRole.DisplayRole:
             return obj.format_display(key, model=self)
-        elif role == Qt.ForegroundRole:
+        elif role == Qt.ItemDataRole.ForegroundRole:
             color = obj.format_foreground(key, model=self)
             return (
                 QColor(color.value if isinstance(color, Colors) else color)
                 if color
                 else None
             )
-        elif role == Qt.BackgroundRole:
+        elif role == Qt.ItemDataRole.BackgroundRole:
             color = obj.format_background(key, model=self)
-            return (
-                QColor(color.value if isinstance(color, Colors) else color)
-                if color
-                else None
-            )
-        elif role == Qt.DecorationRole:
+            if color is None:
+                return None
+            return QColor(color.value if isinstance(color, Colors) else color)
+        elif role == Qt.ItemDataRole.DecorationRole:
             return pixlib[obj.format_decoration(key, model=self)]
-        elif role == Qt.FontRole:
+        elif role == Qt.ItemDataRole.FontRole:
             font = obj.format_font(key, model=self)
             return fontlib[font]
-        elif role == Qt.ToolTipRole:
-            if config.get("debug", False):
+        elif role == Qt.ItemDataRole.ToolTipRole:
+            if firefly.config.debug:
                 r = pprint.pformat(obj.meta)
                 if obj.object_type == "item":
                     r += "\n\n" + pprint.pformat(obj.asset.meta) if obj.asset else ""
@@ -127,12 +132,12 @@ class FireflyView(QTableView):
         super(FireflyView, self).__init__(parent)
         self.verticalHeader().setVisible(False)
         self.setWordWrap(False)
-        self.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.setDragEnabled(True)
         self.setAcceptDrops(True)
         self.setDropIndicatorShown(True)
-        self.setSelectionMode(self.ExtendedSelection)
+        self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.setShowGrid(False)
         self.setAlternatingRowColors(True)
         self.selected_objects = []
