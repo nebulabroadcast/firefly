@@ -3,38 +3,41 @@ import queue
 import time
 import websocket
 
+from typing import Any
 from nxtools import logging, log_traceback
 
-from firefly.core.common import config
-from firefly.common import CLIENT_ID
+from firefly.config import config
 from firefly.qt import QThread
 
 
-if config.get("debug"):
+if config.debug:
     websocket.enableTrace(True)
 
 
-def readlines(f):
-    buff = b""
-    for ch in f.iter_content(1):
-        ch = ch
-        if ch == b"\n":
-            yield buff.decode("ascii")
-            buff = b""
-        else:
-            buff += ch
-    yield buff.decode("ascii")
+class SeismicMessage:
+    def __init__(self, **payload):
+        self.timestamp = time.time()
+        self.site_name = config.site.name
+        self.host = payload.get("host", "server")
+        self.topic = payload.get("topic", "unknown")
+        self.data = payload.get("data", {})
 
+    def __getitem__(self, key: str) -> Any:
+        return self.data.get(key)
 
-class SeismicMessage(object):
-    def __init__(self, packet):
-        self.timestamp, self.site_name, self.host, self.method, self.data = packet
+    @property
+    def method(self):
+        # V5 compat
+        return self.topic
+
+    def __repr__(self):
+        return f"<SeismicMessage {self.topic}>"
 
 
 class SeismicListener(QThread):
     def __init__(self):
         QThread.__init__(self, None)
-        self.site_name = config["site_name"]
+        self.site_name = config.site.name
         self.should_run = True
         self.active = False
         self.last_msg = time.time()
@@ -42,12 +45,13 @@ class SeismicListener(QThread):
         self.start()
 
     def run(self):
-        addr = config["hub"].replace("http", "ws", 1) + "/ws/" + config["site_name"]
+        addr = config.site.host.replace("http", "ws", 1) + "/ws"
         while self.should_run:
             logging.debug(f"[LISTENER] Connecting to {addr}", handlers=False)
             self.halted = False
             self.ws = websocket.WebSocketApp(
                 addr,
+                on_open=self.on_open,
                 on_message=self.on_message,
                 on_error=self.on_error,
                 on_close=self.on_close,
@@ -58,25 +62,34 @@ class SeismicListener(QThread):
         logging.debug("[LISTENER] halted", handlers=False)
         self.halted = True
 
+    def on_open(self, *args):
+        logging.goodnews("[LISTENER] connected", handlers=False)
+        self.ws.send(
+            json.dumps(
+                {
+                    "topic": "auth",
+                    "token": config.site.token,
+                    "subscribe": ["*"],
+                }
+            )
+        )
+
     def on_message(self, *args):
         data = args[-1]
-
         if not self.active:
-            logging.goodnews("[LISTENER] connected", handlers=False)
+            logging.goodnews("[LISTENER] Got first message!", handlers=False)
             self.active = True
         try:
-            message = SeismicMessage(json.loads(data))
+            original_payload = json.loads(data)
+            message = SeismicMessage(**original_payload)
         except Exception:
             log_traceback(handlers=False)
             logging.debug(f"[LISTENER] Malformed message: {data}", handlers=False)
             return
 
-        if message.site_name != self.site_name:
-            return
-
         self.last_msg = time.time()
 
-        if message.data and message.data.get("initiator", None) == CLIENT_ID:
+        if message.data and message.data.get("initiator", None) == config.client_id:
             return
 
         self.queue.put(message)

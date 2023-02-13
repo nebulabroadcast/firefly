@@ -1,13 +1,12 @@
-__all__ = ["PlaceholderDialog", "SubclipSelectDialog", "trim_dialog"]
-
 import functools
 
 from nxtools import s2tc, logging
 
 from firefly.api import api
-from firefly.core.metadata import meta_types
-from firefly.core.enum import MetaClass
+from firefly.metadata import meta_types
+from firefly.enum import MetaClass
 from firefly.widgets import MetaEditor
+from firefly.settings import FolderField
 from firefly.qt import (
     Qt,
     QDialog,
@@ -28,17 +27,18 @@ class PlaceholderDialog(QDialog):
         keys = []
         for k in ["title", "subtitle", "description", "color", "duration"]:  # TODO
             if k in meta:
-                keys.append([k, {"default": meta[k]}])
+                keys.append(FolderField(name=k, mode="text"))
 
         self.form = MetaEditor(parent, keys)
         for k in keys:
-            if meta_types[k[0]]["class"] == MetaClass.SELECT:
-                self.form.inputs[k[0]].auto_data(meta_types[k[0]])
-            k = k[0]
-            self.form[k] = meta[k]
+            if meta_types[k.name].type == MetaClass.SELECT:
+                self.form.inputs[k.name].auto_data(meta_types[k.name])
+            self.form[k.name] = meta[k.name]
 
         buttons = QDialogButtonBox(
-            QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
+            Qt.Orientation.Horizontal,
+            self,
         )
         buttons.accepted.connect(self.on_accept)
         buttons.rejected.connect(self.on_cancel)
@@ -150,7 +150,9 @@ class TrimDialog(QDialog):
             self.form[k] = item[k]
 
         buttons = QDialogButtonBox(
-            QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
+            Qt.Orientation.Horizontal,
+            self,
         )
         buttons.accepted.connect(self.on_accept)
         buttons.rejected.connect(self.on_cancel)
@@ -172,11 +174,14 @@ class TrimDialog(QDialog):
 
     def on_accept(self):
         QApplication.processEvents()
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
         response = api.set(
             object_type="item",
-            objects=[self.item.id],
-            data={"mark_in": self.form["mark_in"], "mark_out": self.form["mark_out"]},
+            id=self.item.id,
+            payload={
+                "mark_in": self.form["mark_in"],
+                "mark_out": self.form["mark_out"],
+            },
         )
         QApplication.restoreOverrideCursor()
         if not response:
@@ -184,6 +189,6 @@ class TrimDialog(QDialog):
         self.close()
 
 
-def show_trim_dialog(item):
-    dlg = TrimDialog(None, item)
-    dlg.exec_()
+def show_trim_dialog(parent, item):
+    dlg = TrimDialog(parent, item)
+    dlg.exec()

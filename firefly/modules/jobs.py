@@ -18,11 +18,11 @@ class SearchWidget(QLineEdit):
         super(QLineEdit, self).__init__()
 
     def keyPressEvent(self, event):
-        if event.key() in [Qt.Key_Return, Qt.Key_Enter]:
+        if event.key() in [Qt.Key.Key_Return, Qt.Key.Key_Enter]:
             self.parent().parent().load()
-        elif event.key() == Qt.Key_Escape:
+        elif event.key() == Qt.Key.Key_Escape:
             self.line_edit.setText("")
-        elif event.key() == Qt.Key_Down:
+        elif event.key() == Qt.Key.Key_Down:
             self.parent().parent().view.setFocus()
         QLineEdit.keyPressEvent(self, event)
 

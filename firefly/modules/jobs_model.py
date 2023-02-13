@@ -3,9 +3,7 @@ import functools
 from nxtools import format_time, logging
 
 from firefly.api import api
-from firefly.core.common import config
-from firefly.core.enum import JobState
-from firefly.common import Colors
+from firefly.enum import JobState, Colors
 from firefly.objects import asset_cache
 from firefly.view import FireflyViewModel, FireflyView
 from firefly.qt import (
@@ -15,10 +13,6 @@ from firefly.qt import (
     QMenu,
     QAction,
 )
-
-# from firefly.common import *
-# from firefly.widgets import *
-# from firefly.view import *
 
 
 DEFAULT_HEADER_DATA = [
@@ -39,14 +33,9 @@ def job_format(data, key):
     elif key == "title":
         return asset_cache[data["id_asset"]]["title"]
     elif key == "action":
-        return config["actions"][data["id_action"]]["title"]
+        return data["action_name"]
     elif key == "service":
-        if data["id_service"]:
-            id_service = data["id_service"]
-            service = config["services"].get(id_service, None)
-            if service:
-                return f"{service['title']}@{service['host']}"
-        return data["id_service"]
+        return data["service_name"]
     elif key == "message":
         return data["message"]
     elif key == "id":
@@ -105,38 +94,47 @@ class JobsModel(FireflyViewModel):
         super(JobsModel, self).__init__(*args, **kwargs)
         self.request_data = {"view": "active"}
 
-    def headerData(self, col, orientation=Qt.Horizontal, role=Qt.DisplayRole):
-        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+    def headerData(
+        self,
+        col,
+        orientation=Qt.Orientation.Horizontal,
+        role=Qt.ItemDataRole.DisplayRole,
+    ):
+        if (
+            orientation == Qt.Orientation.Horizontal
+            and role == Qt.ItemDataRole.DisplayRole
+        ):
             return header_format[self.header_data[col]]
         return None
 
-    def data(self, index, role=Qt.DisplayRole):
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
         if not index.isValid():
             return None
         row = index.row()
         obj = self.object_data[row]
         key = self.header_data[index.column()]
 
-        if role == Qt.DisplayRole:
+        if role == Qt.ItemDataRole.DisplayRole:
             return job_format(obj, key)
-        elif role == Qt.ToolTipRole:
+        elif role == Qt.ItemDataRole.ToolTipRole:
             return f"{obj['message']}\n\n{asset_cache[obj['id_asset']]}"
-        elif role == Qt.ForegroundRole:
-            return colors[obj["status"]]
+        elif role == Qt.ItemDataRole.ForegroundRole:
+            if key == "progress":
+                return colors[obj["status"]]
 
         return None
 
     def load(self, **kwargs):
         self.request_data.update(kwargs)
         self.beginResetModel()
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
         data = []
         response = api.jobs(**self.request_data)
         if not response:
             logging.error(response.message)
         else:
             request_assets = []
-            for row in response.data:
+            for row in response["jobs"]:
                 data.append(row)
                 request_assets.append([row["id_asset"], 0])
             asset_cache.request(request_assets)
@@ -189,20 +187,23 @@ class FireflyJobsView(FireflyView):
         action_abort.triggered.connect(functools.partial(self.on_abort, jobs))
         menu.addAction(action_abort)
 
-        menu.exec_(event.globalPos())
+        menu.exec(event.globalPos())
 
     def on_restart(self, jobs):
-        response = api.jobs(restart=jobs)
-        if not response:
-            logging.error(response.message)
-        else:
-            logging.info(response.message)
+        for job in jobs:
+            api.job_restart(job)
+            response = api.jobs(restart=job)
+            if not response:
+                logging.error(response.message)
+            else:
+                logging.info(response.message)
         self.model.load()
 
     def on_abort(self, jobs):
-        response = api.jobs(abort=jobs)
-        if not response:
-            logging.error(response.message)
-        else:
-            logging.info(response.message)
-        self.model.load()
+        for job in jobs:
+            response = api.jobs(abort=job)
+            if not response:
+                logging.error(response.message)
+            else:
+                logging.info(response.message)
+            self.model.load()

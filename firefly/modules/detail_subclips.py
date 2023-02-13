@@ -2,7 +2,7 @@ import copy
 
 from nxtools import logging, s2tc
 
-from firefly.core.metadata import meta_types
+from firefly.metadata import meta_types
 from firefly.view import FireflyViewModel, FireflyView
 from firefly.qt import Qt, QInputDialog, QMenu, QAction
 
@@ -32,18 +32,26 @@ class SubclipsModel(FireflyViewModel):
         super(SubclipsModel, self).__init__(*args, **kwargs)
         self.header_data = DEFAULT_HEADER_DATA
 
-    def headerData(self, col, orientation=Qt.Horizontal, role=Qt.DisplayRole):
-        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+    def headerData(
+        self,
+        col,
+        orientation=Qt.Orientation.Horizontal,
+        role=Qt.ItemDataRole.DisplayRole,
+    ):
+        if (
+            orientation == Qt.Orientation.Horizontal
+            and role == Qt.ItemDataRole.DisplayRole
+        ):
             return header_format[self.header_data[col]]
         return None
 
-    def data(self, index, role=Qt.DisplayRole):
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
         if not index.isValid():
             return None
         row = index.row()
         obj = self.object_data[row]
         key = self.header_data[index.column()]
-        if role == Qt.DisplayRole:
+        if role == Qt.ItemDataRole.DisplayRole:
             return meta_types[key].show(obj[key])
         return None
 
@@ -136,7 +144,7 @@ class FireflySubclipsView(FireflyView):
         action_delete_subclip.triggered.connect(self.on_delete_subclip)
         menu.addAction(action_delete_subclip)
 
-        menu.exec_(event.globalPos())
+        menu.exec(event.globalPos())
 
     def on_update_marks(self):
         try:

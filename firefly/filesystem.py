@@ -1,7 +1,9 @@
 import os
 
+import firefly
+
 from nxtools import PLATFORM, logging
-from firefly.core.common import config
+from firefly.config import config
 
 
 if PLATFORM == "windows":
@@ -20,6 +22,7 @@ if PLATFORM == "windows":
 
 
 def load_filesystem(handler=False):
+    paths: dict[int, str] = {}
     if PLATFORM == "windows":
         for letter in get_available_drives():
             if handler:
@@ -39,10 +42,18 @@ def load_filesystem(handler=False):
                 except Exception:
                     continue
 
-                if site != config["site_name"]:
+                if site != config.site.name:
                     continue
+                paths[id_storage] = base_path
 
-                if id_storage in config["storages"]:
-                    config["storages"][id_storage]["protocol"] = "local"
-                    config["storages"][id_storage]["path"] = base_path
-                    logging.debug(f"Mapped storage {id_storage} to {base_path}")
+    for storage in firefly.settings.storages:
+        if PLATFORM == "windows" and storage.id in paths:
+            storage.path = paths[storage.id]
+            logging.debug(f"Mapped storage {id_storage} to {base_path}")
+
+        elif PLATFORM == "unix":
+            path = f"/mnt/{config.site.name}_{storage.id:<02d}"
+            if not os.path.isdir(path):
+                continue
+            storage.path = path
+            logging.debug(f"Mapped storage {id_storage} to {path}")

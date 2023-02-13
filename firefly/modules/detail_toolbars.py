@@ -1,12 +1,15 @@
 import functools
 
-from firefly.common import pixlib
+import firefly
+
 from firefly.widgets import ToolBarStretcher
+from firefly.widgets import FireflySelect, FireflyTimecode
 from firefly.qt import (
     QToolBar,
     QMenu,
     QIcon,
     QAction,
+    pixlib,
 )
 
 
@@ -59,6 +62,50 @@ def preview_toolbar(wnd):
 def detail_toolbar(wnd):
     toolbar = QToolBar(wnd)
 
+    # for widget in widgets:
+    #     toolbar.addWidget(widget)
+    fdata = []
+    for folder in firefly.settings.folders:
+        fdata.append(
+            {
+                "value": folder.id,
+                "title": folder.name,
+                "role": "option",
+            }
+        )
+
+    wnd.folder_select = FireflySelect(toolbar, options=fdata)
+    for i, fd in enumerate(fdata):
+        wnd.folder_select.setItemIcon(i, QIcon(pixlib["folder_" + str(fd["value"])]))
+    wnd.folder_select.currentIndexChanged.connect(wnd.on_folder_changed)
+    wnd.folder_select.setEnabled(False)
+
+    toolbar.addWidget(wnd.folder_select)
+
+    wnd.duration = FireflyTimecode(toolbar)
+
+    toolbar.addWidget(wnd.duration)
+
+    toolbar.addWidget(ToolBarStretcher(toolbar))
+
+    wnd.btn_tab_main = QAction("Main", wnd)
+    wnd.btn_tab_main.triggered.connect(functools.partial(wnd.switch_tabs, 0))
+    toolbar.addAction(wnd.btn_tab_main)
+
+    wnd.btn_tab_extended = QAction("Extended", wnd)
+    wnd.btn_tab_extended.triggered.connect(functools.partial(wnd.switch_tabs, 1))
+    toolbar.addAction(wnd.btn_tab_extended)
+
+    wnd.btn_tab_technical = QAction("Technical", wnd)
+    wnd.btn_tab_technical.triggered.connect(functools.partial(wnd.switch_tabs, 2))
+    toolbar.addAction(wnd.btn_tab_technical)
+
+    wnd.btn_tab_preview = QAction("Preview", wnd)
+    wnd.btn_tab_preview.triggered.connect(functools.partial(wnd.switch_tabs, 3))
+    toolbar.addAction(wnd.btn_tab_preview)
+
+    toolbar.addWidget(ToolBarStretcher(toolbar))
+
     wnd.action_approve = QAction(QIcon(pixlib["qc_approved"]), "Approve", wnd)
     wnd.action_approve.setShortcut("Y")
     wnd.action_approve.triggered.connect(functools.partial(wnd.on_set_qc, 4))
@@ -77,7 +124,7 @@ def detail_toolbar(wnd):
     wnd.action_reject.setEnabled(False)
     toolbar.addAction(wnd.action_reject)
 
-    toolbar.addWidget(ToolBarStretcher(wnd))
+    toolbar.addSeparator()
 
     wnd.action_revert = QAction(QIcon(pixlib["cancel"]), "&Revert changes", wnd)
     wnd.action_revert.setStatusTip("Revert changes")

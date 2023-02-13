@@ -1,19 +1,20 @@
 from nxtools import logging
 
+import firefly
+
 from firefly.api import api
-from firefly.core.common import config
-from firefly.core.metadata import meta_types
-from firefly.objects import user, Event
+from firefly.objects import Event
 from firefly.widgets import MetaEditor
+from firefly.settings import FolderField
 from firefly.qt import Qt, QDialog, QDialogButtonBox, QVBoxLayout, app_skin
 
 
-default_meta_set = [
-    ["start", {}],
-    ["title", {}],
-    ["subtitle", {}],
-    ["description", {}],
-    ["color", {}],
+default_fields = [
+    FolderField(name="start"),
+    FolderField(name="title"),
+    FolderField(name="subtitle"),
+    FolderField(name="description"),
+    FolderField(name="color"),
 ]
 
 
@@ -25,25 +26,24 @@ class EventDialog(QDialog):
         self.setStyleSheet(app_skin)
 
         self.event = kwargs.get("event", Event())
-        self.accepted = False
-        self.can_edit = user.has_right("scheduler_edit", self.event["id_channel"])
-
         for key in ["start", "id_channel"]:
-            if kwargs.get(key, False):
-                self.event[key] = kwargs[key]
+            if (value := kwargs.get(key)) is not None:
+                self.event[key] = value
 
-        keys = config["playout_channels"][self.event["id_channel"]].get(
-            "meta_set", default_meta_set
-        )
+        self.result = None
+        self.can_edit = firefly.user.can("scheduler_edit", self.event["id_channel"])
+        self.date = kwargs["date"]
 
-        if "asset" in self.kwargs:
-            asset = self.kwargs["asset"]
-            for key in [k for k in meta_types if meta_types[k]["ns"] == "m"]:
-                if key not in asset.meta:
-                    continue
-                self.event[key] = asset[key]
+        playout_config = firefly.settings.get_playout_channel(self.event["id_channel"])
 
-        self.form = MetaEditor(self, keys)
+        fields = playout_config.fields or default_fields
+
+        if (asset := self.kwargs.get("asset")) is not None:
+            for field in fields:
+                if field.name in asset.meta:
+                    self.event[field.name] = asset.meta[field.name]
+
+        self.form = MetaEditor(self, fields)
         for key in self.form.keys():
             self.form[key] = self.event[key]
 
@@ -51,7 +51,9 @@ class EventDialog(QDialog):
             self.form.setEnabled(False)
 
         buttons = QDialogButtonBox(
-            QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, self
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
+            Qt.Orientation.Horizontal,
+            self,
         )
         buttons.accepted.connect(self.on_accept)
         buttons.rejected.connect(self.on_cancel)
@@ -61,8 +63,8 @@ class EventDialog(QDialog):
         layout.addWidget(buttons)
         self.setLayout(layout)
 
-    def closeEvent(self, event):
-        event.accept()
+    def closeEvent(self, evt):
+        evt.accept()
 
     def on_cancel(self):
         self.close()
@@ -76,22 +78,28 @@ class EventDialog(QDialog):
         for key in ["id_channel", "start", "id"]:
             if key not in meta:
                 meta[key] = self.event[key]
+        meta["id_channel"] = self.event["id_channel"]
 
-        for key in meta:
-            value = meta[key]
-            self.event[key] = value  # use event as a validator
-            meta[key] = self.event[key]
-
-        response = api.schedule(id_channel=self.event["id_channel"], events=[meta])
+        response = api.scheduler(
+            id_channel=self.event["id_channel"],
+            date=self.date,
+            events=[
+                {
+                    "id": self.event["id"],
+                    "start": self.event["start"],
+                    "meta": meta,
+                }
+            ],
+        )
 
         if not response:
-            logging.error(response.message)
+            logging.error("Scheduler dialog response", response.message)
 
-        self.accepted = True
+        self.result = response
         self.close()
 
 
-def show_event_dialog(**kwargs):
-    dlg = EventDialog(None, **kwargs)
-    dlg.exec_()
-    return dlg.accepted
+def show_event_dialog(parent=None, **kwargs):
+    dlg = EventDialog(parent, **kwargs)
+    dlg.exec()
+    return dlg.result
