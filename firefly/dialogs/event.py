@@ -32,7 +32,7 @@ class EventDialog(QDialog):
 
         self.result = None
         self.can_edit = firefly.user.can("scheduler_edit", self.event["id_channel"])
-        self.date = kwargs["date"]
+        self.date = kwargs.get("date")
 
         playout_config = firefly.settings.get_playout_channel(self.event["id_channel"])
 

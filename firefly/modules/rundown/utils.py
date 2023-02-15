@@ -51,28 +51,27 @@ ITEM_BUTTONS = [
     },
 ]
 
+class CalendarDialog(QDialog):
+    def __init__(self, parent):
+        super(CalendarDialog, self).__init__(parent)
+        self.setWindowTitle("Calendar")
+        self.date = False, False, False
+        self.setModal(True)
+        self.calendar = QCalendarWidget(self)
+        self.calendar.setGridVisible(True)
+        self.calendar.setFirstDayOfWeek(Qt.DayOfWeek.Monday)
+        self.calendar.activated[QDate].connect(self.setDate)
+        layout = QVBoxLayout()
+        layout.addWidget(self.calendar)
+        self.setLayout(layout)
+        self.show()
 
-def get_date():
-    class CalendarDialog(QDialog):
-        def __init__(self):
-            super(CalendarDialog, self).__init__()
-            self.setWindowTitle("Calendar")
-            self.date = False, False, False
-            self.setModal(True)
-            self.calendar = QCalendarWidget(self)
-            self.calendar.setGridVisible(True)
-            self.calendar.setFirstDayOfWeek(1)
-            self.calendar.activated[QDate].connect(self.setDate)
-            layout = QVBoxLayout()
-            layout.addWidget(self.calendar)
-            self.setLayout(layout)
-            self.show()
+    def setDate(self, date):
+        self.date = (date.year(), date.month(), date.day())
+        self.close()
 
-        def setDate(self, date):
-            self.date = (date.year(), date.month(), date.day())
-            self.close()
-
-    cal = CalendarDialog()
+def get_date(parent=None):
+    cal = CalendarDialog(parent)
     cal.exec()
     return cal.date
 
@@ -179,4 +178,3 @@ def rundown_toolbar(wnd):
     toolbar.addWidget(wnd.channel_display)
 
     return toolbar
-

@@ -214,7 +214,7 @@ class RundownModule(BaseModule):
                     break
 
     def show_calendar(self):
-        y, m, d = get_date()
+        y, m, d = get_date(self)
         if not y:
             return
         hh, mm = self.playout_config.day_start

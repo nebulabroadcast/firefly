@@ -11,6 +11,7 @@ from firefly.objects import Asset, Item, Event, asset_cache
 from firefly.view import FireflyViewModel
 from firefly.qt import Qt, QApplication, QUrl, QMimeData
 
+
 DEFAULT_COLUMNS = [
     "title",
     "id/main",
@@ -80,13 +81,15 @@ class RundownModel(FireflyViewModel):
 
         i = 0
         for row in response["rows"]:
-            row["rundown_row"] = 1
+            row["rundown_row"] = i
             row["rundown_scheduled"] = row["scheduled_time"]
             row["rundown_broadcast"] = row["broadcast_time"]
             row["rundown_difference"] = row["broadcast_time"] - row["scheduled_time"]
 
             if row["type"] == "event":
                 self.object_data.append(Event(meta=row))
+                self.object_data[-1]["id_channel"] = self.id_channel
+                self.object_data[-1]["start"] = row["scheduled_time"]
                 i += 1
                 self.event_ids.append(row["id"])
                 if not row["duration"]:
@@ -300,7 +303,7 @@ class RundownModel(FireflyViewModel):
         api.order(
             self.order_callback,
             id_channel=self.id_channel,
-            bin=to_bin,
+            id_bin=to_bin,
             order=sorted_items,
         )
         return False
@@ -308,7 +311,7 @@ class RundownModel(FireflyViewModel):
     def order_callback(self, response):
         self.parent().setCursor(Qt.CursorShape.ArrowCursor)
         if not response:
-            logging.error("Unable to change bin order: {}".format(response.message))
+            logging.error(f"Unable to change bin order: {response.message}")
             return False
         self.load()
         return False

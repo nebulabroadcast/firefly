@@ -10,7 +10,11 @@ from firefly.view import FireflyView
 
 from firefly.dialogs.event import show_event_dialog
 from firefly.dialogs.send_to import show_send_to_dialog
-from firefly.dialogs.rundown import PlaceholderDialog, show_trim_dialog
+from firefly.dialogs.rundown import (
+    PlaceholderDialog,
+    show_trim_dialog,
+    show_split_dialog,
+)
 
 from .model import RundownModel
 
@@ -111,10 +115,15 @@ class RundownView(FireflyView):
                             solver_menu.addAction(action_solve)
 
                 if obj_set[0] == "item" and self.selected_objects[0]["id_asset"]:
-                    action_trim = QAction("Trim", self)
+                    action_trim = QAction("Trim item", self)
                     action_trim.setStatusTip("Trim selected item")
                     action_trim.triggered.connect(self.on_trim)
                     menu.addAction(action_trim)
+
+                    action_split = QAction("Split item", self)
+                    action_split.setStatusTip("Split selected item")
+                    action_split.triggered.connect(self.on_split)
+                    menu.addAction(action_split)
 
             if obj_set[0] == "item" and (
                 self.selected_objects[0]["id_asset"]
@@ -299,6 +308,29 @@ class RundownView(FireflyView):
         show_trim_dialog(self, item)
         self.model().load()
 
+    def on_split(self):
+        item = self.selected_objects[0]
+        head_items = []
+        tail_items = []
+        for row in self.model().object_data:
+            if row.object_type != "item":
+                continue
+            if row["id_bin"] != item["id_bin"]:
+                continue
+            if row["rundown_row"] < item["rundown_row"]:
+                head_items.append(row)
+            elif row["rundown_row"] > item["rundown_row"]:
+                tail_items.append(row)
+
+        show_split_dialog(
+            self,
+            item,
+            head_items,
+            tail_items,
+            id_channel=self.id_channel,
+        )
+        self.model().load()
+
     def on_solve(self, solver):
         QApplication.processEvents()
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
@@ -419,7 +451,7 @@ class RundownView(FireflyView):
                         timeout=1,
                         action="cue",
                         id_channel=self.id_channel,
-                        payload={"id_item" : obj.id},
+                        payload={"id_item": obj.id},
                     )
                     if not response:
                         logging.error(response.message)
