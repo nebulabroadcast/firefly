@@ -1,5 +1,5 @@
 .PHONY=skin
-VERSION=$(shell python -c 'import firefly; print(firefly.__version__)')
+VERSION=$(shell poetry run python -c 'import firefly; print(firefly.__version__)')
 
 run: skin
 	poetry run python -m firefly
