@@ -40,19 +40,11 @@ jobs:
 
       - uses: ncipollo/release-action@v1
         with:
-          artifacts: firefly-${{ steps.get_version.outputs.value }}-win.zip
+          artifacts: dist/firefly-${{ steps.get_version.outputs.value }}-win.zip
           tag: v${{ steps.get_version.outputs.value }}
           name: Firefly v${{ steps.get_version.outputs.value }}
           body: Firefly ${{ steps.get_version.outputs.value }}
+          allowUpdates: true
           draft: true
           prerelease: false
           commit: false
-      
-
-#      - name: Upload release asset
-#        uses: actions/upload-release-asset@v1
-#        with:
-#          upload_url: ${{ steps.create_release.outputs.upload_url }}
-#          asset_path: firefly-${{ steps.get_version.outputs.value }}-win.zip
-#          asset_name: firefly-${{ steps.get_version.outputs.value }}-win.zip
-#          asset_content_type: application/octet-stream
