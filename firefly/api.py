@@ -7,8 +7,7 @@ from nxtools import log_traceback, logging
 import firefly
 from firefly.config import config
 from firefly.objects import asset_cache
-from firefly.qt import (QApplication, QNetworkAccessManager, QNetworkRequest,
-                        QUrl)
+from firefly.qt import QApplication, QNetworkAccessManager, QNetworkRequest, QUrl
 
 
 class NebulaResponse:

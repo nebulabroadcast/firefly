@@ -5,8 +5,16 @@ from nxtools import logging, s2tc, tc2s
 from firefly.api import api
 from firefly.enum import MetaClass
 from firefly.metadata import meta_types
-from firefly.qt import (QApplication, QDialog, QDialogButtonBox, QLabel,
-                        QPushButton, Qt, QTextEdit, QVBoxLayout)
+from firefly.qt import (
+    QApplication,
+    QDialog,
+    QDialogButtonBox,
+    QLabel,
+    QPushButton,
+    Qt,
+    QTextEdit,
+    QVBoxLayout,
+)
 from firefly.settings import FolderField
 from firefly.widgets import MetaEditor
 

@@ -10,10 +10,25 @@ from firefly.dialogs.batch_ops import show_batch_ops_dialog
 from firefly.dialogs.send_to import show_send_to_dialog
 from firefly.enum import ObjectStatus
 from firefly.objects import asset_cache
-from firefly.qt import (QAbstractItemView, QAction, QApplication, QHBoxLayout,
-                        QIcon, QLabel, QLineEdit, QMenu, QMessageBox,
-                        QPushButton, Qt, QTabWidget, QToolBar, QVBoxLayout,
-                        QWidget, app_skin, pixlib)
+from firefly.qt import (
+    QAbstractItemView,
+    QAction,
+    QApplication,
+    QHBoxLayout,
+    QIcon,
+    QLabel,
+    QLineEdit,
+    QMenu,
+    QMessageBox,
+    QPushButton,
+    Qt,
+    QTabWidget,
+    QToolBar,
+    QVBoxLayout,
+    QWidget,
+    app_skin,
+    pixlib,
+)
 from firefly.view import FireflyView
 
 from .browser_model import BrowserModel

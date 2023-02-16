@@ -2,8 +2,18 @@ import time
 
 from nxtools import logging, s2tc
 
-from firefly.qt import (QCheckBox, QColor, QColorDialog, QFont, QFontDatabase,
-                        QLineEdit, QPushButton, QSpinBox, Qt, QTextEdit)
+from firefly.qt import (
+    QCheckBox,
+    QColor,
+    QColorDialog,
+    QFont,
+    QFontDatabase,
+    QLineEdit,
+    QPushButton,
+    QSpinBox,
+    Qt,
+    QTextEdit,
+)
 
 
 class FireflyString(QLineEdit):

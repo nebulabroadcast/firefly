@@ -5,8 +5,7 @@ from nxtools import logging
 
 import firefly
 from firefly.api import api
-from firefly.qt import (QFormLayout, QHBoxLayout, QPushButton, QTabWidget,
-                        QWidget)
+from firefly.qt import QFormLayout, QHBoxLayout, QPushButton, QTabWidget, QWidget
 from firefly.widgets import FireflySelect, FireflyString
 
 

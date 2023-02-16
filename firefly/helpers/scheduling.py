@@ -2,8 +2,8 @@ import datetime
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from firefly.settings import AcceptModel
     from firefly.objects import Asset
+    from firefly.settings import AcceptModel
 
 
 def date_offset(date: str, offset: int) -> tuple[str, int]:

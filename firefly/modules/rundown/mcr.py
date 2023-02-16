@@ -5,9 +5,17 @@ from nxtools import s2tc
 
 import firefly
 from firefly.api import api
-from firefly.qt import (QApplication, QGridLayout, QHBoxLayout, QLabel,
-                        QProgressBar, QPushButton, QTimer, QVBoxLayout,
-                        QWidget)
+from firefly.qt import (
+    QApplication,
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QProgressBar,
+    QPushButton,
+    QTimer,
+    QVBoxLayout,
+    QWidget,
+)
 
 PROGRESS_BAR_RESOLUTION = 1000
 

@@ -6,8 +6,7 @@ from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer
 from PySide6.QtMultimediaWidgets import QVideoWidget
 
 from firefly.proxyplayer.utils import RegionBar, TimecodeWindow, get_navbar
-from firefly.qt import (QHBoxLayout, QIcon, QSlider, Qt, QTimer, QVBoxLayout,
-                        QWidget)
+from firefly.qt import QHBoxLayout, QIcon, QSlider, Qt, QTimer, QVBoxLayout, QWidget
 
 
 class VideoPlayer(QWidget):

@@ -1,7 +1,6 @@
 import functools
 
-from firefly.qt import (QComboBox, QHBoxLayout, QPushButton, Qt, QWidget,
-                        fontlib)
+from firefly.qt import QComboBox, QHBoxLayout, QPushButton, Qt, QWidget, fontlib
 
 from .comboutils import CheckComboBox, ComboMenuDelegate
 

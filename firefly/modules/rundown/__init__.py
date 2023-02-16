@@ -6,8 +6,14 @@ from nxtools import logging
 
 import firefly
 from firefly.base_module import BaseModule
-from firefly.qt import (QAbstractItemView, QInputDialog, QItemSelection,
-                        QItemSelectionModel, QModelIndex, QVBoxLayout)
+from firefly.qt import (
+    QAbstractItemView,
+    QInputDialog,
+    QItemSelection,
+    QItemSelectionModel,
+    QModelIndex,
+    QVBoxLayout,
+)
 
 from .mcr import MCR
 from .plugins import PlayoutPlugins

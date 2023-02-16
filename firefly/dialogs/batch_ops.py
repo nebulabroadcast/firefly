@@ -4,8 +4,15 @@ import firefly
 from firefly.api import api
 from firefly.enum import MetaClass
 from firefly.metadata import meta_types
-from firefly.qt import (QDialog, QDialogButtonBox, QFrame, QMessageBox,
-                        QScrollArea, Qt, QVBoxLayout)
+from firefly.qt import (
+    QDialog,
+    QDialogButtonBox,
+    QFrame,
+    QMessageBox,
+    QScrollArea,
+    Qt,
+    QVBoxLayout,
+)
 from firefly.widgets import MetaEditor
 
 ERR = "** ERROR **"

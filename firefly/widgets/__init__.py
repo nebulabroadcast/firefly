@@ -2,13 +2,28 @@ import functools
 
 import firefly
 from firefly.metadata import meta_types
-from firefly.qt import (QAction, QGridLayout, QLabel, QMenu, QPushButton,
-                        QSizePolicy, Qt, QWidget)
+from firefly.qt import (
+    QAction,
+    QGridLayout,
+    QLabel,
+    QMenu,
+    QPushButton,
+    QSizePolicy,
+    Qt,
+    QWidget,
+)
 
 from .combo import FireflyList, FireflyRadio, FireflySelect
-from .simple import (FireflyBoolean, FireflyColorPicker, FireflyDatetime,
-                     FireflyInteger, FireflyNumeric, FireflyString,
-                     FireflyText, FireflyTimecode)
+from .simple import (
+    FireflyBoolean,
+    FireflyColorPicker,
+    FireflyDatetime,
+    FireflyInteger,
+    FireflyNumeric,
+    FireflyString,
+    FireflyText,
+    FireflyTimecode,
+)
 
 
 class ChannelDisplay(QLabel):

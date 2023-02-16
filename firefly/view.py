@@ -4,8 +4,16 @@ import pprint
 import firefly
 from firefly.enum import Colors
 from firefly.metadata import meta_types
-from firefly.qt import (QAbstractItemView, QAbstractTableModel, QColor,
-                        QSortFilterProxyModel, Qt, QTableView, fontlib, pixlib)
+from firefly.qt import (
+    QAbstractItemView,
+    QAbstractTableModel,
+    QColor,
+    QSortFilterProxyModel,
+    Qt,
+    QTableView,
+    fontlib,
+    pixlib,
+)
 
 
 @functools.lru_cache(maxsize=100)
