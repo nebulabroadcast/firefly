@@ -9,11 +9,30 @@ from firefly.api import api
 from firefly.dialogs.event import show_event_dialog
 from firefly.helpers.scheduling import can_append
 from firefly.objects import Asset, Event
-from firefly.qt import (QAction, QApplication, QColor, QDrag, QFont, QFrame,
-                        QHBoxLayout, QLabel, QLinearGradient, QMenu,
-                        QMessageBox, QMimeData, QPainter, QPen, QRect,
-                        QScrollArea, QSizePolicy, QSlider, Qt, QVBoxLayout,
-                        QWidget, app_skin)
+from firefly.qt import (
+    QAction,
+    QApplication,
+    QColor,
+    QDrag,
+    QFont,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QLinearGradient,
+    QMenu,
+    QMessageBox,
+    QMimeData,
+    QPainter,
+    QPen,
+    QRect,
+    QScrollArea,
+    QSizePolicy,
+    QSlider,
+    Qt,
+    QVBoxLayout,
+    QWidget,
+    app_skin,
+)
 
 from .utils import suggested_duration, text_shorten
 
@@ -727,13 +746,25 @@ class SchedulerCalendar(QWidget):
     def open_rundown(self, start_time, event=False):
         self.parent().open_rundown(start_time, event)
 
+
     def on_zoom(self):
+        # Calculate the zoom ratio
         ratio = max(1, self.zoom.value() / 1000.0)
+
+        # Calculate the new height of the scroll widget
         h = int(self.scroll_area.height() * ratio)
+
+        # Calculate the current position of the scrollbar relative to the total height
         pos = self.scroll_area.verticalScrollBar().value() / self.scroll_widget.height()
+
+        # Calculate the new position of the scrollbar to center the currently visible area
+        new_pos = (
+            (pos * self.scroll_widget.height() + 0.5 * self.scroll_area.height()) / h
+        ) - (0.5 * self.scroll_area.height() / h)
+
+        # Set the new minimum height of the scroll widget and update the scrollbar position
         self.scroll_widget.setMinimumHeight(h)
-        self.scroll_area.verticalScrollBar().setValue(int(pos * h))
-        self.parent().app_state["scheduler_zoom"] = self.zoom.value()
+        self.scroll_area.verticalScrollBar().setValue(int(new_pos * h))
 
     def resizeEvent(self, evt):
         self.zoom.setMinimum(self.scroll_area.height())
