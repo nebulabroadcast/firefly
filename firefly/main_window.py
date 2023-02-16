@@ -1,18 +1,14 @@
-import time
 import queue
+import time
 
-from nxtools import logging, log_traceback
-from nxtools.logging import INFO, WARNING, ERROR
+from nxtools import log_traceback, logging
+from nxtools.logging import ERROR, INFO, WARNING
 
 import firefly
-
 from firefly.api import api
 from firefly.config import config
-from firefly.menu import create_menu
 from firefly.listener import SeismicListener
-from firefly.objects import asset_cache
-from firefly.version import FIREFLY_VERSION
-
+from firefly.menu import create_menu
 from firefly.modules import (
     BrowserModule,
     DetailModule,
@@ -20,21 +16,21 @@ from firefly.modules import (
     RundownModule,
     SchedulerModule,
 )
-
+from firefly.objects import asset_cache
 from firefly.qt import (
-    Qt,
+    QApplication,
+    QIcon,
     QMainWindow,
     QMessageBox,
-    QApplication,
-    QWidget,
-    QTabWidget,
     QSplitter,
-    QVBoxLayout,
-    QIcon,
+    Qt,
+    QTabWidget,
     QTimer,
-    get_app_state,
+    QVBoxLayout,
+    QWidget,
     app_settings,
     app_skin,
+    get_app_state,
     pixlib,
 )
 
@@ -48,7 +44,7 @@ class FireflyMainWidget(QWidget):
 
         self.tabs = QTabWidget(self)
 
-        self.browser = self.detail = self.rundown = self.scheduler = self.jobs = False
+        self.browser = self.detail = self.rundown = self.scheduler = self.jobs = None
 
         # MAM modules
 
@@ -111,7 +107,8 @@ class FireflyMainWidget(QWidget):
         self.tabs.currentChanged.connect(self.on_switch_tab)
 
     def on_close(self):
-        self.detail.check_changed()
+        if self.detail:
+            self.detail.check_changed()
         self.main_window.listener.halt()
         QApplication.quit()
         logging.debug("[MAIN WINDOW] Window closed")
@@ -132,19 +129,20 @@ class FireflyMainWidget(QWidget):
 
     def on_switch_tab(self, index=None):
         if self.perform_on_switch_tab:
-            if self.current_module == self.detail:
-                self.detail.detail_tabs.on_switch()
-            else:
-                # Disable proxy loading if player is not focused
-                self.detail.detail_tabs.on_switch(-1)
+            if self.detail:
+                if self.current_module == self.detail:
+                    self.detail.detail_tabs.on_switch()
+                else:
+                    # Disable proxy loading if player is not focused
+                    self.detail.detail_tabs.on_switch(-1)
 
-            if self.current_module == self.rundown:
+            if self.rundown and (self.current_module == self.rundown):
                 if self.rundown.mcr and self.rundown.mcr.isVisible():
                     self.rundown.mcr.request_display_resize = True
                 # Refresh rundown on focus
                 self.rundown.load()
 
-            if self.current_module == self.jobs:
+            if self.jobs and (self.current_module == self.jobs):
                 self.jobs.load()
 
         self.main_window.app_state["current_module"] = self.tabs.currentIndex()
@@ -168,7 +166,7 @@ class FireflyMainWindow(QMainWindow):
         self.show()
 
         self.setWindowIcon(QIcon(pixlib["icon"]))
-        title = f"Firefly {FIREFLY_VERSION}"
+        title = f"Firefly {firefly.__version__}"
         title += f" ({firefly.user}@{config.site.name})"
         self.setWindowTitle(title)
         self.setAttribute(Qt.WidgetAttribute.WA_AlwaysShowToolTips)

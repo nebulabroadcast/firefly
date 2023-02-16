@@ -1,5 +1,5 @@
+import firefly
 from firefly.qt import QMessageBox
-from firefly.version import FIREFLY_VERSION
 
 ABOUT_TEXT = """
 <b>Firefly - Nebula broadcast automation system client application</b>
@@ -20,4 +20,4 @@ For more information visit
 
 
 def show_about_dialog(parent):
-    QMessageBox.about(parent, f"Firefly {FIREFLY_VERSION}", ABOUT_TEXT)
+    QMessageBox.about(parent, f"Firefly {firefly.__version__}", ABOUT_TEXT)

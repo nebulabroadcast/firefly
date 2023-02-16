@@ -1,14 +1,13 @@
 import json
 import queue
 import time
-import websocket
-
 from typing import Any
-from nxtools import logging, log_traceback
+
+import websocket
+from nxtools import log_traceback, logging
 
 from firefly.config import config
 from firefly.qt import QThread
-
 
 if config.debug:
     websocket.enableTrace(True)

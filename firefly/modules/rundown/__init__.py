@@ -1,24 +1,17 @@
-import time
 import datetime
 import functools
+import time
 
 from nxtools import logging
 
 import firefly
-
 from firefly.base_module import BaseModule
-from firefly.qt import (
-    QVBoxLayout,
-    QModelIndex,
-    QAbstractItemView,
-    QItemSelection,
-    QItemSelectionModel,
-    QInputDialog,
-)
+from firefly.qt import (QAbstractItemView, QInputDialog, QItemSelection,
+                        QItemSelectionModel, QModelIndex, QVBoxLayout)
 
-from .utils import rundown_toolbar, day_start, get_date
 from .mcr import MCR
 from .plugins import PlayoutPlugins
+from .utils import day_start, get_date, rundown_toolbar
 from .view import RundownView
 
 
@@ -214,7 +207,7 @@ class RundownModule(BaseModule):
                     break
 
     def show_calendar(self):
-        y, m, d = get_date()
+        y, m, d = get_date(self)
         if not y:
             return
         hh, mm = self.playout_config.day_start
@@ -353,4 +346,3 @@ class RundownModule(BaseModule):
     def refresh_assets(self, *assets):
         model = self.view.model()
         model.refresh_assets(assets)
-

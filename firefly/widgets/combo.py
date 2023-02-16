@@ -1,16 +1,9 @@
 import functools
 
-from firefly.qt import (
-    Qt,
-    QWidget,
-    QHBoxLayout,
-    QPushButton,
-    QComboBox,
-    fontlib,
-)
+from firefly.qt import (QComboBox, QHBoxLayout, QPushButton, Qt, QWidget,
+                        fontlib)
 
-
-from .comboutils import ComboMenuDelegate, CheckComboBox
+from .comboutils import CheckComboBox, ComboMenuDelegate
 
 
 def format_select(*args, **kwargs):
@@ -26,9 +19,9 @@ class FireflyRadio(QWidget):
         self.cdata = []
         self.current_index = -1
         self.buttons = []
-        self.layout = QHBoxLayout()
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.setLayout(self.layout)
+        self._layout = QHBoxLayout()
+        self._layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(self._layout)
         if options is not None:
             self.set_options(options)
         self.default = self.get_value()
@@ -36,7 +29,7 @@ class FireflyRadio(QWidget):
     def clear(self):
         for i, button in enumerate(self.buttons):
             button.deleteLater()
-            self.layout.removeWidget(button)
+            self._layout.removeWidget(button)
         self.current_index = -1
         self.buttons = []
 
@@ -62,7 +55,7 @@ class FireflyRadio(QWidget):
             self.buttons[-1].setCheckable(row["role"] in ["option", "header"])
             self.buttons[-1].setAutoExclusive(True)
             self.buttons[-1].clicked.connect(functools.partial(self.switch, i))
-            self.layout.addWidget(self.buttons[-1])
+            self._layout.addWidget(self.buttons[-1])
             i += 1
 
     def switch(self, index):

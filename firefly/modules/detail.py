@@ -1,33 +1,20 @@
 import time
 
-from nxtools import logging, format_time
+from nxtools import format_time, logging
 
 import firefly
-
 from firefly.api import api
-from firefly.metadata import meta_types
-from firefly.enum import ObjectStatus
 from firefly.base_module import BaseModule
-from firefly.modules.detail_toolbars import detail_toolbar, preview_toolbar
+from firefly.enum import ObjectStatus
+from firefly.metadata import meta_types
 from firefly.modules.detail_subclips import FireflySubclipsView
-from firefly.proxyplayer import VideoPlayer
+from firefly.modules.detail_toolbars import detail_toolbar, preview_toolbar
 from firefly.objects import Asset, asset_cache
+from firefly.proxyplayer import VideoPlayer
+from firefly.qt import (QApplication, QFontDatabase, QFrame, QHBoxLayout,
+                        QMessageBox, QScrollArea, Qt, QTabWidget, QTextEdit,
+                        QVBoxLayout, QWidget, pixlib)
 from firefly.widgets import MetaEditor
-
-from firefly.qt import (
-    Qt,
-    QWidget,
-    QApplication,
-    QVBoxLayout,
-    QScrollArea,
-    QFrame,
-    QTextEdit,
-    QFontDatabase,
-    QTabWidget,
-    QHBoxLayout,
-    QMessageBox,
-    pixlib,
-)
 
 
 class DetailTabMain(QWidget):

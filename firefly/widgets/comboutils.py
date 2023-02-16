@@ -2,22 +2,22 @@ __all__ = ["ComboMenuDelegate", "CheckComboBox"]
 
 
 from firefly.qt import (
-    Qt,
     QAbstractItemDelegate,
     QApplication,
-    QStyle,
-    QStyleOptionMenuItem,
     QBrush,
     QColor,
-    QPixmap,
-    QPalette,
-    QIcon,
-    QFontMetrics,
     QComboBox,
-    QTimer,
-    QStyleOptionComboBox,
-    QStylePainter,
     QEvent,
+    QFontMetrics,
+    QIcon,
+    QPalette,
+    QPixmap,
+    QStyle,
+    QStyleOptionComboBox,
+    QStyleOptionMenuItem,
+    QStylePainter,
+    Qt,
+    QTimer,
 )
 
 
@@ -58,7 +58,7 @@ class ComboMenuDelegate(QAbstractItemDelegate):
         background = index.data(Qt.ItemDataRole.BackgroundRole)
         if isinstance(background, (QBrush, QColor, QPixmap)):
             background = QBrush(background)
-            palette.setBrush(QPalette.Background, background)
+            palette.setBrush(QPalette.window(), background)
 
         menuoption.palette = palette
 

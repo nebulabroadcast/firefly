@@ -1,5 +1,6 @@
-from .base import BaseObject
 from .asset import asset_cache
+from .base import BaseObject
+
 
 class Item(BaseObject):
     object_type_id = 1
@@ -66,4 +67,3 @@ class Item(BaseObject):
         if not self["id_asset"]:
             return ""
         return self.asset.file_path
-

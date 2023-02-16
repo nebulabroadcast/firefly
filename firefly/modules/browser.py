@@ -1,36 +1,20 @@
 import copy
 import functools
 
-from nxtools import logging, log_traceback
+from nxtools import log_traceback, logging
 
 import firefly
-
 from firefly.api import api
-from firefly.enum import ObjectStatus
-from firefly.dialogs.send_to import show_send_to_dialog
-from firefly.dialogs.batch_ops import show_batch_ops_dialog
 from firefly.base_module import BaseModule
+from firefly.dialogs.batch_ops import show_batch_ops_dialog
+from firefly.dialogs.send_to import show_send_to_dialog
+from firefly.enum import ObjectStatus
 from firefly.objects import asset_cache
+from firefly.qt import (QAbstractItemView, QAction, QApplication, QHBoxLayout,
+                        QIcon, QLabel, QLineEdit, QMenu, QMessageBox,
+                        QPushButton, Qt, QTabWidget, QToolBar, QVBoxLayout,
+                        QWidget, app_skin, pixlib)
 from firefly.view import FireflyView
-from firefly.qt import (
-    Qt,
-    QLineEdit,
-    QAbstractItemView,
-    QApplication,
-    QPushButton,
-    QHBoxLayout,
-    QIcon,
-    QLabel,
-    QWidget,
-    QAction,
-    QMenu,
-    QToolBar,
-    QVBoxLayout,
-    QMessageBox,
-    QTabWidget,
-    app_skin,
-    pixlib,
-)
 
 from .browser_model import BrowserModel
 

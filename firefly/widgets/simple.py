@@ -2,18 +2,8 @@ import time
 
 from nxtools import logging, s2tc
 
-from firefly.qt import (
-    Qt,
-    QLineEdit,
-    QTextEdit,
-    QFontDatabase,
-    QFont,
-    QSpinBox,
-    QCheckBox,
-    QPushButton,
-    QColorDialog,
-    QColor,
-)
+from firefly.qt import (QCheckBox, QColor, QColorDialog, QFont, QFontDatabase,
+                        QLineEdit, QPushButton, QSpinBox, Qt, QTextEdit)
 
 
 class FireflyString(QLineEdit):
@@ -117,22 +107,22 @@ class FireflyDatetime(QLineEdit):
         mode = kwargs.get("mode")
 
         if mode == "date":
-            self.mask = "9999-99-99"
+            self._mask = "9999-99-99"
             self.format = "%Y-%m-%d"
 
         elif mode == "year":
-            self.mask = "9999"
+            self._mask = "9999"
             self.format = "%Y"
 
         else:
-            self.mask = "9999-99-99 99:99"
+            self._mask = "9999-99-99 99:99"
             self.format = "%Y-%m-%d %H:%M"
 
             if kwargs.get("show_seconds", False):
-                self.mask += ":99"
+                self._mask += ":99"
                 self.format += ":%S"
 
-        self.setInputMask(self.mask)
+        self.setInputMask(self._mask)
         self.default = self.get_value()
 
     def set_value(self, timestamp):
@@ -142,7 +132,7 @@ class FireflyDatetime(QLineEdit):
             self.setText(time.strftime(self.format, tt))
         else:
             self.setText(self.format.replace("9", "-"))
-        self.setInputMask(self.mask)
+        self.setInputMask(self._mask)
         self.default = self.get_value()
 
     def get_value(self):

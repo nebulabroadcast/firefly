@@ -65,7 +65,6 @@ def dump_template(calendar):
     return result
 
 
-
 def export_template(scheduler):
     pass
     # data = dump_template(scheduler.calendar)

@@ -1,18 +1,14 @@
-import time
-import json
 import functools
+import json
+import time
 
-from nxtools import logging, log_traceback
+from nxtools import log_traceback, logging
 
+import firefly
 from firefly.config import config
 from firefly.objects import asset_cache
-from firefly.version import FIREFLY_VERSION
-from firefly.qt import (
-    QApplication,
-    QNetworkAccessManager,
-    QNetworkRequest,
-    QUrl,
-)
+from firefly.qt import (QApplication, QNetworkAccessManager, QNetworkRequest,
+                        QUrl)
 
 
 class NebulaResponse:
@@ -73,7 +69,7 @@ class NebulaAPI:
         data = json.dumps(kwargs).encode("ascii")
         access_token = config.site.token
         authorization = bytes(f"Bearer {access_token}", "ascii")
-        user_agent = bytes(f"firefly/{FIREFLY_VERSION}", "ascii")
+        user_agent = bytes(f"firefly/{firefly.__version__}", "ascii")
 
         request = QNetworkRequest(QUrl(config.site.host + endpoint))
         request.setRawHeader(b"Content-Type", b"application/json")

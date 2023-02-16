@@ -1,13 +1,7 @@
-from firefly.config import config
-from firefly.qt import (
-    app_skin,
-    QDialog,
-    QLineEdit,
-    QPushButton,
-    QFormLayout,
-    QMessageBox,
-)
 from firefly.api import api
+from firefly.config import config
+from firefly.qt import (QDialog, QFormLayout, QLineEdit, QMessageBox,
+                        QPushButton, app_skin)
 
 
 class LoginDialog(QDialog):

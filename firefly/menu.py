@@ -1,14 +1,9 @@
 from functools import partial
 
 import firefly
-
 from firefly.config import config
 from firefly.dialogs.about import show_about_dialog
-from firefly.qt import (
-    QAction,
-    QActionGroup,
-)
-
+from firefly.qt import QAction, QActionGroup
 
 # FAKE DICT for the settings originally stored in config,
 # but should be eventually moved to the settings
@@ -116,19 +111,22 @@ def create_menu(wnd):
         ag.setExclusive(True)
 
         for playout_channel in firefly.settings.playout_channels:
-            a = ag.addAction(QAction(playout_channel.name, wnd, checkable=True))
-            a.id_channel = playout_channel.id
-            a.triggered.connect(partial(wnd.set_channel, playout_channel.id))
+            act = QAction(playout_channel.name, wnd)
+
+            act.setCheckable(True)
+            act.id_channel = playout_channel.id
+            act.triggered.connect(partial(wnd.set_channel, playout_channel.id))
             if (
-                firefly.user.can("rundown_view", a.id_channel)
-                or firefly.user.can("rundown_edit", a.id_channel)
-                or firefly.user.can("scheduler_view", a.id_channel)
-                or firefly.user.can("scheduler_edit", a.id_channel)
+                firefly.user.can("rundown_view", playout_channel.id)
+                or firefly.user.can("rundown_edit", playout_channel.id)
+                or firefly.user.can("scheduler_view", playout_channel.id)
+                or firefly.user.can("scheduler_edit", playout_channel.id)
             ):
-                a.setEnabled(True)
+                act.setEnabled(True)
             else:
-                a.setEnabled(False)
-            wnd.menu_scheduler.addAction(a)
+                act.setEnabled(False)
+            wnd.menu_scheduler.addAction(act)
+            ag.addAction(act)
 
         wnd.menu_scheduler.addSeparator()
 

@@ -3,8 +3,8 @@ import copy
 from nxtools import logging, s2tc
 
 from firefly.metadata import meta_types
-from firefly.view import FireflyViewModel, FireflyView
-from firefly.qt import Qt, QInputDialog, QMenu, QAction
+from firefly.qt import QAction, QInputDialog, QMenu, Qt
+from firefly.view import FireflyView, FireflyViewModel
 
 __all__ = ["FireflySubclipsView"]
 

@@ -1,20 +1,13 @@
 import functools
 
 from nxtools import s2tc
-from firefly.proxyplayer.utils import get_navbar, RegionBar, TimecodeWindow
-from firefly.qt import (
-    Qt,
-    QWidget,
-    QSlider,
-    QTimer,
-    QHBoxLayout,
-    QVBoxLayout,
-    QIcon,
-)
-
 from PySide6.QtCore import Slot
 from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer
 from PySide6.QtMultimediaWidgets import QVideoWidget
+
+from firefly.proxyplayer.utils import RegionBar, TimecodeWindow, get_navbar
+from firefly.qt import (QHBoxLayout, QIcon, QSlider, Qt, QTimer, QVBoxLayout,
+                        QWidget)
 
 
 class VideoPlayer(QWidget):

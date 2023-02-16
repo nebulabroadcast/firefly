@@ -3,17 +3,10 @@ import functools
 from nxtools import format_time, logging
 
 from firefly.api import api
-from firefly.enum import JobState, Colors
+from firefly.enum import Colors, JobState
 from firefly.objects import asset_cache
-from firefly.view import FireflyViewModel, FireflyView
-from firefly.qt import (
-    Qt,
-    QColor,
-    QApplication,
-    QMenu,
-    QAction,
-)
-
+from firefly.qt import QAction, QApplication, QColor, QMenu, Qt
+from firefly.view import FireflyView, FireflyViewModel
 
 DEFAULT_HEADER_DATA = [
     "id",
@@ -29,15 +22,17 @@ DEFAULT_HEADER_DATA = [
 
 def job_format(data, key):
     if key in ["ctime", "stime", "etime"]:
-        return format_time(data[key], never_placeholder="")
+        if not data.get(key):
+            return ""
+        return format_time(data[key])
     elif key == "title":
         return asset_cache[data["id_asset"]]["title"]
     elif key == "action":
         return data["action_name"]
     elif key == "service":
-        return data["service_name"]
+        return data.get("service_name", "")
     elif key == "message":
-        return data["message"]
+        return data.get("message", "")
     elif key == "id":
         return str(data["id"])
     elif key == "progress":
@@ -191,7 +186,6 @@ class FireflyJobsView(FireflyView):
 
     def on_restart(self, jobs):
         for job in jobs:
-            api.job_restart(job)
             response = api.jobs(restart=job)
             if not response:
                 logging.error(response.message)

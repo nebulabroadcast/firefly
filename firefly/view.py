@@ -1,27 +1,18 @@
-import pprint
 import functools
+import pprint
 
 import firefly
-
 from firefly.enum import Colors
 from firefly.metadata import meta_types
-from firefly.qt import (
-    Qt,
-    QColor,
-    QAbstractTableModel,
-    QAbstractItemView,
-    QSortFilterProxyModel,
-    QTableView,
-    pixlib,
-    fontlib,
-)
+from firefly.qt import (QAbstractItemView, QAbstractTableModel, QColor,
+                        QSortFilterProxyModel, Qt, QTableView, fontlib, pixlib)
 
 
 @functools.lru_cache(maxsize=100)
 def format_header(key):
     if key in meta_types:
         return meta_types[key].header
-    return key.replace('_', ' ').title()
+    return key.replace("_", " ").title()
 
 
 @functools.lru_cache(maxsize=100)

@@ -2,12 +2,12 @@ from typing import TYPE_CHECKING, Any
 
 from nxtools import format_filesize, format_time, s2tc
 
-from firefly.enum import ContentType, MediaType, ObjectStatus, QCState
 from firefly import settings
+from firefly.enum import ContentType, MediaType, ObjectStatus, QCState
 
 if TYPE_CHECKING:
     from firefly.objects.base import BaseObject
-    from firefly.settings.metatypes import MetaType
+    from firefly.metadata import MetaType
 
 
 def format_cs_values(metatype: "MetaType", values: list[str]) -> str:
@@ -16,9 +16,11 @@ def format_cs_values(metatype: "MetaType", values: list[str]) -> str:
     return ", ".join([metatype.csdata.title(value) for value in values])
 
 
-
 def format_meta(
-    parent, object: "BaseObject", key: str, **kwargs: dict[str, Any],
+    parent,
+    object: "BaseObject",
+    key: str,
+    **kwargs: dict[str, Any],
 ) -> str:
     """Return a human-readable string representation of a metadata value."""
 

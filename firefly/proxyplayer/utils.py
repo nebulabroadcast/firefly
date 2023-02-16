@@ -1,15 +1,7 @@
 from nxtools import s2tc
-from firefly.qt import (
-    QLineEdit,
-    QSizePolicy,
-    QWidget,
-    QColor,
-    QPainter,
-    Qt,
-    QToolBar,
-    QAction,
-    QIcon,
-)
+
+from firefly.qt import (QAction, QColor, QIcon, QLineEdit, QPainter,
+                        QSizePolicy, Qt, QToolBar, QWidget)
 
 
 class TimecodeWindow(QLineEdit):

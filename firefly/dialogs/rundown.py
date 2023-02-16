@@ -1,20 +1,116 @@
 import functools
 
-from nxtools import s2tc, logging
+from nxtools import logging, s2tc, tc2s
 
 from firefly.api import api
-from firefly.metadata import meta_types
 from firefly.enum import MetaClass
-from firefly.widgets import MetaEditor
+from firefly.metadata import meta_types
+from firefly.qt import (QApplication, QDialog, QDialogButtonBox, QLabel,
+                        QPushButton, Qt, QTextEdit, QVBoxLayout)
 from firefly.settings import FolderField
-from firefly.qt import (
-    Qt,
-    QDialog,
-    QDialogButtonBox,
-    QVBoxLayout,
-    QPushButton,
-    QApplication,
-)
+from firefly.widgets import MetaEditor
+
+
+class SplitDialog(QDialog):
+    def __init__(self, parent, item, head_items, tail_items, id_channel):
+        super(SplitDialog, self).__init__(parent)
+        self.setWindowTitle("Trim {}".format(item))
+
+        self.ok = False
+        self.item = item
+        self.head_items = head_items
+        self.tail_items = tail_items
+        self.id_channel = id_channel
+
+        label = QLabel(
+            "Enter split points as coma-delimited list of HH:MM:SS:FF timecodes"
+        )
+
+        self.textarea = QTextEdit()
+        self.textarea.setPlaceholderText("00:00:00:00, 00:00:00:00")
+
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
+            Qt.Orientation.Horizontal,
+            self,
+        )
+        buttons.accepted.connect(self.on_accept)
+        buttons.rejected.connect(self.on_cancel)
+
+        layout = QVBoxLayout()
+        layout.addWidget(label)
+        layout.addWidget(self.textarea)
+        layout.addWidget(buttons, 0)
+        self.setLayout(layout)
+
+        self.setModal(True)
+        self.setMinimumWidth(400)
+
+    def on_cancel(self):
+        self.close()
+
+    def on_accept(self):
+        text = self.textarea.toPlainText()
+
+        original_duration = self.item.asset["duration"]
+        values = [tc2s(tc.strip()) for tc in text.split(",") if tc.strip() != ""]
+        values = [v for v in values if v > 0 and v < original_duration]
+
+        regions = []
+        for i, v in enumerate(values):
+            if i == 0:
+                regions.append((0, v))
+            else:
+                regions.append((values[i - 1], v))
+        regions.append((values[-1], original_duration))
+
+        print("REGIONS", regions)
+
+        new_order = []  # True faith. he he he
+        i = 0
+        for item in self.head_items:
+            new_order.append({"type": "item", "id": item.id})
+            i += 1
+
+        for j, region in enumerate(regions):
+            new_order.append(
+                {
+                    "type": "item",
+                    "meta": {
+                        "id": self.item.id if j == 0 else None,
+                        "mark_in": region[0],
+                        "mark_out": region[1],
+                        "id_asset": self.item["id_asset"],
+                    },
+                }
+            )
+            i += 1
+
+        for item in self.tail_items:
+            new_order.append({"type": "item", "id": item.id})
+            i += 1
+
+        QApplication.processEvents()
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+        response = api.order(
+            id_channel=self.id_channel,
+            id_bin=self.item["id_bin"],
+            order=new_order,
+        )
+        QApplication.restoreOverrideCursor()
+        if not response:
+            logging.error(response.message)
+        self.close()
+
+
+def show_split_dialog(parent, item, head_items, tail_items, id_channel):
+    dlg = SplitDialog(parent, item, head_items, tail_items, id_channel)
+    dlg.exec()
+
+
+#
+# Placeholder
+#
 
 
 class PlaceholderDialog(QDialog):
@@ -141,13 +237,13 @@ class TrimDialog(QDialog):
         self.item = item
 
         keys = [
-            ["mark_in", {}],
-            ["mark_out", {}],
+            FolderField(name="mark_in"),
+            FolderField(name="mark_out"),
         ]
 
         self.form = MetaEditor(parent, keys)
-        for k, s in keys:
-            self.form[k] = item[k]
+        for field in keys:
+            self.form[field.name] = item[field.name]
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
@@ -178,7 +274,7 @@ class TrimDialog(QDialog):
         response = api.set(
             object_type="item",
             id=self.item.id,
-            payload={
+            data={
                 "mark_in": self.form["mark_in"],
                 "mark_out": self.form["mark_out"],
             },

@@ -1,21 +1,12 @@
-import firefly
-
 from nxtools import logging
 
+import firefly
 from firefly.api import api
-from firefly.metadata import meta_types
 from firefly.enum import MetaClass
+from firefly.metadata import meta_types
+from firefly.qt import (QDialog, QDialogButtonBox, QFrame, QMessageBox,
+                        QScrollArea, Qt, QVBoxLayout)
 from firefly.widgets import MetaEditor
-from firefly.qt import (
-    Qt,
-    QDialog,
-    QScrollArea,
-    QFrame,
-    QDialogButtonBox,
-    QVBoxLayout,
-    QMessageBox,
-)
-
 
 ERR = "** ERROR **"
 

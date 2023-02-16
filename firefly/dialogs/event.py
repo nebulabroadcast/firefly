@@ -1,13 +1,11 @@
 from nxtools import logging
 
 import firefly
-
 from firefly.api import api
 from firefly.objects import Event
-from firefly.widgets import MetaEditor
+from firefly.qt import QDialog, QDialogButtonBox, Qt, QVBoxLayout, app_skin
 from firefly.settings import FolderField
-from firefly.qt import Qt, QDialog, QDialogButtonBox, QVBoxLayout, app_skin
-
+from firefly.widgets import MetaEditor
 
 default_fields = [
     FolderField(name="start"),
@@ -32,7 +30,7 @@ class EventDialog(QDialog):
 
         self.result = None
         self.can_edit = firefly.user.can("scheduler_edit", self.event["id_channel"])
-        self.date = kwargs["date"]
+        self.date = kwargs.get("date")
 
         playout_config = firefly.settings.get_playout_channel(self.event["id_channel"])
 

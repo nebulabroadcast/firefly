@@ -1,15 +1,12 @@
 import copy
-import functools
-
-from collections import defaultdict
 from typing import Any
-from pydantic import BaseModel
+
 from nxtools import unaccent
+from pydantic import BaseModel
 
 import firefly
 
-from .utils import filter_match, CachedObject
-
+from .utils import CachedObject, filter_match
 
 TYPE_DEFAULTS = {
     -1: None,
@@ -33,7 +30,6 @@ class ClassificationScheme(metaclass=CachedObject):
         self.urn = urn
         self.csdata = dict(firefly.settings.cs.get(urn, []))
         if filter is not None:
-            print("Filter", filter)
             self.valid_keys = [r for r in self.csdata if filter_match(filter, r)]
         else:
             self.valid_keys = list(self.csdata.keys())
