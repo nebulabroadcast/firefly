@@ -1,5 +1,6 @@
-from firefly import settings
 from typing import Any
+
+from firefly import settings
 
 ALWAYS_TO_INT = [
     "id_folder",

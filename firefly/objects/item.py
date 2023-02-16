@@ -1,5 +1,5 @@
-from .base import BaseObject
 from .asset import asset_cache
+from .base import BaseObject
 
 
 class Item(BaseObject):

@@ -16,16 +16,16 @@
 # <http://www.gnu.org/licenses/>.
 #
 
-from ctypes import *
-import ctypes.util
-import threading
-import os
-import sys
-from warnings import warn
-from functools import partial, wraps
 import collections
+import ctypes.util
+import os
 import re
+import sys
+import threading
 import traceback
+from ctypes import *
+from functools import partial, wraps
+from warnings import warn
 
 if os.name == "nt":
     backend = CDLL("mpv-1.dll")

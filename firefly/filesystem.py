@@ -1,10 +1,9 @@
 import os
 
-import firefly
-
 from nxtools import PLATFORM, logging
-from firefly.config import config
 
+import firefly
+from firefly.config import config
 
 if PLATFORM == "windows":
     import ctypes

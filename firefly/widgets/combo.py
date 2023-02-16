@@ -1,16 +1,9 @@
 import functools
 
-from firefly.qt import (
-    Qt,
-    QWidget,
-    QHBoxLayout,
-    QPushButton,
-    QComboBox,
-    fontlib,
-)
+from firefly.qt import (QComboBox, QHBoxLayout, QPushButton, Qt, QWidget,
+                        fontlib)
 
-
-from .comboutils import ComboMenuDelegate, CheckComboBox
+from .comboutils import CheckComboBox, ComboMenuDelegate
 
 
 def format_select(*args, **kwargs):

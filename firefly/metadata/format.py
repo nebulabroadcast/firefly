@@ -2,8 +2,8 @@ from typing import TYPE_CHECKING, Any
 
 from nxtools import format_filesize, format_time, s2tc
 
-from firefly.enum import ContentType, MediaType, ObjectStatus, QCState
 from firefly import settings
+from firefly.enum import ContentType, MediaType, ObjectStatus, QCState
 
 if TYPE_CHECKING:
     from firefly.objects.base import BaseObject

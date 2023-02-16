@@ -1,42 +1,21 @@
-import time
-import json
 import functools
+import json
+import time
 
-from nxtools import s2time, s2tc, format_time, logging, datestr2ts
+from nxtools import datestr2ts, format_time, logging, s2tc, s2time
 
 import firefly
-
 from firefly.api import api
-from firefly.objects import Event, Asset
-from firefly.helpers.scheduling import can_append
 from firefly.dialogs.event import show_event_dialog
+from firefly.helpers.scheduling import can_append
+from firefly.objects import Asset, Event
+from firefly.qt import (QAction, QApplication, QColor, QDrag, QFont, QFrame,
+                        QHBoxLayout, QLabel, QLinearGradient, QMenu,
+                        QMessageBox, QMimeData, QPainter, QPen, QRect,
+                        QScrollArea, QSizePolicy, QSlider, Qt, QVBoxLayout,
+                        QWidget, app_skin)
 
-from firefly.qt import (
-    Qt,
-    QPen,
-    QWidget,
-    QPainter,
-    QFont,
-    QColor,
-    QRect,
-    QLinearGradient,
-    QMimeData,
-    QDrag,
-    QMessageBox,
-    QMenu,
-    QAction,
-    QApplication,
-    QLabel,
-    QHBoxLayout,
-    QSizePolicy,
-    QScrollArea,
-    QFrame,
-    QSlider,
-    QVBoxLayout,
-    app_skin,
-)
-
-from .utils import text_shorten, suggested_duration
+from .utils import suggested_duration, text_shorten
 
 SECS_PER_DAY = 3600 * 24
 MINS_PER_DAY = 60 * 24

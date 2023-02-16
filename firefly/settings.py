@@ -1,5 +1,7 @@
 from typing import Any
+
 from pydantic import BaseModel, Field
+
 from firefly.enum import ContentType, MediaType
 
 

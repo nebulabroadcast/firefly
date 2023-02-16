@@ -3,8 +3,8 @@ import functools
 from nxtools import logging
 
 from firefly.api import api
+from firefly.qt import QApplication, QCheckBox, QDialog, Qt, QVBoxLayout
 from firefly.widgets import ActionButton
-from firefly.qt import Qt, QDialog, QVBoxLayout, QCheckBox, QApplication
 
 
 class SendToDialog(QDialog):

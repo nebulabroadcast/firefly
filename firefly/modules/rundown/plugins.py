@@ -1,13 +1,13 @@
-import json
 import functools
+import json
 
 from nxtools import logging
 
 import firefly
-
 from firefly.api import api
-from firefly.widgets import FireflyString, FireflySelect
-from firefly.qt import QWidget, QHBoxLayout, QFormLayout, QPushButton, QTabWidget
+from firefly.qt import (QFormLayout, QHBoxLayout, QPushButton, QTabWidget,
+                        QWidget)
+from firefly.widgets import FireflySelect, FireflyString
 
 
 class PlayoutPlugin(QWidget):

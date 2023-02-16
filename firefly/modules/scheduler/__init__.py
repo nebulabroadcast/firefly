@@ -1,11 +1,11 @@
-from firefly.base_module import BaseModule
-from firefly.helpers.scheduling import get_this_monday, date_offset
-from firefly.qt import QVBoxLayout
-
 from nxtools import logging
 
-from .toolbar import scheduler_toolbar
+from firefly.base_module import BaseModule
+from firefly.helpers.scheduling import date_offset, get_this_monday
+from firefly.qt import QVBoxLayout
+
 from .calendar import SchedulerCalendar
+from .toolbar import scheduler_toolbar
 
 
 class SchedulerModule(BaseModule):

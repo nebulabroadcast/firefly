@@ -1,31 +1,22 @@
+import locale
 import os
 import sys
 import time
-import locale
-
 from typing import Any
-from nxtools import logging, log_traceback, critical_error
+
+from nxtools import critical_error, log_traceback, logging
 
 import firefly
-
-from firefly.filesystem import load_filesystem
-from firefly.dialogs.login import show_login_dialog
-from firefly.dialogs.site_select import show_site_select_dialog
 from firefly.api import api
 from firefly.config import config
+from firefly.dialogs.login import show_login_dialog
+from firefly.dialogs.site_select import show_site_select_dialog
+from firefly.filesystem import load_filesystem
+from firefly.main_window import FireflyMainWidget, FireflyMainWindow
 from firefly.metadata import clear_cs_cache
-from firefly.main_window import FireflyMainWindow, FireflyMainWidget
 from firefly.objects import asset_cache
-from firefly.qt import (
-    Qt,
-    QApplication,
-    QMessageBox,
-    QSplashScreen,
-    app_settings,
-    app_dir,
-    app_skin,
-    pixlib,
-)
+from firefly.qt import (QApplication, QMessageBox, QSplashScreen, Qt, app_dir,
+                        app_settings, app_skin, pixlib)
 
 
 def check_login(wnd):

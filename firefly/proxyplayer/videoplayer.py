@@ -2,17 +2,11 @@
 
 import functools
 
-from nxtools import logging, log_traceback
-from firefly.proxyplayer.utils import get_navbar, RegionBar, TimecodeWindow
-from firefly.qt import (
-    Qt,
-    QWidget,
-    QSlider,
-    QTimer,
-    QHBoxLayout,
-    QVBoxLayout,
-    QIcon,
-)
+from nxtools import log_traceback, logging
+
+from firefly.proxyplayer.utils import RegionBar, TimecodeWindow, get_navbar
+from firefly.qt import (QHBoxLayout, QIcon, QSlider, Qt, QTimer, QVBoxLayout,
+                        QWidget)
 
 try:
     from .mpv import MPV

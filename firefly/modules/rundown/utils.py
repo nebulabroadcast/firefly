@@ -1,26 +1,12 @@
-import time
-import json
 import datetime
+import json
+import time
 
 import firefly
-
-from firefly.widgets import ToolBarStretcher, ChannelDisplay
-from firefly.qt import (
-    Qt,
-    QAction,
-    QApplication,
-    QToolBar,
-    QDialog,
-    QCalendarWidget,
-    QVBoxLayout,
-    QDate,
-    QToolButton,
-    QIcon,
-    QDrag,
-    QMimeData,
-    pixlib,
-)
-
+from firefly.qt import (QAction, QApplication, QCalendarWidget, QDate, QDialog,
+                        QDrag, QIcon, QMimeData, Qt, QToolBar, QToolButton,
+                        QVBoxLayout, pixlib)
+from firefly.widgets import ChannelDisplay, ToolBarStretcher
 
 ITEM_BUTTONS = [
     {

@@ -1,41 +1,20 @@
-import time
 import queue
+import time
 
-from nxtools import logging, log_traceback
-from nxtools.logging import INFO, WARNING, ERROR
+from nxtools import log_traceback, logging
+from nxtools.logging import ERROR, INFO, WARNING
 
 import firefly
-
 from firefly.api import api
 from firefly.config import config
-from firefly.menu import create_menu
 from firefly.listener import SeismicListener
+from firefly.menu import create_menu
+from firefly.modules import (BrowserModule, DetailModule, JobsModule,
+                             RundownModule, SchedulerModule)
 from firefly.objects import asset_cache
-
-from firefly.modules import (
-    BrowserModule,
-    DetailModule,
-    JobsModule,
-    RundownModule,
-    SchedulerModule,
-)
-
-from firefly.qt import (
-    Qt,
-    QMainWindow,
-    QMessageBox,
-    QApplication,
-    QWidget,
-    QTabWidget,
-    QSplitter,
-    QVBoxLayout,
-    QIcon,
-    QTimer,
-    get_app_state,
-    app_settings,
-    app_skin,
-    pixlib,
-)
+from firefly.qt import (QApplication, QIcon, QMainWindow, QMessageBox,
+                        QSplitter, Qt, QTabWidget, QTimer, QVBoxLayout,
+                        QWidget, app_settings, app_skin, get_app_state, pixlib)
 
 
 class FireflyMainWidget(QWidget):

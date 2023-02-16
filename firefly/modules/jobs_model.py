@@ -3,17 +3,10 @@ import functools
 from nxtools import format_time, logging
 
 from firefly.api import api
-from firefly.enum import JobState, Colors
+from firefly.enum import Colors, JobState
 from firefly.objects import asset_cache
-from firefly.view import FireflyViewModel, FireflyView
-from firefly.qt import (
-    Qt,
-    QColor,
-    QApplication,
-    QMenu,
-    QAction,
-)
-
+from firefly.qt import QAction, QApplication, QColor, QMenu, Qt
+from firefly.view import FireflyView, FireflyViewModel
 
 DEFAULT_HEADER_DATA = [
     "id",

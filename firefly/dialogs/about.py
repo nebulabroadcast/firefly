@@ -1,5 +1,4 @@
 import firefly
-
 from firefly.qt import QMessageBox
 
 ABOUT_TEXT = """

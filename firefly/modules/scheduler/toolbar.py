@@ -1,15 +1,6 @@
-from firefly.widgets import ToolBarStretcher, ChannelDisplay
-from firefly.qt import (
-    Qt,
-    QToolButton,
-    QIcon,
-    QDrag,
-    QMimeData,
-    QToolBar,
-    QAction,
-    pixlib,
-)
-
+from firefly.qt import (QAction, QDrag, QIcon, QMimeData, Qt, QToolBar,
+                        QToolButton, pixlib)
+from firefly.widgets import ChannelDisplay, ToolBarStretcher
 
 EMPTY_EVENT_DATA = '[{"id" : 0, "title" : "Empty event"}]'.encode("ascii")
 

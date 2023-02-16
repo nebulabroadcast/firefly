@@ -1,91 +1,29 @@
 import os
 
+from nxtools import log_traceback, logging
+from PySide6.QtCore import (QAbstractTableModel, QDate, QEvent, QItemSelection,
+                            QItemSelectionModel, QMimeData, QModelIndex, QRect,
+                            QSettings, QSortFilterProxyModel, QThread, QTimer,
+                            QUrl, QUrlQuery)
+from PySide6.QtGui import (QAction, QActionGroup, QBrush, QColor, QDrag, QFont,
+                           QFontDatabase, QFontMetrics, QIcon, QLinearGradient,
+                           QPainter, QPalette, QPen, QPixmap, Qt)
+from PySide6.QtNetwork import QNetworkAccessManager, QNetworkRequest
+from PySide6.QtWidgets import (QAbstractItemDelegate, QAbstractItemView,
+                               QApplication, QCalendarWidget, QCheckBox,
+                               QColorDialog, QComboBox, QDialog,
+                               QDialogButtonBox, QFileDialog, QFormLayout,
+                               QFrame, QGridLayout, QHBoxLayout, QInputDialog,
+                               QLabel, QLineEdit, QMainWindow, QMenu,
+                               QMessageBox, QProgressBar, QPushButton,
+                               QScrollArea, QSizePolicy, QSlider, QSpinBox,
+                               QSplashScreen, QSplitter, QStyle,
+                               QStyleOptionComboBox, QStyleOptionMenuItem,
+                               QStylePainter, QTableView, QTabWidget,
+                               QTextEdit, QToolBar, QToolButton, QVBoxLayout,
+                               QWidget)
+
 import firefly
-
-from nxtools import logging, log_traceback
-
-from PySide6.QtCore import (
-    QSettings,
-    QUrlQuery,
-    QUrl,
-    QTimer,
-    QEvent,
-    QThread,
-    QModelIndex,
-    QItemSelection,
-    QItemSelectionModel,
-    QDate,
-    QMimeData,
-    QAbstractTableModel,
-    QSortFilterProxyModel,
-    QRect,
-)
-
-from PySide6.QtGui import (
-    Qt,
-    QFont,
-    QPixmap,
-    QIcon,
-    QColor,
-    QAction,
-    QFontDatabase,
-    QBrush,
-    QPalette,
-    QFontMetrics,
-    QActionGroup,
-    QDrag,
-    QPainter,
-    QLinearGradient,
-    QPen,
-)
-
-from PySide6.QtWidgets import (
-    QDialog,
-    QLineEdit,
-    QPushButton,
-    QFormLayout,
-    QMessageBox,
-    QApplication,
-    QVBoxLayout,
-    QMenu,
-    QWidget,
-    QLabel,
-    QSizePolicy,
-    QGridLayout,
-    QTextEdit,
-    QSpinBox,
-    QCheckBox,
-    QColorDialog,
-    QHBoxLayout,
-    QComboBox,
-    QAbstractItemDelegate,
-    QStyle,
-    QStyleOptionMenuItem,
-    QStyleOptionComboBox,
-    QStylePainter,
-    QAbstractItemView,
-    QInputDialog,
-    QToolBar,
-    QCalendarWidget,
-    QToolButton,
-    QProgressBar,
-    QTabWidget,
-    QDialogButtonBox,
-    QTableView,
-    QFileDialog,
-    QScrollArea,
-    QFrame,
-    QSlider,
-    QMainWindow,
-    QSplitter,
-    QSplashScreen,
-)
-
-from PySide6.QtNetwork import (
-    QNetworkAccessManager,
-    QNetworkRequest,
-)
-
 
 app_dir = os.getcwd()
 

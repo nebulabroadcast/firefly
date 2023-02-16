@@ -1,14 +1,8 @@
 import functools
 
 from firefly.base_module import BaseModule
+from firefly.qt import QLineEdit, QPushButton, Qt, QToolBar, QVBoxLayout
 from firefly.widgets import ToolBarStretcher
-from firefly.qt import (
-    Qt,
-    QLineEdit,
-    QToolBar,
-    QPushButton,
-    QVBoxLayout,
-)
 
 from .jobs_model import FireflyJobsView
 

@@ -1,19 +1,14 @@
-import time
-import json
 import functools
+import json
+import time
+
+from nxtools import log_traceback, logging
 
 import firefly
-
-from nxtools import logging, log_traceback
-
 from firefly.config import config
 from firefly.objects import asset_cache
-from firefly.qt import (
-    QApplication,
-    QNetworkAccessManager,
-    QNetworkRequest,
-    QUrl,
-)
+from firefly.qt import (QApplication, QNetworkAccessManager, QNetworkRequest,
+                        QUrl)
 
 
 class NebulaResponse:

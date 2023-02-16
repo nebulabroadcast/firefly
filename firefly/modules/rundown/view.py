@@ -1,20 +1,17 @@
 from functools import partial
+
 from nxtools import logging, s2time
 
 import firefly
-
 from firefly.api import api
-from firefly.enum import RunMode
-from firefly.qt import Qt, QAbstractItemView, QMenu, QAction, QApplication, QMessageBox
-from firefly.view import FireflyView
-
 from firefly.dialogs.event import show_event_dialog
+from firefly.dialogs.rundown import (PlaceholderDialog, show_split_dialog,
+                                     show_trim_dialog)
 from firefly.dialogs.send_to import show_send_to_dialog
-from firefly.dialogs.rundown import (
-    PlaceholderDialog,
-    show_trim_dialog,
-    show_split_dialog,
-)
+from firefly.enum import RunMode
+from firefly.qt import (QAbstractItemView, QAction, QApplication, QMenu,
+                        QMessageBox, Qt)
+from firefly.view import FireflyView
 
 from .model import RundownModel
 

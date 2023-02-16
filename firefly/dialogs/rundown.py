@@ -1,22 +1,14 @@
 import functools
 
-from nxtools import s2tc, tc2s, logging
+from nxtools import logging, s2tc, tc2s
 
 from firefly.api import api
-from firefly.metadata import meta_types
 from firefly.enum import MetaClass
-from firefly.widgets import MetaEditor
+from firefly.metadata import meta_types
+from firefly.qt import (QApplication, QDialog, QDialogButtonBox, QLabel,
+                        QPushButton, Qt, QTextEdit, QVBoxLayout)
 from firefly.settings import FolderField
-from firefly.qt import (
-    Qt,
-    QDialog,
-    QLabel,
-    QTextEdit,
-    QDialogButtonBox,
-    QVBoxLayout,
-    QPushButton,
-    QApplication,
-)
+from firefly.widgets import MetaEditor
 
 
 class SplitDialog(QDialog):

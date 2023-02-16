@@ -1,15 +1,14 @@
 import copy
 import functools
-
 from collections import defaultdict
 from typing import Any
-from pydantic import BaseModel
+
 from nxtools import unaccent
+from pydantic import BaseModel
 
 import firefly
 
-from .utils import filter_match, CachedObject
-
+from .utils import CachedObject, filter_match
 
 TYPE_DEFAULTS = {
     -1: None,

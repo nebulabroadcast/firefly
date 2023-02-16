@@ -1,14 +1,14 @@
-import time
 import pprint
+import time
 
 from nxtools import logging
 
-from firefly.enum import RunMode, ObjectStatus, Colors
+from firefly.enum import Colors, ObjectStatus, RunMode
 from firefly.metadata import MetaTypes
-from firefly.metadata.normalize import normalize_meta
 from firefly.metadata.format import format_meta
+from firefly.metadata.normalize import normalize_meta
 
-from .format import format_helpers, STATUS_FG_COLORS
+from .format import STATUS_FG_COLORS, format_helpers
 
 
 class BaseObject:

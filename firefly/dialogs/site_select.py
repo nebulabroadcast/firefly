@@ -1,7 +1,7 @@
 import functools
 
 from firefly.config import config
-from firefly.qt import QVBoxLayout, QDialog, QIcon, app_skin
+from firefly.qt import QDialog, QIcon, QVBoxLayout, app_skin
 from firefly.widgets import ActionButton
 
 

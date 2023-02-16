@@ -1,16 +1,14 @@
 import json
 import time
 
-from nxtools import logging, format_time
+from nxtools import format_time, logging
 
 import firefly
-
 from firefly.api import api
 from firefly.dialogs.rundown import PlaceholderDialog, SubclipSelectDialog
-from firefly.objects import Asset, Item, Event, asset_cache
+from firefly.objects import Asset, Event, Item, asset_cache
+from firefly.qt import QApplication, QMimeData, Qt, QUrl
 from firefly.view import FireflyViewModel
-from firefly.qt import Qt, QApplication, QUrl, QMimeData
-
 
 DEFAULT_COLUMNS = [
     "title",

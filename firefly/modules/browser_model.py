@@ -1,20 +1,13 @@
-import json
 import functools
+import json
 
-from nxtools import logging, log_traceback
+from nxtools import log_traceback, logging
 
 import firefly
-
-from firefly.objects import Asset
 from firefly.api import api
-from firefly.view import FireflyViewModel, format_header, format_description
-from firefly.qt import (
-    Qt,
-    QApplication,
-    QUrl,
-    QMimeData,
-    pixlib,
-)
+from firefly.objects import Asset
+from firefly.qt import QApplication, QMimeData, Qt, QUrl, pixlib
+from firefly.view import FireflyViewModel, format_description, format_header
 
 DEFAULT_HEADER_DATA = ["title", "duration", "id_folder"]
 RECORDS_PER_PAGE = 1000
