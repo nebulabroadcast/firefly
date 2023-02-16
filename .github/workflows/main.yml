@@ -24,8 +24,8 @@ jobs:
           poetry config virtualenvs.create false
           poetry install --no-interaction --no-ansi
           pyinstaller --clean -y --dist dist --name firefly --icon images/firefly.ico --onefile firefly/__main__.py
-          copy -r images dist/images
-          copy skin.css dist/skin.css
+          cp -r images dist/images
+          cp skin.css dist/skin.css
           chown -R --reference=. dist
                     
       - name: Upload Artifact
