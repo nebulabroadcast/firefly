@@ -21,7 +21,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install poetry
-          poetry config virtualenvs.create false
           poetry install --no-interaction --no-ansi
           make build_windows
 
@@ -31,6 +30,13 @@ jobs:
         with:
           file: 'pyproject.toml'
           field: 'tool.poetry.version'
+          
+      - name: Create zip
+        uses: thedoctor0/zip-release@0.7.1
+        with:
+          type: 'zip'
+          directory: dist
+          filename: firefly-${{ steps.get_version.outputs.value }}-win.zip
 
       - name: Create Release
         id: create_release
