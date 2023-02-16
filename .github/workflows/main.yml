@@ -22,7 +22,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install poetry
           poetry install --no-interaction --no-ansi
-          make build_windows
+          make build
 
       - name: Get the version
         id: get_version
