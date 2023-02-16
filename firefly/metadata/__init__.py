@@ -1,6 +1,4 @@
 import copy
-import functools
-from collections import defaultdict
 from typing import Any
 
 from nxtools import unaccent

@@ -57,6 +57,8 @@ class FireflyApplication(QApplication):
             sys.exit(0)
         config.set_site(i)
 
+        assert config.site is not None, "No site selected"
+
         self.app_state_path = os.path.join(
             app_dir, f"ffdata.{config.site.name}.appstate"
         )

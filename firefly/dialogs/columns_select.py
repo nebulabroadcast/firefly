@@ -1,6 +1,6 @@
 # TODO
 
-from firelfly.qt import QAbstractItemView, QDialog, QHBoxLayout, QListWidget
+from firefly.qt import QAbstractItemView, QDialog, QHBoxLayout, QListWidget
 
 
 class ColumnsSelectDialog(QDialog):

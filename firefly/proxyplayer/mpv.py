@@ -854,18 +854,19 @@ class MPV(object):
 
     def screenshot_raw(self, includes="subtitles"):
         """Mapped mpv screenshot_raw command, see man mpv(1). Returns a pillow Image object."""
-        from PIL import Image
-
-        res = self.node_command("screenshot-raw", includes)
-        if res["format"] != "bgr0":
-            raise ValueError(
-                'Screenshot in unknown format "{}". Currently, only bgr0 is supported.'.format(
-                    res["format"]
-                )
-            )
-        img = Image.frombytes("RGBA", (res["w"], res["h"]), res["data"])
-        b, g, r, a = img.split()
-        return Image.merge("RGB", (r, g, b))
+        return
+        # from PIL import Image
+        #
+        # res = self.node_command("screenshot-raw", includes)
+        # if res["format"] != "bgr0":
+        #     raise ValueError(
+        #         'Screenshot in unknown format "{}". Currently, only bgr0 is supported.'.format(
+        #             res["format"]
+        #         )
+        #     )
+        # img = Image.frombytes("RGBA", (res["w"], res["h"]), res["data"])
+        # b, g, r, a = img.split()
+        # return Image.merge("RGB", (r, g, b))
 
     def playlist_next(self, mode="weak"):
         """Mapped mpv playlist_next command, see man mpv(1)."""
