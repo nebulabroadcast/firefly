@@ -47,4 +47,3 @@ jobs:
           allowUpdates: true
           draft: true
           prerelease: false
-          commit: false
