@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "firefly"
-version = "6.0.0-beta.1"
+version = "6.0.0-beta.2"
 description = "Desktop client application for Nebula - Open source media asset management and broadcast automation system."
 authors = ["Nebula Broadcast <info@nebulabroadcast.com>"]
 
@@ -18,6 +18,12 @@ flake8 = "^4.0.1"
 qtsass = "^0.3.2"
 mypy = "^1.0.0"
 pyinstaller = "^5.8.0"
+
+[tool.isort]
+profile = "black"
+
+[tool.black]
+line-length = 88
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

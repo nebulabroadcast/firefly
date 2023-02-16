@@ -42,8 +42,8 @@ jobs:
         with:
           artifacts: dist/firefly-${{ steps.get_version.outputs.value }}-win.zip
           tag: v${{ steps.get_version.outputs.value }}
-          name: Firefly v${{ steps.get_version.outputs.value }}
-          body: Firefly ${{ steps.get_version.outputs.value }}
+          name: Firefly ${{ steps.get_version.outputs.value }}
+          body: Firefly version ${{ steps.get_version.outputs.value }}
           allowUpdates: true
           draft: true
           prerelease: false

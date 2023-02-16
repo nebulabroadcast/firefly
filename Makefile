@@ -10,6 +10,11 @@ skin:
 check_version:
 	sed -i "s/version = \".*\"/version = \"$(VERSION)\"/" pyproject.toml
 
+lint: check_version
+	poetry run isort firefly
+	poetry run flake8 firefly
+	poetry run black firefly
+
 build: check_version skin
 	poetry run pyinstaller -y \
 		--clean \
