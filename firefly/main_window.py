@@ -11,7 +11,6 @@ from firefly.config import config
 from firefly.menu import create_menu
 from firefly.listener import SeismicListener
 from firefly.objects import asset_cache
-from firefly.version import FIREFLY_VERSION
 
 from firefly.modules import (
     BrowserModule,
@@ -168,7 +167,7 @@ class FireflyMainWindow(QMainWindow):
         self.show()
 
         self.setWindowIcon(QIcon(pixlib["icon"]))
-        title = f"Firefly {FIREFLY_VERSION}"
+        title = f"Firefly {firefly.__version__}"
         title += f" ({firefly.user}@{config.site.name})"
         self.setWindowTitle(title)
         self.setAttribute(Qt.WidgetAttribute.WA_AlwaysShowToolTips)

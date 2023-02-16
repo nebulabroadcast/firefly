@@ -7,7 +7,7 @@ from firefly.qt import (
     QMimeData,
     QToolBar,
     QAction,
-    pixlib
+    pixlib,
 )
 
 

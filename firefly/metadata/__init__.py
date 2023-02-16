@@ -33,7 +33,6 @@ class ClassificationScheme(metaclass=CachedObject):
         self.urn = urn
         self.csdata = dict(firefly.settings.cs.get(urn, []))
         if filter is not None:
-            print("Filter", filter)
             self.valid_keys = [r for r in self.csdata if filter_match(filter, r)]
         else:
             self.valid_keys = list(self.csdata.keys())

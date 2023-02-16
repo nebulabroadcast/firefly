@@ -21,7 +21,7 @@ from firefly.qt import (
 def format_header(key):
     if key in meta_types:
         return meta_types[key].header
-    return key.replace('_', ' ').title()
+    return key.replace("_", " ").title()
 
 
 @functools.lru_cache(maxsize=100)

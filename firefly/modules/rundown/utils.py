@@ -51,6 +51,7 @@ ITEM_BUTTONS = [
     },
 ]
 
+
 class CalendarDialog(QDialog):
     def __init__(self, parent):
         super(CalendarDialog, self).__init__(parent)
@@ -69,6 +70,7 @@ class CalendarDialog(QDialog):
     def setDate(self, date):
         self.date = (date.year(), date.month(), date.day())
         self.close()
+
 
 def get_date(parent=None):
     cal = CalendarDialog(parent)

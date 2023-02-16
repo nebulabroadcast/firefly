@@ -29,15 +29,17 @@ DEFAULT_HEADER_DATA = [
 
 def job_format(data, key):
     if key in ["ctime", "stime", "etime"]:
-        return format_time(data[key], never_placeholder="")
+        if not data.get(key):
+            return ""
+        return format_time(data[key])
     elif key == "title":
         return asset_cache[data["id_asset"]]["title"]
     elif key == "action":
         return data["action_name"]
     elif key == "service":
-        return data["service_name"]
+        return data.get("service_name", "")
     elif key == "message":
-        return data["message"]
+        return data.get("message", "")
     elif key == "id":
         return str(data["id"])
     elif key == "progress":
@@ -191,7 +193,6 @@ class FireflyJobsView(FireflyView):
 
     def on_restart(self, jobs):
         for job in jobs:
-            api.job_restart(job)
             response = api.jobs(restart=job)
             if not response:
                 logging.error(response.message)

@@ -16,7 +16,6 @@ from firefly.config import config
 from firefly.metadata import clear_cs_cache
 from firefly.main_window import FireflyMainWindow, FireflyMainWidget
 from firefly.objects import asset_cache
-from firefly.version import FIREFLY_VERSION
 from firefly.qt import (
     Qt,
     QApplication,
@@ -49,7 +48,7 @@ def check_login(wnd):
 class FireflyApplication(QApplication):
     def __init__(self, **kwargs):
         super(FireflyApplication, self).__init__(sys.argv)
-        self.app_state = {"name": "firefly", "title": f"Firefly {FIREFLY_VERSION}"}
+        self.app_state = {"name": "firefly", "title": f"Firefly {firefly.__version__}"}
         self.app_state_path = os.path.join(app_dir, f"{app_settings['name']}.appstate")
         self.setStyleSheet(app_skin)
         locale.setlocale(locale.LC_NUMERIC, "C")

@@ -353,4 +353,3 @@ class RundownModule(BaseModule):
     def refresh_assets(self, *assets):
         model = self.view.model()
         model.refresh_assets(assets)
-
