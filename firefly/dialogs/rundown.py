@@ -16,7 +16,7 @@ from firefly.qt import (
     QVBoxLayout,
 )
 from firefly.settings import FolderField
-from firefly.widgets import MetaEditor
+from firefly.components.form import MetadataForm
 
 
 class SplitDialog(QDialog):
@@ -133,7 +133,7 @@ class PlaceholderDialog(QDialog):
             if k in meta:
                 keys.append(FolderField(name=k, mode="text"))
 
-        self.form = MetaEditor(parent, keys)
+        self.form = MetadataForm(parent, keys)
         for k in keys:
             if meta_types[k.name].type == MetaClass.SELECT:
                 self.form.inputs[k.name].auto_data(meta_types[k.name])

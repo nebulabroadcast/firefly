@@ -3,6 +3,7 @@ import functools
 import firefly
 from firefly.qt import QAction, QIcon, QMenu, QToolBar, pixlib
 from firefly.widgets import FireflySelect, FireflyTimecode, ToolBarStretcher
+from firefly.components.input_timecode import InputTimecode
 
 
 def preview_toolbar(wnd):
@@ -74,7 +75,7 @@ def detail_toolbar(wnd):
 
     toolbar.addWidget(wnd.folder_select)
 
-    wnd.duration = FireflyTimecode(toolbar)
+    wnd.duration = InputTimecode(toolbar)
 
     toolbar.addWidget(wnd.duration)
 

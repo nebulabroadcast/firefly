@@ -25,7 +25,8 @@ from firefly.qt import (
     QWidget,
     pixlib,
 )
-from firefly.widgets import MetaEditor
+
+from firefly.components.form import MetadataForm
 
 
 class DetailTabMain(QWidget):
@@ -74,7 +75,7 @@ class DetailTabMain(QWidget):
             for i in reversed(range(self.layout.count())):
                 self.layout.itemAt(i).widget().deleteLater()
 
-            self.form = MetaEditor(self, self.fields)
+            self.form = MetadataForm(self, self.fields, {})
             self.layout.addWidget(self.form)
             self.id_folder = id_folder
             self.status = asset["status"]
@@ -208,6 +209,7 @@ class DetailTabPreview(QWidget):
         if self.current_asset and not self.loaded:
             proxy_url = f"{firefly.settings.server_url}/proxy/{self.current_asset.id}"
             logging.debug(f"[DETAIL] Opening {self.current_asset} preview: {proxy_url}")
+            proxy_url += f"?token={firefly.config.site.token}"
             self.player.fps = self.current_asset.fps
             if self.current_asset["poster_frame"]:
                 markers = {
@@ -475,7 +477,7 @@ class DetailModule(BaseModule):
         else:
             data["id_folder"] = self.folder_select.get_value()
             data["duration"] = self.duration.get_value()
-            for key in self.form.keys():
+            for key in self.form.changed:
                 data[key] = self.form[key]
 
         if self.preview.changed:

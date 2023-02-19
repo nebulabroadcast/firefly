@@ -1,14 +1,15 @@
 from nxtools import logging
 
 import firefly
+
 from firefly.api import api
+from firefly.components.form import MetadataForm
 from firefly.objects import Event
 from firefly.qt import QDialog, QDialogButtonBox, Qt, QVBoxLayout, app_skin
 from firefly.settings import FolderField
-from firefly.widgets import MetaEditor
+
 
 default_fields = [
-    FolderField(name="start"),
     FolderField(name="title"),
     FolderField(name="subtitle"),
     FolderField(name="description"),
@@ -33,17 +34,18 @@ class EventDialog(QDialog):
         self.date = kwargs.get("date")
 
         playout_config = firefly.settings.get_playout_channel(self.event["id_channel"])
-
-        fields = playout_config.fields or default_fields
+        fields = [FolderField(name="start")]
+        if playout_config.fields:
+            fields.extend(playout_config.fields)
+        else:
+            fields.extend(default_fields)
 
         if (asset := self.kwargs.get("asset")) is not None:
             for field in fields:
                 if field.name in asset.meta:
                     self.event[field.name] = asset.meta[field.name]
 
-        self.form = MetaEditor(self, fields)
-        for key in self.form.keys():
-            self.form[key] = self.event[key]
+        self.form = MetadataForm(self, fields, self.event.meta)
 
         if not self.can_edit:
             self.form.setEnabled(False)
@@ -72,11 +74,8 @@ class EventDialog(QDialog):
             self.close()
             return
 
-        meta = self.form.meta
-        for key in ["id_channel", "start", "id"]:
-            if key not in meta:
-                meta[key] = self.event[key]
-        meta["id_channel"] = self.event["id_channel"]
+        for key in self.form.changed:
+            self.event[key] = self.form[key]
 
         response = api.scheduler(
             id_channel=self.event["id_channel"],
@@ -85,7 +84,7 @@ class EventDialog(QDialog):
                 {
                     "id": self.event["id"],
                     "start": self.event["start"],
-                    "meta": meta,
+                    "meta": self.event.meta,
                 }
             ],
         )

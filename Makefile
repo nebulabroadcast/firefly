@@ -14,6 +14,7 @@ lint: check_version
 	poetry run isort firefly
 	poetry run flake8 firefly
 	poetry run black firefly
+	poetry run mypy firefly
 
 build: check_version skin
 	poetry run pyinstaller -y \

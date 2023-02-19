@@ -25,6 +25,10 @@ from .simple import (
     FireflyTimecode,
 )
 
+assert FireflyList
+assert FireflyRadio
+assert FireflySelect
+
 
 class ChannelDisplay(QLabel):
     pass

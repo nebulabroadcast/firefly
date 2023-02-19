@@ -1,6 +1,5 @@
 import functools
 
-from nxtools import s2tc
 from PySide6.QtCore import Slot
 from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer
 from PySide6.QtMultimediaWidgets import QVideoWidget

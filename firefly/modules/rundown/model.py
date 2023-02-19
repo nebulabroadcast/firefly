@@ -79,6 +79,8 @@ class RundownModel(FireflyViewModel):
 
         i = 0
         for row in response["rows"]:
+            row.update(row.get("meta", {}))
+            row.pop("meta", None)
             row["rundown_row"] = i
             row["rundown_scheduled"] = row["scheduled_time"]
             row["rundown_broadcast"] = row["broadcast_time"]
@@ -97,11 +99,11 @@ class RundownModel(FireflyViewModel):
             elif row["type"] == "item":
                 item = Item(meta=row)
                 item.id_channel = self.id_channel
-                if row["id_asset"]:
+                if row.get("id_asset"):
                     item._asset = asset_cache.get(row["id_asset"])
                     required_assets.append([row["id_asset"], row["asset_mtime"]])
                 else:
-                    item._asset = False
+                    item._asset = None
                 self.object_data.append(item)
                 i += 1
             else:
@@ -200,10 +202,12 @@ class RundownModel(FireflyViewModel):
                 return False
             else:
                 for obj in items:
+                    print(obj)
                     if action == Qt.DropAction.CopyAction:
-                        obj["id"] = False
-                    elif not obj.get("id", False):
-                        item_role = obj.get("item_role", False)
+                        obj["id"] = None
+                    elif not obj.get("id"):
+                        item_role = obj.get("item_role", None)
+                        print("ITEM ROLE")
                         if item_role in ["live", "placeholder"]:
                             dlg = PlaceholderDialog(self.parent(), obj)
                             dlg.exec()
@@ -298,6 +302,7 @@ class RundownModel(FireflyViewModel):
             return
         self.parent().setCursor(Qt.CursorShape.BusyCursor)
         QApplication.processEvents()
+        print(sorted_items)
         api.order(
             self.order_callback,
             id_channel=self.id_channel,
