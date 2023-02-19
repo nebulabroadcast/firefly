@@ -149,11 +149,14 @@ QSpinBox {
 QTextEdit {
   min-height: 150px; }
 
-QPushButton:checked, QToolButton:checked {
-  border: 1px solid #0ed3fe; }
-
 QPushButton:hover, QToolButton:hover {
   background-color: #3a3644; }
+
+QPushButton:checked, QToolButton:checked {
+  background-color: #0ed3fe;
+  color: #19161f; }
+  QPushButton:checked:hover, QToolButton:checked:hover {
+    background-color: #0ed3fe; }
 
 QPushButton:pressed, QToolButton:pressed {
   border: #0ed3fe; }

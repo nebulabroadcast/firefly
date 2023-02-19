@@ -420,9 +420,9 @@ class DetailModule(BaseModule):
         if self._load_queue:
             self.focus(self._load_queue)
 
-    def on_folder_changed(self):
+    def on_folder_changed(self, new_folder: int):
         data = {key: self.form[key] for key in self.form.changed}
-        self.detail_tabs.load(self.asset, id_folder=self.folder_select.get_value())
+        self.detail_tabs.load(self.asset, id_folder=new_folder)
         for key in data:
             if key in self.form.inputs:
                 self.form[key] = data[key]

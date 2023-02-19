@@ -210,13 +210,19 @@ QTextEdit{
 // BUTTONS
 
 QPushButton, QToolButton{
-  &:checked{
-    border: 1px solid $color-highlight;
-  }
-
   &:hover{
     background-color: $color-surface-06;
   }
+
+  &:checked{
+    background-color: $color-highlight;
+    color: $color-surface-01;
+
+    &:hover{
+      background-color: $color-highlight;
+    }
+  }
+
 
   &:pressed{
     border: $color-highlight;

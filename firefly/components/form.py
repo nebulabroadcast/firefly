@@ -15,6 +15,7 @@ from .input_textarea import InputTextarea
 from .input_timecode import InputTimecode
 from .input_datetime import InputDatetime
 from .input_switch import InputSwitch
+from .input_radio import InputRadio
 
 
 class NotImplementeWidget(QLabel):
@@ -84,7 +85,10 @@ class MetadataForm(QWidget):
             if key_description:
                 label.setToolTip(key_description)
 
-            input_class = editor_map.get(key_class, NotImplementeWidget)
+            if key_settings.get("mode") == "radio":
+                input_class = InputRadio
+            else:
+                input_class = editor_map.get(key_class, NotImplementeWidget)
 
             self.inputs[field.name] = input_class(
                 self,

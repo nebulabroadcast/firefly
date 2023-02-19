@@ -2,8 +2,9 @@ import functools
 
 import firefly
 from firefly.qt import QAction, QIcon, QMenu, QToolBar, pixlib
-from firefly.widgets import FireflySelect, FireflyTimecode, ToolBarStretcher
+from firefly.widgets import ToolBarStretcher
 from firefly.components.input_timecode import InputTimecode
+from firefly.components.folder_dropdown import FolderDropdown
 
 
 def preview_toolbar(wnd):
@@ -55,28 +56,12 @@ def preview_toolbar(wnd):
 def detail_toolbar(wnd):
     toolbar = QToolBar(wnd)
 
-    # for widget in widgets:
-    #     toolbar.addWidget(widget)
-    fdata = []
-    for folder in firefly.settings.folders:
-        fdata.append(
-            {
-                "value": folder.id,
-                "title": folder.name,
-                "role": "option",
-            }
-        )
-
-    wnd.folder_select = FireflySelect(toolbar, options=fdata)
-    for i, fd in enumerate(fdata):
-        wnd.folder_select.setItemIcon(i, QIcon(pixlib["folder_" + str(fd["value"])]))
-    wnd.folder_select.currentIndexChanged.connect(wnd.on_folder_changed)
+    wnd.folder_select = FolderDropdown(wnd)
+    wnd.folder_select.folder_changed.connect(wnd.on_folder_changed)
     wnd.folder_select.setEnabled(False)
-
     toolbar.addWidget(wnd.folder_select)
 
     wnd.duration = InputTimecode(toolbar)
-
     toolbar.addWidget(wnd.duration)
 
     toolbar.addWidget(ToolBarStretcher(toolbar))

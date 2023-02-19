@@ -249,9 +249,7 @@ class TrimDialog(QDialog):
             FolderField(name="mark_out"),
         ]
 
-        self.form = MetaEditor(parent, keys)
-        for field in keys:
-            self.form[field.name] = item[field.name]
+        self.form = MetadataForm(parent, keys, item.meta)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,

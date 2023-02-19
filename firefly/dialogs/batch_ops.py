@@ -13,7 +13,7 @@ from firefly.qt import (
     Qt,
     QVBoxLayout,
 )
-from firefly.widgets import MetaEditor
+from firefly.components.form import MetadataForm
 
 ERR = "** ERROR **"
 
@@ -25,7 +25,7 @@ class BatchOpsDialog(QDialog):
         self.setWindowTitle(f"Batch modify: {len(self.objects)} assets")
         id_folder = self.objects[0]["id_folder"]
         self.fields = firefly.settings.get_folder(id_folder)
-        self.form = MetaEditor(self, self.fields)
+        self.form = MetadataForm(self, self.fields)
 
         if self.form:
             for key, conf in self.fields:
