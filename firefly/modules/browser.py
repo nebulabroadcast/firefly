@@ -470,7 +470,7 @@ class BrowserTab(QWidget):
             return
         response = api.ops(
             operations=[
-                {"id": id, "data": {"status": ObjectStatus.CREATING}} for id in objects
+                {"id": id, "data": {"status": ObjectStatus.OFFLINE}} for id in objects
             ]
         )
         if not response:

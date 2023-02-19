@@ -89,6 +89,7 @@ class FireflyMainWidget(QWidget):
         # Layout
 
         self.main_splitter = QSplitter(Qt.Orientation.Horizontal)
+        self.main_splitter.setHandleWidth(12)
         self.main_splitter.addWidget(self.browser)
         self.main_splitter.addWidget(self.tabs)
         self.main_splitter.splitterMoved.connect(self.main_window.save_window_state)

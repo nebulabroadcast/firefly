@@ -402,7 +402,7 @@ class RundownView(FireflyView):
                 if obj.object_type == "item" and obj["id_asset"]
             ]
         )
-        show_send_to_dialog(self, objs)
+        show_send_to_dialog(self, list(objs))
         self.model().load()
 
     def on_edit_item(self):
