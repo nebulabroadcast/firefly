@@ -16,6 +16,8 @@ from .input_timecode import InputTimecode
 from .input_datetime import InputDatetime
 from .input_switch import InputSwitch
 from .input_radio import InputRadio
+from .input_select import InputSelect
+from .input_list import InputList
 
 
 class NotImplementeWidget(QLabel):
@@ -44,6 +46,8 @@ editor_map = {
     "datetime": InputDatetime,
     "color": InputColor,
     "boolean": InputSwitch,
+    "select": InputSelect,
+    "list": InputList,
 }
 
 

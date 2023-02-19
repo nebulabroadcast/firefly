@@ -19,6 +19,8 @@ class InputTextarea(QTextEdit):
             return
         if value:
             self.setText(str(value))
+        else:
+            self.clear()
 
     def get_value(self) -> str:
         return self.toPlainText()

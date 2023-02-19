@@ -11,8 +11,10 @@ class InputText(QLineEdit):
     def set_value(self, value: str) -> None:
         if value == self.get_value():
             return
-
-        self.setText(str(value))
+        if value:
+            self.setText(str(value))
+        else:
+            self.clear()
 
     def get_value(self):
         return self.text()

@@ -1,66 +1,14 @@
-from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtWidgets import (
     QDialog,
     QVBoxLayout,
     QHBoxLayout,
     QLabel,
-    QLineEdit,
     QListWidget,
     QPushButton,
 )
 
 
-from PySide6.QtCore import Qt
-
-# from PySide6.QtGui import QIntValidator, QRegExpValidator, QValidator
-from PySide6.QtWidgets import QLineEdit, QHBoxLayout, QLabel, QWidget
-
-from nxtools import s2tc, tc2s
-
-
-class InputTimecode(QLineEdit):
-    def __init__(self, parent, value=None, fps=25):
-        super().__init__(parent)
-
-        self._fps = fps
-        self._value = value
-
-        self.setPlaceholderText("--:--:--:--")
-        self.setMaxLength(11)
-        self.setFixedWidth(200)
-
-        if value:
-            self.setText(s2tc(value, fps))
-
-        self.editingFinished.connect(self.onSubmit)
-        self.textChanged.connect(self.onChangeHandler)
-        self.returnPressed.connect(self.onSubmit)
-
-    def focusInEvent(self, evt):
-        self.selectAll()
-
-    def onSubmit(self):
-        str_ = self.text().replace(":", "")
-        str_ = str_.zfill(8)
-        str_ = ":".join([str_[i : i + 2] for i in range(0, len(str_), 2)])
-
-        self._value = tc2s(str_, self._fps)
-        print("SET TO", self._value)
-
-    def onChangeHandler(self, text):
-        res = text
-        # res = res.replace("[^0-9:]", "")
-        if len(res) > 11:
-            res = self.text
-        else:
-            # res = res.replace("[^0-9]", "")
-            if len(res) > 2:
-                res = res[:-2] + ":" + res[-2:]
-            if len(res) > 5:
-                res = res[:-5] + ":" + res[-5:]
-            if len(res) > 8:
-                res = res[:-8] + ":" + res[-8:]
-        self.setText(res)
+from firefly.components.input_timecode import InputTimecode
 
 
 class SplitItemDialog(QDialog):

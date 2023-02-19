@@ -4,6 +4,7 @@ from typing import Any
 from PySide6.QtWidgets import QWidget, QPushButton, QHBoxLayout
 
 import firefly
+from firefly.metadata.utils import filter_match
 
 
 class InputRadio(QWidget):
@@ -11,8 +12,13 @@ class InputRadio(QWidget):
         super().__init__(parent)
 
         self._value = value
-        self._default_value = value
+        self._original_value = value
+        self._options = []
 
+        self.set_field_options(**kwargs)
+        self.set_value(value)
+
+    def set_field_options(self, **kwargs) -> None:
         self._options = []
         if urn := kwargs.get("cs"):
             _filter = kwargs.get("filter")
@@ -27,7 +33,7 @@ class InputRadio(QWidget):
 
                 self._options.append(
                     {
-                        "value": value,
+                        "value": opt_value,
                         "title": csmeta.get("title", opt_value),
                         "description": csmeta.get("description", opt_value),
                     }
@@ -49,10 +55,6 @@ class InputRadio(QWidget):
         self._current_index = None
         self._buttons = []
 
-    def auto_options(self, key, id_folder=0):
-        # TODO
-        self.set_options([])
-
     def build_options(self):
         self.clear()
         self._current_index = None
@@ -71,10 +73,6 @@ class InputRadio(QWidget):
                 self._current_index = i
                 self._buttons[-1].setChecked(True)
             i += 1
-
-    def set_options(self, options: list[dict[str, Any]]) -> None:
-        self._options = options
-        self.build_options()
 
     def switch(self, index: int) -> None:
         self._current_index = index

@@ -1,6 +1,6 @@
 import firefly
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QComboBox
 from PySide6.QtGui import QIcon
 
@@ -37,6 +37,7 @@ class FolderDropdown(QComboBox):
             return
         if not value:
             return
+        self._value = value
         for i, val in enumerate(self._folder_ids):
             if val == value:
                 self.setCurrentIndex(i)

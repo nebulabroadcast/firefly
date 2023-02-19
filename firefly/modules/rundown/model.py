@@ -202,12 +202,11 @@ class RundownModel(FireflyViewModel):
                 return False
             else:
                 for obj in items:
-                    print(obj)
                     if action == Qt.DropAction.CopyAction:
                         obj["id"] = None
                     elif not obj.get("id"):
                         item_role = obj.get("item_role", None)
-                        print("ITEM ROLE")
+                        print("ITEM ROLE", item_role)
                         if item_role in ["live", "placeholder"]:
                             dlg = PlaceholderDialog(self.parent(), obj)
                             dlg.exec()
