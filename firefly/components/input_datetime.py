@@ -66,7 +66,7 @@ class InputDatetime(QWidget):
 
     def set_value(self, value):
         if not value:
-            self.display.setText("(not set)")
+            self.display.setText("")
             self._value = None
             return
         self._value = int(value)

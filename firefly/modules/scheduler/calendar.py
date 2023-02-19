@@ -674,13 +674,10 @@ class SchedulerCalendar(QWidget):
             Qt.ScrollBarPolicy.ScrollBarAlwaysOn
         )
 
-        zoomlevel = self.parent().app_state.get("scheduler_zoom", 0)
         self.zoom = QSlider(Qt.Orientation.Horizontal)
         self.zoom.setMinimum(0)
         self.zoom.setMaximum(10000)
         self.zoom.valueChanged.connect(self.on_zoom)
-        log.status("Setting scheduler zoom level to", zoomlevel)
-        self.zoom.setValue(zoomlevel)
 
         layout = QVBoxLayout()
         layout.addLayout(header_layout)
@@ -688,6 +685,13 @@ class SchedulerCalendar(QWidget):
         layout.addWidget(self.zoom, 0)
         self.setLayout(layout)
         self.setMinimumHeight(450)
+
+        QTimer.singleShot(100, self.set_initial_zoom_level)
+
+    def set_initial_zoom_level(self):
+        zoomlevel = self.parent().app_state.get("scheduler_zoom", 0)
+        log.status("Setting scheduler zoom level to", zoomlevel)
+        self.zoom.setValue(zoomlevel)
 
     @property
     def id_channel(self):
