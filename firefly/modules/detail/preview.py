@@ -2,6 +2,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout
 
 import firefly
 
+from firefly.log import log
 from firefly.modules.detail.subclips import FireflySubclipsView
 from firefly.proxyplayer import VideoPlayer
 from firefly.modules.detail.toolbars import preview_toolbar
@@ -39,7 +40,7 @@ class AssetPreview(QWidget):
     def load_video(self):
         if self.current_asset and not self.loaded:
             proxy_url = f"{firefly.settings.server_url}/proxy/{self.current_asset.id}"
-            logging.debug(f"[DETAIL] Opening {self.current_asset} preview: {proxy_url}")
+            log.debug(f"[DETAIL] Opening {self.current_asset} preview: {proxy_url}")
             proxy_url += f"?token={firefly.config.site.token}"
             self.player.fps = self.current_asset.fps
             if self.current_asset["poster_frame"]:
@@ -75,7 +76,7 @@ class AssetPreview(QWidget):
             and self.player.mark_out
             and self.player.mark_in >= self.player.mark_out
         ):
-            logging.error("Unable to save marks. In point must precede out point")
+            log.error("Unable to save marks. In point must precede out point")
         else:
             self.changed["mark_in"] = self.player.mark_in
             self.changed["mark_out"] = self.player.mark_out
@@ -89,7 +90,7 @@ class AssetPreview(QWidget):
         if (
             not (self.player.mark_in and self.player.mark_out)
         ) or self.player.mark_in >= self.player.mark_out:
-            logging.error("Unable to create subclip. Invalid region selected.")
+            log.error("Unable to create subclip. Invalid region selected.")
             return
         self.subclips.create_subclip(self.player.mark_in, self.player.mark_out)
 

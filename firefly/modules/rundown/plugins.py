@@ -1,10 +1,9 @@
 import functools
 import json
 
-from nxtools import logging
-
 import firefly
 from firefly.api import api
+from firefly.log import log
 from firefly.qt import QFormLayout, QHBoxLayout, QPushButton, QTabWidget, QWidget
 from firefly.widgets import FireflySelect, FireflyString
 
@@ -66,9 +65,9 @@ class PlayoutPlugin(QWidget):
             data=json.dumps(data),
         )
         if response:
-            logging.info(f"{self.title} action '{name}' executed succesfully.")
+            log.info(f"{self.title} action '{name}' executed succesfully.")
         else:
-            logging.error(
+            log.error(
                 f"[PLUGINS] Plugin error {response.response}\n\n{response.message}"
             )
 
@@ -86,7 +85,7 @@ class PlayoutPlugins(QTabWidget):
         if not firefly.user.can("mcr", self.id_channel):
             return
 
-        logging.debug("[PLUGINS] Loading playout plugins")
+        log.debug("[PLUGINS] Loading playout plugins")
         for idx in reversed(range(self.count())):
             widget = self.widget(idx)
             self.removeTab(idx)
@@ -94,7 +93,7 @@ class PlayoutPlugins(QTabWidget):
 
         response = api.playout(action="plugin_list", id_channel=self.id_channel)
         if not response:
-            logging.error(
+            log.error(
                 f"[PLUGINS] Unable to load playout plugins:\n{response.message}"
             )
             return

@@ -2,10 +2,9 @@ import datetime
 import functools
 import time
 
-from nxtools import logging
-
 import firefly
 from firefly.base_module import BaseModule
+from firefly.log import log
 from firefly.qt import (
     QAbstractItemView,
     QInputDialog,
@@ -172,7 +171,7 @@ class RundownModule(BaseModule):
         t = t.strftime("%A %Y-%m-%d")
         self.parent().setWindowTitle(f"Rundown {t}")
         self.channel_display.setText(f"<font{s}>{t}</font> - {ch}")
-        logging.debug(f"[RUNDOWN] Header update ({ch})")
+        log.debug(f"[RUNDOWN] Header update ({ch})")
 
     #
     # Actions
@@ -289,7 +288,7 @@ class RundownModule(BaseModule):
                 continue
             break
         else:
-            logging.warning("Not found: {}".format(self.last_search))
+            log.warning(f"Not found: {self.last_search}")
             self.view.clearSelection()
 
     #
@@ -326,11 +325,7 @@ class RundownModule(BaseModule):
             if message.data["object_type"] == "event":
                 for id_event in message.data["objects"]:
                     if id_event in self.view.model().event_ids:
-                        logging.debug(
-                            "Event id {} has been changed. Reloading rundown.".format(
-                                id_event
-                            )
-                        )
+                        log.debug( f"Event id {id_event} has been changed. Reloading rundown.")
                         self.load()
                         break
             elif message.data["object_type"] == "asset":

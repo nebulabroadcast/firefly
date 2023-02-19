@@ -1,8 +1,7 @@
 import functools
 
-from nxtools import logging
-
 from firefly.api import api
+from firefly.log import log
 from firefly.qt import QApplication, QCheckBox, QDialog, Qt, QVBoxLayout
 from firefly.widgets import ActionButton
 
@@ -66,7 +65,7 @@ def show_send_to_dialog(parent=None, objects: list | None = None):
     response = api.actions(ids=asset_ids)
 
     if not response:
-        logging.error(response.message)
+        log.error(response.message)
         return
 
     actions = []
@@ -74,7 +73,7 @@ def show_send_to_dialog(parent=None, objects: list | None = None):
         actions.append((action["id"], action["name"]))
 
     if not actions:
-        logging.error("No actions available")
+        log.error("No actions available")
         return
 
     # Execute the dialog
@@ -99,4 +98,4 @@ def show_send_to_dialog(parent=None, objects: list | None = None):
     )
     QApplication.restoreOverrideCursor()
     if not response:
-        logging.error(response.message)
+        log.error(response.message)

@@ -1,9 +1,10 @@
 import functools
 
-from nxtools import logging, s2tc, tc2s
+from nxtools import s2tc, tc2s
 
 from firefly.api import api
 from firefly.enum import MetaClass
+from firefly.log import log
 from firefly.metadata import meta_types
 from firefly.qt import (
     QApplication,
@@ -190,7 +191,7 @@ class TrimDialog(QDialog):
         )
         QApplication.restoreOverrideCursor()
         if not response:
-            logging.error(response.message)
+            log.error(response.message)
         self.close()
 
 

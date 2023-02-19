@@ -1,10 +1,9 @@
 import functools
 import json
 
-from nxtools import log_traceback, logging
-
 import firefly
 from firefly.api import api
+from firefly.log import log
 from firefly.objects import Asset
 from firefly.qt import QApplication, QMimeData, Qt, QUrl, pixlib
 from firefly.view import FireflyViewModel, format_description, format_header
@@ -38,7 +37,7 @@ class BrowserModel(FireflyViewModel):
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
 
         if not response:
-            logging.error(response.message)
+            log.error(response.message)
 
         # Pagination
 
@@ -121,5 +120,5 @@ class BrowserModel(FireflyViewModel):
             mimeData.setUrls(urls)
             return mimeData
         except Exception:
-            log_traceback()
+            log.traceback()
             return

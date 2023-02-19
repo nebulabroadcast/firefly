@@ -1,7 +1,6 @@
 import copy
 import functools
 
-from nxtools import log_traceback, logging
 
 import firefly
 from firefly.api import api
@@ -9,6 +8,7 @@ from firefly.base_module import BaseModule
 from firefly.dialogs.batch_ops import show_batch_ops_dialog
 from firefly.dialogs.send_to import show_send_to_dialog
 from firefly.enum import ObjectStatus
+from firefly.log import log
 from firefly.objects import asset_cache
 from firefly.qt import (
     QAbstractItemView,
@@ -83,7 +83,7 @@ class FireflyBrowserView(FireflyView):
             self.main_window.focus(asset)
 
             if len(self.selected_objects) > 1 and tot_dur:
-                logging.debug(
+                log.status(
                     f"[BROWSER] {len(self.selected_objects)} objects selected. "
                     "Total duration {durstr}"
                 )
@@ -111,7 +111,7 @@ class FireflyBrowserView(FireflyView):
         val = obj.show(key)
 
         QApplication.clipboard().setText(str(val))
-        logging.info(f'Copied "{val}" to clipboard')
+        log.status(f'Copied "{val}" to clipboard')
 
     def set_page(self, current_page, page_count):
         self.current_page = current_page
@@ -456,7 +456,7 @@ class BrowserTab(QWidget):
         else:
             return
         if not response:
-            logging.error("Unable to trash:\n\n" + response.message)
+            log.error("Unable to trash:\n\n" + response.message)
             return
         self.refresh_assets(*objects, request_data=True)
 
@@ -474,7 +474,7 @@ class BrowserTab(QWidget):
             ]
         )
         if not response:
-            logging.error("Unable to untrash:\n\n" + response.message)
+            log.error("Unable to untrash:\n\n" + response.message)
             return
         self.refresh_assets(*objects, request_data=True)
 
@@ -502,7 +502,7 @@ class BrowserTab(QWidget):
         else:
             return
         if not response:
-            logging.error("Unable to archive:\n\n" + response.message)
+            log.error("Unable to archive:\n\n" + response.message)
             return
         self.refresh_assets(*objects, request_data=True)
 
@@ -521,13 +521,13 @@ class BrowserTab(QWidget):
             ]
         )
         if not response:
-            logging.error("Unable to unarchive:\n\n" + response.message)
+            log.error("Unable to unarchive:\n\n" + response.message)
             return
         self.refresh_assets(*objects, request_data=True)
 
     def on_choose_columns(self):
         # TODO
-        logging.error("Not implemented")
+        log.error("Not implemented")
 
     def on_copy_result(self):
         result = ""
@@ -594,8 +594,8 @@ class BrowserModule(BaseModule):
                 self.new_tab(title, **tabcfg)
                 created_tabs += 1
             except Exception:
-                log_traceback()
-                logging.warning("Unable to restore tab")
+                log.traceback()
+                log.warning("Unable to restore tab")
         if not created_tabs:
             self.new_tab()
 

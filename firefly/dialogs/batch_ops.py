@@ -1,8 +1,7 @@
-from nxtools import logging
-
 import firefly
 from firefly.api import api
 from firefly.enum import MetaClass
+from firefly.log import log
 from firefly.metadata import meta_types
 from firefly.qt import (
     QDialog,
@@ -86,7 +85,7 @@ class BatchOpsDialog(QDialog):
         if reply == QMessageBox.StandardButton.Yes:
             pass
         else:
-            logging.info("Save aborted")
+            log.info("Save aborted")
             return
 
         response = api.set(
@@ -95,7 +94,7 @@ class BatchOpsDialog(QDialog):
         )
 
         if not response:
-            logging.error(response.message)
+            log.error(response.message)
 
         self.response = True
         self.close()

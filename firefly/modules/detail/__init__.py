@@ -1,12 +1,13 @@
 import time
 
-from nxtools import format_time, logging
+from nxtools import format_time
 
 import firefly
 
 from firefly.api import api
 from firefly.base_module import BaseModule
 from firefly.enum import ObjectStatus
+from firefly.log import log
 from firefly.metadata import meta_types
 from firefly.modules.detail.editor import AssetEditor
 from firefly.modules.detail.preview import AssetPreview
@@ -196,7 +197,7 @@ class DetailModule(BaseModule):
         if not isinstance(asset, Asset):
             return
 
-        logging.debug(f"[DETAIL] Focusing {asset}")
+        log.status(f"[DETAIL] Focusing {asset}")
 
         if self._is_loading:
             self._load_queue = [asset]
@@ -309,9 +310,9 @@ class DetailModule(BaseModule):
         self.setCursor(Qt.CursorShape.BusyCursor)
         response = api.set(id=self.asset.id, data=data)
         if not response:
-            logging.error(response.message)
+            log.error(response.message)
         else:
-            logging.debug("[DETAIL] Set method responded", response.response)
+            log.debug("[DETAIL] Set method responded", response.response)
             try:
                 aid = response["id"]
             except Exception:
@@ -339,7 +340,7 @@ class DetailModule(BaseModule):
             id=self.asset.id, data={"qc/state": state, "qc/report": report}
         )
         if not response:
-            logging.error(response.message)
+            log.error(response.message)
             return
         try:
             aid = response["id"]

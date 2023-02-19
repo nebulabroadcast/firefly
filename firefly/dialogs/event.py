@@ -1,9 +1,8 @@
-from nxtools import logging
-
 import firefly
 
 from firefly.api import api
 from firefly.components.form import MetadataForm
+from firefly.log import log
 from firefly.objects import Event
 from firefly.qt import QDialog, QDialogButtonBox, Qt, QVBoxLayout, app_skin
 from firefly.settings import FolderField
@@ -90,7 +89,7 @@ class EventDialog(QDialog):
         )
 
         if not response:
-            logging.error("Scheduler dialog response", response.message)
+            log.error("Scheduler dialog response", response.message)
 
         self.result = response
         self.close()

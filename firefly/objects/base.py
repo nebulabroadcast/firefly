@@ -1,9 +1,8 @@
 import pprint
 import time
 
-from nxtools import logging
-
 from firefly.enum import Colors, ObjectStatus, RunMode
+from firefly.log import log
 from firefly.metadata import MetaTypes
 from firefly.metadata.format import format_meta
 from firefly.metadata.normalize import normalize_meta
@@ -117,19 +116,19 @@ class BaseObject:
     def load(self, id):
         pass
 
-    def save(self, **kwargs):
-        if not kwargs.get("silent", False):
-            logging.debug(f"Saving {self}")
-        self["ctime"] = self["ctime"] or time.time()
-        if kwargs.get("set_mtime", True):
-            self["mtime"] = time.time()
-        for key in self.required:
-            if (key not in self.meta) and (key in self.defaults):
-                self[key] = self.defaults[key]
-            assert key in self.meta, f"Unable to save {self}. {key} is required"
-
-    def delete(self, **kwargs):
-        assert self.id > 0, "Unable to delete unsaved object"
+    # def save(self, **kwargs):
+    #     if not kwargs.get("silent", False):
+    #         log.debug(f"Saving {self}")
+    #     self["ctime"] = self["ctime"] or time.time()
+    #     if kwargs.get("set_mtime", True):
+    #         self["mtime"] = time.time()
+    #     for key in self.required:
+    #         if (key not in self.meta) and (key in self.defaults):
+    #             self[key] = self.defaults[key]
+    #         assert key in self.meta, f"Unable to save {self}. {key} is required"
+    #
+    # def delete(self, **kwargs):
+    #     assert self.id > 0, "Unable to delete unsaved object"
 
     def __delitem__(self, key):
         key = key.lower().strip()

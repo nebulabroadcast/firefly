@@ -1,6 +1,5 @@
 import os
 
-from nxtools import log_traceback, logging
 from PySide6.QtCore import (
     QAbstractTableModel,
     QDate,
@@ -102,7 +101,6 @@ class AppSettings:
 
 
 app_settings = AppSettings()
-logging.name = app_settings["name"]
 
 
 def get_app_state(path):
@@ -119,7 +117,7 @@ if os.path.exists(skin_path):
     try:
         app_skin = open(skin_path).read()
     except Exception:
-        log_traceback("Unable to read stylesheet")
+        print("Unable to read stylesheet")
 
 
 class FontLib:

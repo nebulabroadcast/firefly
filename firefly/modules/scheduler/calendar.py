@@ -2,12 +2,13 @@ import functools
 import json
 import time
 
-from nxtools import datestr2ts, format_time, logging, s2tc, s2time
+from nxtools import datestr2ts, format_time, s2tc, s2time
 
 import firefly
 from firefly.api import api
 from firefly.dialogs.event import show_event_dialog
 from firefly.helpers.scheduling import can_append
+from firefly.log import log
 from firefly.objects import Asset, Event
 from firefly.qt import (
     QAction,
@@ -246,7 +247,7 @@ class SchedulerDayWidget(SchedulerVerticalBar):
 
         e_start_time = time.strftime("%H:%M", time.localtime(drop_ts))
         e_end_time = time.strftime("%H:%M", time.localtime(drop_ts + max(300, exp_dur)))
-        logging.debug(f"Start time: {e_start_time} End time: {e_end_time}")
+        log.status(f"Start time: {e_start_time} End time: {e_end_time}")
 
     def mouseMoveEvent(self, e):
         my = e.pos().y()
@@ -375,7 +376,7 @@ class SchedulerDayWidget(SchedulerVerticalBar):
         )
 
         if not firefly.user.can("scheduler_edit", self.id_channel):
-            logging.error("You are not allowed to modify schedule of this channel.")
+            log.error("You are not allowed to modify schedule of this channel.")
             self.calendar.drag_source = False
             self.calendar.dragging = False
             return
@@ -400,7 +401,7 @@ class SchedulerDayWidget(SchedulerVerticalBar):
                             return
 
             if evt.keyboardModifiers() & Qt.KeyboardModifier.AltModifier:
-                logging.info(
+                log.info(
                     f"Creating event from {self.calendar.dragging}"
                     f"at time {format_time(self.cursor_time)}"
                 )
@@ -522,7 +523,7 @@ class SchedulerDayWidget(SchedulerVerticalBar):
             return
         cursor_event = self.calendar.selected_event
         if not firefly.user.can("scheduler_edit", self.id_channel):
-            logging.error("You are not allowed to modify schedule of this channel.")
+            log.error("You are not allowed to modify schedule of this channel.")
             return
 
         ret = QMessageBox.question(
@@ -542,10 +543,10 @@ class SchedulerDayWidget(SchedulerVerticalBar):
             )
             self.calendar.setCursor(Qt.CursorShape.ArrowCursor)
             if response:
-                logging.info(f"{cursor_event} deleted")
+                log.info(f"{cursor_event} deleted")
                 self.calendar.set_data(response["events"])
             else:
-                logging.error(response.message)
+                log.error(response.message)
                 self.calendar.load()
 
     def wheelEvent(self, event):
@@ -678,7 +679,7 @@ class SchedulerCalendar(QWidget):
         self.zoom.setMinimum(0)
         self.zoom.setMaximum(10000)
         self.zoom.valueChanged.connect(self.on_zoom)
-        logging.debug("Setting scheduler zoom level to", zoomlevel)
+        log.status("Setting scheduler zoom level to", zoomlevel)
         self.zoom.setValue(zoomlevel)
 
         layout = QVBoxLayout()
@@ -720,7 +721,7 @@ class SchedulerCalendar(QWidget):
         response = api.scheduler(id_channel=self.id_channel, date=self.date)
 
         if not response:
-            logging.error(response.message)
+            log.error(response.message)
             self.setCursor(Qt.CursorShape.ArrowCursor)
             return
 

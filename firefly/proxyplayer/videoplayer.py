@@ -1,9 +1,6 @@
-#!/usr/bin/env python3
-
 import functools
 
-from nxtools import log_traceback, logging
-
+from firefly.log import log
 from firefly.proxyplayer.utils import RegionBar, TimecodeWindow, get_navbar
 from firefly.qt import QHBoxLayout, QIcon, QSlider, Qt, QTimer, QVBoxLayout, QWidget
 
@@ -13,9 +10,7 @@ try:
     has_mpv = True
 except OSError:
     has_mpv = False
-    logging.warning(
-        "Unable to load MPV libraries. Video preview will not be available."
-    )
+    log.warning("Unable to load MPV libraries. Video preview will not be available.")
 
 
 class DummyPlayer:
@@ -58,7 +53,7 @@ class VideoPlayer(QWidget):
                 window_id = self.video_window.winId().__int__()
                 self.player = MPV(keep_open=True, wid=f"{window_id}")
             except Exception:
-                log_traceback(handlers=False)
+                log.traceback()
                 self.player = DummyPlayer()
 
         self.position = 0

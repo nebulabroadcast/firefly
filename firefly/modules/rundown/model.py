@@ -1,11 +1,12 @@
 import json
 import time
 
-from nxtools import format_time, logging
+from nxtools import format_time
 
 import firefly
 from firefly.api import api
 from firefly.dialogs.rundown import PlaceholderDialog, SubclipSelectDialog
+from firefly.log import log
 from firefly.objects import Asset, Event, Item, asset_cache
 from firefly.qt import QApplication, QMimeData, Qt, QUrl
 from firefly.view import FireflyViewModel
@@ -59,13 +60,13 @@ class RundownModel(FireflyViewModel):
     def load_callback(self, response):
         self.parent().setCursor(Qt.CursorShape.ArrowCursor)
         if not response:
-            logging.error(response.message)
+            log.error(response.message)
             return
 
         QApplication.processEvents()
         self.parent().setCursor(Qt.CursorShape.WaitCursor)
         self.beginResetModel()
-        logging.info("Loading rundown. Please wait...")
+        log.status("Loading rundown. Please wait...")
 
         required_assets = []
 
@@ -113,7 +114,7 @@ class RundownModel(FireflyViewModel):
 
         self.endResetModel()
         self.parent().setCursor(Qt.CursorShape.ArrowCursor)
-        logging.goodnews(
+        log.status(
             f"Rundown loaded in {time.time() - self.load_start_time:.03f}s"
         )
 
@@ -301,7 +302,6 @@ class RundownModel(FireflyViewModel):
             return
         self.parent().setCursor(Qt.CursorShape.BusyCursor)
         QApplication.processEvents()
-        print(sorted_items)
         api.order(
             self.order_callback,
             id_channel=self.id_channel,
@@ -313,7 +313,7 @@ class RundownModel(FireflyViewModel):
     def order_callback(self, response):
         self.parent().setCursor(Qt.CursorShape.ArrowCursor)
         if not response:
-            logging.error(f"Unable to change bin order: {response.message}")
+            log.error(f"Unable to change bin order: {response.message}")
             return False
         self.load()
         return False

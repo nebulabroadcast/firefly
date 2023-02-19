@@ -9,10 +9,9 @@ from PySide6.QtWidgets import (
     QPushButton,
 )
 
-from nxtools import logging
-
 from firefly.api import api
 from firefly.components.input_timecode import InputTimecode
+from firefly.log import log
 
 
 class SplitItemDialog(QDialog):
@@ -142,7 +141,7 @@ class SplitItemDialog(QDialog):
         )
         QApplication.restoreOverrideCursor()
         if not response:
-            logging.error(response.message)
+            log.error(response.message)
         self.accept()
 
 
