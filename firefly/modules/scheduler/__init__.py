@@ -66,9 +66,9 @@ class SchedulerModule(BaseModule):
     def refresh_events(self, events):
         for id_event in events:
             if id_event in self.calendar.event_ids:
-                log.status(
+                log.debug(
                     f"[SCHEDULER] Event id {id_event} has been changed."
-                    "Reloading calendar"
+                    " Reloading calendar"
                 )
                 self.load()
                 break

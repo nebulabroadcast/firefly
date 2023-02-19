@@ -22,7 +22,6 @@ class LogLevel(enum.IntEnum):
 
 
 class Logger:
-    user: str = "nebula"
     level = LogLevel.TRACE
     main_window: QMainWindow | None = None
 
@@ -31,7 +30,6 @@ class Logger:
             return
         print(
             f"{level.name.upper():<8}",
-            f"{kwargs.get('user') or self.user:<10}",
             " ".join([str(arg) for arg in args]),
             file=sys.stderr,
             flush=True,
@@ -48,8 +46,7 @@ class Logger:
         if self.main_window is None:
             return
         msg = " ".join([str(arg) for arg in args])
-        timeout = 10000
-        self.main_window.statusBar().showMessage(msg, timeout)
+        self.main_window.statusBar().showMessage(msg)
 
     def trace(self, *args, **kwargs):
         self(LogLevel.TRACE, *args, **kwargs)

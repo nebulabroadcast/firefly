@@ -88,8 +88,9 @@ class SeismicListener(QThread):
 
         self.last_msg = time.time()
 
-        if message.data and message.data.get("initiator", None) == config.client_id:
-            return
+        if initiator := message.data.get("initiator"):
+            if message.data and initiator == config.client_id:
+                return
 
         self.queue.put(message)
 

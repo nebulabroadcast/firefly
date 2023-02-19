@@ -1,6 +1,6 @@
 from functools import partial
 
-from nxtools import  s2time
+from nxtools import s2time
 
 import firefly
 from firefly.api import api
@@ -377,8 +377,6 @@ class RundownView(FireflyView):
             if not response:
                 log.error(response.message)
                 return
-            else:
-                log.info(f"Item deleted: {response.message}")
 
         if events:
             QApplication.processEvents()
@@ -388,8 +386,6 @@ class RundownView(FireflyView):
             if not response:
                 log.error(response.message)
                 return
-            else:
-                log.info(f"Event deleted: {response.message}")
 
         self.selectionModel().clear()
         self.model().load()
