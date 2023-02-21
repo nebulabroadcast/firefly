@@ -38,7 +38,7 @@ class Logger:
         if level >= LogLevel.ERROR:
             if self.main_window:
                 msg = " ".join([str(arg) for arg in args])
-                QMessageBox.critical(self.main_window, "Error", msg)
+                QMessageBox.critical("Error", msg)
 
         self.status(*args)
 

@@ -64,6 +64,7 @@ class MetaType(BaseModel):
     format: str | None = None
     order: str | None = None
     filter: str | None = None
+    required: bool = False
 
     # @functools.cached_property
     @property

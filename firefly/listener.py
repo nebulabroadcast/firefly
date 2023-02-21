@@ -96,7 +96,7 @@ class SeismicListener(QThread):
 
     def on_error(self, *args):
         error = args[-1]
-        log.error(error, handlers=False)
+        log.warning(error, handlers=False)
 
     def on_close(self, *args):
         self.active = False

@@ -5,7 +5,9 @@ from PySide6.QtWidgets import (
     QPushButton,
     QHBoxLayout,
 )
-from PySide6.QtCore import QDateTime, Qt, Signal
+from PySide6.QtCore import QDateTime, Signal
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QKeyEvent
 
 
 class ClickableLineEdit(QLineEdit):
@@ -15,11 +17,21 @@ class ClickableLineEdit(QLineEdit):
         self.activated.emit()
 
 
+class DateTimeEdit(QDateTimeEdit):
+    def keyPressEvent(self, event: QKeyEvent):
+        if event.key() == Qt.Key_Return:
+            self.editingFinished.emit()
+            event.ignore()
+        else:
+            super().keyPressEvent(event)
+
+
 class InputDatetime(QWidget):
     def __init__(self, parent, value=None, **kwargs):
         super().__init__(parent)
         self._original_value = int(value) if value else None
         self._read_only = False
+        self.required = kwargs.get("required", False)
 
         self.display = ClickableLineEdit(self)
         self.display.setReadOnly(True)
@@ -32,15 +44,16 @@ class InputDatetime(QWidget):
         self.editor.editingFinished.connect(self.end_edit)
         self.editor.hide()
 
-        self.clear_button = QPushButton(self)
-        self.clear_button.setText("Clear")
-        self.clear_button.clicked.connect(self.clear_value)
-
         layout = QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.display, 1)
         layout.addWidget(self.editor, 1)
-        layout.addWidget(self.clear_button, 0)
+
+        if not self.required:
+            self.clear_button = QPushButton(self)
+            self.clear_button.setText("Clear")
+            self.clear_button.clicked.connect(self.clear_value)
+            layout.addWidget(self.clear_button, 0)
 
         self.setLayout(layout)
         self.set_value(value)

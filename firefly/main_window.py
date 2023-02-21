@@ -18,20 +18,23 @@ from firefly.modules import (
 )
 from firefly.objects import asset_cache
 from firefly.qt import (
-    QApplication,
     QIcon,
-    QMainWindow,
-    QMessageBox,
-    QSplitter,
     Qt,
-    QTabWidget,
     QTimer,
-    QVBoxLayout,
-    QWidget,
     app_settings,
     app_skin,
     get_app_state,
     pixlib,
+)
+
+from PySide6.QtWidgets import (
+    QMainWindow,
+    QWidget,
+    QTabWidget,
+    QVBoxLayout,
+    QSplitter,
+    QMessageBox,
+    QApplication,
 )
 
 
@@ -171,6 +174,7 @@ class FireflyMainWindow(QMainWindow):
         title += f" ({firefly.user}@{config.site.name})"
         self.setWindowTitle(title)
         self.setAttribute(Qt.WidgetAttribute.WA_AlwaysShowToolTips)
+
         log.main_window = self
         self.listener = SeismicListener()
 
@@ -192,10 +196,6 @@ class FireflyMainWindow(QMainWindow):
                 break
 
         log.info("[MAIN WINDOW] Firefly is ready")
-
-    #
-    #
-    #
 
     @property
     def app_state(self):
@@ -227,7 +227,6 @@ class FireflyMainWindow(QMainWindow):
                 self.app_state = state.value("main_window/app")
             except Exception:
                 log.traceback()
-
 
     def closeEvent(self, event):
         self.save_state()

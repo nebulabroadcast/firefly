@@ -334,7 +334,7 @@ class RundownView(FireflyView):
     def on_solve(self, solver):
         QApplication.processEvents()
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
-        response = api.solve(id_item=self.selected_objects[0]["id"], solver=solver)
+        response = api.solve(items=[self.selected_objects[0]["id"]], solver=solver)
         QApplication.restoreOverrideCursor()
         if not response:
             log.error(response.message)

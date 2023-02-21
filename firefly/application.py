@@ -15,15 +15,14 @@ from firefly.main_window import FireflyMainWidget, FireflyMainWindow
 from firefly.metadata import clear_cs_cache
 from firefly.objects import asset_cache
 from firefly.qt import (
-    QApplication,
-    QMessageBox,
-    QSplashScreen,
     Qt,
     app_dir,
     app_settings,
     app_skin,
     pixlib,
 )
+
+from PySide6.QtWidgets import QApplication, QSplashScreen, QMessageBox
 
 
 def check_login(wnd):

@@ -37,11 +37,7 @@ class PlaceholderDialog(QDialog):
             if k in meta:
                 keys.append(FolderField(name=k, mode="text"))
 
-        self.form = MetadataForm(parent, keys)
-        for k in keys:
-            if meta_types[k.name].type == MetaClass.SELECT:
-                self.form.inputs[k.name].auto_data(meta_types[k.name])
-            self.form[k.name] = meta[k.name]
+        self.form = MetadataForm(parent, keys, meta)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
