@@ -1,7 +1,8 @@
+from PySide6.QtWidgets import QVBoxLayout
+
 from firefly.base_module import BaseModule
 from firefly.helpers.scheduling import date_offset, get_this_monday
 from firefly.log import log
-from firefly.qt import QVBoxLayout
 
 from .calendar import SchedulerCalendar
 from .toolbar import scheduler_toolbar

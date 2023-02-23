@@ -1,8 +1,11 @@
 import functools
 
+from PySide6.QtCore import Qt, QTimer
+from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QHBoxLayout, QSlider, QVBoxLayout, QWidget
+
 from firefly.log import log
 from firefly.proxyplayer.utils import RegionBar, TimecodeWindow, get_navbar
-from firefly.qt import QHBoxLayout, QIcon, QSlider, Qt, QTimer, QVBoxLayout, QWidget
 
 try:
     from .mpv import MPV

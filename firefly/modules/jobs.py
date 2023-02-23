@@ -1,7 +1,9 @@
 import functools
 
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QLineEdit, QPushButton, QToolBar, QVBoxLayout
+
 from firefly.base_module import BaseModule
-from firefly.qt import QLineEdit, QPushButton, Qt, QToolBar, QVBoxLayout
 from firefly.widgets import ToolBarStretcher
 
 from .jobs_model import FireflyJobsView

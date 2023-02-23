@@ -4,10 +4,10 @@ import time
 from typing import Any
 
 import websocket
+from PySide6.QtCore import QThread
 
 from firefly.config import config
 from firefly.log import log
-from firefly.qt import QThread
 
 if config.debug:
     websocket.enableTrace(True)

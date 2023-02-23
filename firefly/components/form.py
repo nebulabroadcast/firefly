@@ -1,23 +1,22 @@
 import copy
 import json
-
 from typing import Any
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QGridLayout, QWidget, QLabel
+from PySide6.QtWidgets import QGridLayout, QLabel, QWidget
 
 from firefly.metadata import meta_types
 from firefly.settings import FolderField
 
 from .input_color import InputColor
+from .input_datetime import InputDatetime
+from .input_list import InputList
+from .input_radio import InputRadio
+from .input_select import InputSelect
+from .input_switch import InputSwitch
 from .input_text import InputText
 from .input_textarea import InputTextarea
 from .input_timecode import InputTimecode
-from .input_datetime import InputDatetime
-from .input_switch import InputSwitch
-from .input_radio import InputRadio
-from .input_select import InputSelect
-from .input_list import InputList
 
 
 class NotImplementeWidget(QLabel):

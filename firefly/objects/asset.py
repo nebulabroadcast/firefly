@@ -2,11 +2,12 @@ import json
 import os
 import time
 
+from PySide6.QtWidgets import QApplication
+
 import firefly
 from firefly.config import config
 from firefly.enum import ContentType, MediaType, ObjectStatus
 from firefly.log import log
-from firefly.qt import QApplication
 
 from .base import BaseObject
 
@@ -100,7 +101,7 @@ class AssetCache:
         asset_count = len(to_update)
         if asset_count < 10:
             ids = ", ".join([str(k) for k in to_update])
-            log.info( f"Requesting data for asset(s) ID: {ids}")
+            log.info(f"Requesting data for asset(s) ID: {ids}")
         else:
             log.info(f"Requesting data for {asset_count} assets")
         self.api.get(self.on_response, ids=to_update)

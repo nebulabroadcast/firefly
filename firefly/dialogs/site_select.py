@@ -1,7 +1,10 @@
 import functools
 
+from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QDialog, QVBoxLayout
+
 from firefly.config import config
-from firefly.qt import QDialog, QIcon, QVBoxLayout, app_skin
+from firefly.qt import app_skin
 from firefly.widgets import ActionButton
 
 

@@ -1,22 +1,7 @@
-import functools
+from PySide6.QtWidgets import QLabel, QLineEdit, QPushButton, QSizePolicy, QWidget
 
-import firefly
-from firefly.metadata import meta_types
-from firefly.qt import (
-    QAction,
-    QGridLayout,
-    QLabel,
-    QMenu,
-    QPushButton,
-    QSizePolicy,
-    QLineEdit,
-    Qt,
-    QWidget,
-)
+from .combo import FireflySelect
 
-from .combo import FireflyList, FireflySelect
-
-assert FireflyList
 assert FireflySelect
 
 
@@ -49,6 +34,7 @@ class FireflyString(QLineEdit):
         return self.text()
 
 
+"""
 # DEPRECATED
 class MetaEditor(QWidget):
     def __init__(self, parent, keys, **kwargs):
@@ -147,3 +133,5 @@ class MetaEditor(QWidget):
         self.defaults = {}
         for key in self.keys():
             self.defaults[key] = self[key]
+
+"""

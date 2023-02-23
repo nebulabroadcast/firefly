@@ -1,5 +1,5 @@
-from typing import Any
 from PySide6.QtWidgets import QLineEdit
+
 import firefly
 from firefly.metadata.utils import filter_match
 
@@ -40,7 +40,6 @@ class InputSelect(QLineEdit):
                         "description": csmeta.get("description", opt_value),
                     }
                 )
-
 
     def set_value(self, value: str) -> None:
         if value:

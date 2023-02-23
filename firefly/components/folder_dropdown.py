@@ -1,9 +1,8 @@
-import firefly
-
 from PySide6.QtCore import Signal
-from PySide6.QtWidgets import QComboBox
 from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QComboBox
 
+import firefly
 from firefly.qt import pixlib
 
 

@@ -1,24 +1,19 @@
 import functools
 
-from nxtools import s2tc, tc2s
-
-from firefly.api import api
-from firefly.enum import MetaClass
-from firefly.log import log
-from firefly.metadata import meta_types
-from firefly.qt import (
+from nxtools import s2tc
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
     QApplication,
     QDialog,
     QDialogButtonBox,
-    QLabel,
     QPushButton,
-    Qt,
-    QTextEdit,
     QVBoxLayout,
 )
-from firefly.settings import FolderField
-from firefly.components.form import MetadataForm
 
+from firefly.api import api
+from firefly.components.form import MetadataForm
+from firefly.log import log
+from firefly.settings import FolderField
 
 #
 # Placeholder

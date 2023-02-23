@@ -1,13 +1,22 @@
 import queue
 import time
 
+from PySide6.QtCore import Qt, QTimer
+from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import (
+    QApplication,
+    QMainWindow,
+    QSplitter,
+    QTabWidget,
+    QVBoxLayout,
+    QWidget,
+)
 
 import firefly
-
 from firefly.api import api
 from firefly.config import config
-from firefly.log import log
 from firefly.listener import SeismicListener
+from firefly.log import log
 from firefly.menu import create_menu
 from firefly.modules import (
     BrowserModule,
@@ -17,25 +26,7 @@ from firefly.modules import (
     SchedulerModule,
 )
 from firefly.objects import asset_cache
-from firefly.qt import (
-    QIcon,
-    Qt,
-    QTimer,
-    app_settings,
-    app_skin,
-    get_app_state,
-    pixlib,
-)
-
-from PySide6.QtWidgets import (
-    QMainWindow,
-    QWidget,
-    QTabWidget,
-    QVBoxLayout,
-    QSplitter,
-    QMessageBox,
-    QApplication,
-)
+from firefly.qt import app_settings, app_skin, get_app_state, pixlib
 
 
 class FireflyMainWidget(QWidget):

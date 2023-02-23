@@ -1,11 +1,14 @@
 import functools
 import json
 
+from PySide6.QtCore import QMimeData, Qt, QUrl
+from PySide6.QtWidgets import QApplication
+
 import firefly
 from firefly.api import api
 from firefly.log import log
 from firefly.objects import Asset
-from firefly.qt import QApplication, QMimeData, Qt, QUrl, pixlib
+from firefly.qt import pixlib
 from firefly.view import FireflyViewModel, format_description, format_header
 
 DEFAULT_HEADER_DATA = ["title", "duration", "id_folder"]

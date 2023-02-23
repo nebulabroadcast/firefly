@@ -2,7 +2,6 @@ import pprint
 import time
 
 from firefly.enum import Colors, ObjectStatus, RunMode
-from firefly.log import log
 from firefly.metadata import MetaTypes
 from firefly.metadata.format import format_meta
 from firefly.metadata.normalize import normalize_meta

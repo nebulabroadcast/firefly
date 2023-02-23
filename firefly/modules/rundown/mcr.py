@@ -2,20 +2,20 @@ import math
 import time
 
 from nxtools import s2tc
-
-import firefly
-from firefly.api import api
-from firefly.qt import (
+from PySide6.QtCore import QTimer
+from PySide6.QtWidgets import (
     QApplication,
     QGridLayout,
     QHBoxLayout,
     QLabel,
     QProgressBar,
     QPushButton,
-    QTimer,
     QVBoxLayout,
     QWidget,
 )
+
+import firefly
+from firefly.api import api
 
 PROGRESS_BAR_RESOLUTION = 1000
 

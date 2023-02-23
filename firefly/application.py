@@ -4,6 +4,9 @@ import sys
 import time
 from typing import Any
 
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QApplication, QMessageBox, QSplashScreen
+
 import firefly
 from firefly.api import api
 from firefly.config import config
@@ -14,15 +17,7 @@ from firefly.log import log
 from firefly.main_window import FireflyMainWidget, FireflyMainWindow
 from firefly.metadata import clear_cs_cache
 from firefly.objects import asset_cache
-from firefly.qt import (
-    Qt,
-    app_dir,
-    app_settings,
-    app_skin,
-    pixlib,
-)
-
-from PySide6.QtWidgets import QApplication, QSplashScreen, QMessageBox
+from firefly.qt import app_dir, app_settings, app_skin, pixlib
 
 
 def check_login(wnd):

@@ -1,5 +1,6 @@
+from PySide6.QtWidgets import QMessageBox
+
 import firefly
-from firefly.qt import QMessageBox
 
 ABOUT_TEXT = """
 <b>Firefly - Nebula broadcast automation system client application</b>

@@ -6,7 +6,6 @@ import firefly
 from firefly.config import config
 from firefly.dialogs.about import show_about_dialog
 
-
 # FAKE DICT for the settings originally stored in config,
 # but should be eventually moved to the settings
 fake_config = {}

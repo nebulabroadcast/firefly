@@ -2,17 +2,12 @@ import datetime
 import functools
 import time
 
+from PySide6.QtCore import QItemSelection, QItemSelectionModel, QModelIndex
+from PySide6.QtWidgets import QAbstractItemView, QInputDialog, QVBoxLayout
+
 import firefly
 from firefly.base_module import BaseModule
 from firefly.log import log
-from firefly.qt import (
-    QAbstractItemView,
-    QInputDialog,
-    QItemSelection,
-    QItemSelectionModel,
-    QModelIndex,
-    QVBoxLayout,
-)
 
 from .mcr import MCR
 from .plugins import PlayoutPlugins
@@ -325,7 +320,9 @@ class RundownModule(BaseModule):
             if message.data["object_type"] == "event":
                 for id_event in message.data["objects"]:
                     if id_event in self.view.model().event_ids:
-                        log.debug( f"Event id {id_event} has been changed. Reloading rundown.")
+                        log.debug(
+                            f"Event id {id_event} has been changed. Reloading rundown."
+                        )
                         self.load()
                         break
             elif message.data["object_type"] == "asset":

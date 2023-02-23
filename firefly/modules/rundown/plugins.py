@@ -1,10 +1,11 @@
 import functools
 import json
 
+from PySide6.QtWidgets import QFormLayout, QHBoxLayout, QPushButton, QTabWidget, QWidget
+
 import firefly
 from firefly.api import api
 from firefly.log import log
-from firefly.qt import QFormLayout, QHBoxLayout, QPushButton, QTabWidget, QWidget
 from firefly.widgets import FireflySelect, FireflyString
 
 
@@ -93,9 +94,7 @@ class PlayoutPlugins(QTabWidget):
 
         response = api.playout(action="plugin_list", id_channel=self.id_channel)
         if not response:
-            log.error(
-                f"[PLUGINS] Unable to load playout plugins:\n{response.message}"
-            )
+            log.error(f"[PLUGINS] Unable to load playout plugins:\n{response.message}")
             return
 
         for plugin in response["plugins"] or []:

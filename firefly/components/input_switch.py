@@ -1,18 +1,17 @@
 from PySide6.QtCore import (
-    Qt,
-    QSize,
+    Property,
+    QEasingCurve,
     QPoint,
     QPointF,
-    QRectF,
-    QEasingCurve,
     QPropertyAnimation,
+    QRectF,
     QSequentialAnimationGroup,
+    QSize,
+    Qt,
     Slot,
-    Property,
 )
-
+from PySide6.QtGui import QBrush, QColor, QPainter, QPaintEvent, QPen
 from PySide6.QtWidgets import QCheckBox
-from PySide6.QtGui import QColor, QBrush, QPaintEvent, QPen, QPainter
 
 
 class InputSwitch(QCheckBox):

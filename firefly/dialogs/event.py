@@ -1,16 +1,13 @@
-import firefly
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout
 
+import firefly
 from firefly.api import api
 from firefly.components.form import MetadataForm
 from firefly.log import log
 from firefly.objects import Event
 from firefly.qt import app_skin
 from firefly.settings import FolderField
-
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QKeyEvent
-from PySide6.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout
-
 
 default_fields = [
     FolderField(name="title"),
@@ -78,12 +75,11 @@ class EventDialog(QDialog):
             return
 
         if not self.form["start"]:
-            nebula.log.error("Event must have a start time")
+            firefly.log.error("Event must have a start time")
             return
 
         for key in self.form.changed:
             self.event[key] = self.form[key]
-
 
         response = api.scheduler(
             id_channel=self.event["id_channel"],

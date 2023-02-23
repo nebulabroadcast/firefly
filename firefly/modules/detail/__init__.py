@@ -1,9 +1,17 @@
 import time
 
 from nxtools import format_time
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QFontDatabase
+from PySide6.QtWidgets import (
+    QHBoxLayout,
+    QMessageBox,
+    QTabWidget,
+    QTextEdit,
+    QVBoxLayout,
+)
 
 import firefly
-
 from firefly.api import api
 from firefly.base_module import BaseModule
 from firefly.enum import ObjectStatus
@@ -13,16 +21,6 @@ from firefly.modules.detail.editor import AssetEditor
 from firefly.modules.detail.preview import AssetPreview
 from firefly.modules.detail.toolbars import detail_toolbar
 from firefly.objects import Asset, asset_cache
-
-from firefly.qt import (
-    QFontDatabase,
-    QHBoxLayout,
-    QMessageBox,
-    Qt,
-    QTabWidget,
-    QTextEdit,
-    QVBoxLayout,
-)
 
 
 class MetaList(QTextEdit):

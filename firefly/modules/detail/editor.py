@@ -1,11 +1,9 @@
-import firefly
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QApplication, QFrame, QScrollArea, QVBoxLayout, QWidget
 
+import firefly
 from firefly.components.form import MetadataForm
 from firefly.metadata import meta_types
-
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QApplication
-from PySide6.QtWidgets import QScrollArea, QVBoxLayout, QWidget, QFrame
 
 
 class AssetEditor(QWidget):

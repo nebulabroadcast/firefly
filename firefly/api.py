@@ -2,11 +2,14 @@ import functools
 import json
 import time
 
+from PySide6.QtCore import QUrl
+from PySide6.QtNetwork import QNetworkAccessManager, QNetworkRequest
+from PySide6.QtWidgets import QApplication
+
 import firefly
 from firefly.config import config
 from firefly.log import log
 from firefly.objects import asset_cache
-from firefly.qt import QApplication, QNetworkAccessManager, QNetworkRequest, QUrl
 
 
 class NebulaResponse:

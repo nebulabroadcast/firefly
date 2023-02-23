@@ -1,13 +1,12 @@
+from PySide6.QtCore import QDateTime, Qt, Signal
+from PySide6.QtGui import QKeyEvent
 from PySide6.QtWidgets import (
     QDateTimeEdit,
-    QWidget,
+    QHBoxLayout,
     QLineEdit,
     QPushButton,
-    QHBoxLayout,
+    QWidget,
 )
-from PySide6.QtCore import QDateTime, Signal
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QKeyEvent
 
 
 class ClickableLineEdit(QLineEdit):

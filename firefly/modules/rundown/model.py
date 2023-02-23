@@ -2,13 +2,14 @@ import json
 import time
 
 from nxtools import format_time
+from PySide6.QtCore import QMimeData, Qt, QUrl
+from PySide6.QtWidgets import QApplication
 
 import firefly
 from firefly.api import api
 from firefly.dialogs.rundown import PlaceholderDialog, SubclipSelectDialog
 from firefly.log import log
 from firefly.objects import Asset, Event, Item, asset_cache
-from firefly.qt import QApplication, QMimeData, Qt, QUrl
 from firefly.view import FireflyViewModel
 
 DEFAULT_COLUMNS = [
@@ -114,9 +115,7 @@ class RundownModel(FireflyViewModel):
 
         self.endResetModel()
         self.parent().setCursor(Qt.CursorShape.ArrowCursor)
-        log.status(
-            f"Rundown loaded in {time.time() - self.load_start_time:.03f}s"
-        )
+        log.status(f"Rundown loaded in {time.time() - self.load_start_time:.03f}s")
 
         if self.current_callback:
             self.current_callback()

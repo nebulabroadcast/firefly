@@ -1,10 +1,12 @@
 import functools
 
-import firefly
-from firefly.qt import QAction, QIcon, QMenu, QToolBar, pixlib
-from firefly.widgets import ToolBarStretcher
-from firefly.components.input_timecode import InputTimecode
+from PySide6.QtGui import QAction, QIcon
+from PySide6.QtWidgets import QMenu, QToolBar
+
 from firefly.components.folder_dropdown import FolderDropdown
+from firefly.components.input_timecode import InputTimecode
+from firefly.qt import pixlib
+from firefly.widgets import ToolBarStretcher
 
 
 def preview_toolbar(wnd):

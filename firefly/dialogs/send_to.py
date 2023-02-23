@@ -1,8 +1,10 @@
 import functools
 
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QApplication, QCheckBox, QDialog, QVBoxLayout
+
 from firefly.api import api
 from firefly.log import log
-from firefly.qt import QApplication, QCheckBox, QDialog, Qt, QVBoxLayout
 from firefly.widgets import ActionButton
 
 
@@ -85,8 +87,6 @@ def show_send_to_dialog(parent=None, objects: list | None = None):
         return
 
     # Run the send query
-
-    print("sending to", dlg.id_action)
 
     QApplication.processEvents()
     QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)

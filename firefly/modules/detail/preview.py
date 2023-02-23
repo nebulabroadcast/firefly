@@ -1,11 +1,10 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout
+from PySide6.QtWidgets import QVBoxLayout, QWidget
 
 import firefly
-
 from firefly.log import log
 from firefly.modules.detail.subclips import FireflySubclipsView
-from firefly.proxyplayer import VideoPlayer
 from firefly.modules.detail.toolbars import preview_toolbar
+from firefly.proxyplayer import VideoPlayer
 from firefly.qt import pixlib
 
 

@@ -1,7 +1,6 @@
 import functools
 
-from typing import Any
-from PySide6.QtWidgets import QWidget, QPushButton, QHBoxLayout
+from PySide6.QtWidgets import QHBoxLayout, QPushButton, QWidget
 
 import firefly
 from firefly.metadata.utils import filter_match

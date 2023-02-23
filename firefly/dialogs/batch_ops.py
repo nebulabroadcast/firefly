@@ -1,18 +1,19 @@
-import firefly
-from firefly.api import api
-from firefly.enum import MetaClass
-from firefly.log import log
-from firefly.metadata import meta_types
-from firefly.qt import (
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
     QFrame,
     QMessageBox,
     QScrollArea,
-    Qt,
     QVBoxLayout,
 )
+
+import firefly
+from firefly.api import api
 from firefly.components.form import MetadataForm
+from firefly.enum import MetaClass
+from firefly.log import log
+from firefly.metadata import meta_types
 
 ERR = "** ERROR **"
 

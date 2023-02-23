@@ -1,7 +1,6 @@
 import re
 
 from nxtools import s2tc, tc2s
-
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QFont, QFontDatabase
 from PySide6.QtWidgets import QLineEdit
@@ -18,7 +17,7 @@ class InputTimecode(QLineEdit):
         self.setPlaceholderText("--:--:--:--")
         self.setMaxLength(11)
         self.setFixedWidth(110)
-        self.setAlignment(Qt.AlignCenter)  
+        self.setAlignment(Qt.AlignCenter)
 
         fixed_font = QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont)
         fixed_font.setStyleHint(QFont.StyleHint.Monospace)
@@ -59,7 +58,7 @@ class InputTimecode(QLineEdit):
             return
         text = text.replace(":", "")
         text = text.zfill(8)
-        text = ":".join([text[i : i + 2] for i in range(0, len(text), 2)])
+        text = ":".join([text[i : i + 2] for i in range(0, len(text), 2)])  # noqa: E203
         self.setText(text)
         self._value = tc2s(text, self._fps)
 

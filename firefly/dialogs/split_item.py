@@ -2,11 +2,11 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QApplication,
     QDialog,
-    QVBoxLayout,
     QHBoxLayout,
     QLabel,
     QListWidget,
     QPushButton,
+    QVBoxLayout,
 )
 
 from firefly.api import api

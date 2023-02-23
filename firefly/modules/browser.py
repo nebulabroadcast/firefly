@@ -1,6 +1,22 @@
 import copy
 import functools
 
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QAction, QIcon
+from PySide6.QtWidgets import (
+    QAbstractItemView,
+    QApplication,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMenu,
+    QMessageBox,
+    QPushButton,
+    QTabWidget,
+    QToolBar,
+    QVBoxLayout,
+    QWidget,
+)
 
 import firefly
 from firefly.api import api
@@ -10,25 +26,7 @@ from firefly.dialogs.send_to import show_send_to_dialog
 from firefly.enum import ObjectStatus
 from firefly.log import log
 from firefly.objects import asset_cache
-from firefly.qt import (
-    QAbstractItemView,
-    QAction,
-    QApplication,
-    QHBoxLayout,
-    QIcon,
-    QLabel,
-    QLineEdit,
-    QMenu,
-    QMessageBox,
-    QPushButton,
-    Qt,
-    QTabWidget,
-    QToolBar,
-    QVBoxLayout,
-    QWidget,
-    app_skin,
-    pixlib,
-)
+from firefly.qt import app_skin, pixlib
 from firefly.view import FireflyView
 
 from .browser_model import BrowserModel

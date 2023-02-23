@@ -1,10 +1,12 @@
 import copy
 
-from nxtools import  s2tc
+from nxtools import s2tc
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QAction
+from PySide6.QtWidgets import QInputDialog, QMenu
 
 from firefly.log import log
 from firefly.metadata import meta_types
-from firefly.qt import QAction, QInputDialog, QMenu, Qt
 from firefly.view import FireflyView, FireflyViewModel
 
 __all__ = ["FireflySubclipsView"]

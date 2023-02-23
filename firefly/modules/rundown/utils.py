@@ -2,22 +2,19 @@ import datetime
 import json
 import time
 
-import firefly
-from firefly.qt import (
-    QAction,
+from PySide6.QtCore import QDate, QMimeData, Qt
+from PySide6.QtGui import QAction, QDrag, QIcon
+from PySide6.QtWidgets import (
     QApplication,
     QCalendarWidget,
-    QDate,
     QDialog,
-    QDrag,
-    QIcon,
-    QMimeData,
-    Qt,
     QToolBar,
     QToolButton,
     QVBoxLayout,
-    pixlib,
 )
+
+import firefly
+from firefly.qt import pixlib
 from firefly.widgets import ChannelDisplay, ToolBarStretcher
 
 ITEM_BUTTONS = [

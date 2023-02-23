@@ -1,5 +1,5 @@
 from PySide6.QtGui import QColor
-from PySide6.QtWidgets import QPushButton, QColorDialog
+from PySide6.QtWidgets import QColorDialog, QPushButton
 
 
 class InputColor(QPushButton):
