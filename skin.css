@@ -288,3 +288,17 @@ QScrollBar::add-line:vertical {
 QScrollBar::sub-line:horizontal,
 QScrollBar::sub-line:vertical {
   background: none; }
+
+QCalendarWidget QAbstractItemView:enabled {
+  font-size: 20px;
+  color: #b4b4b4;
+  background-color: black;
+  selection-background-color: #404040;
+  selection-color: lime; }
+
+QCalendarWidget QWidget#qt_calendar_navigationbar {
+  padding: 20px;
+  margin-bottom: 20px !important; }
+
+QCalendarWidget QAbstractItemView:disabled {
+  color: #404040; }

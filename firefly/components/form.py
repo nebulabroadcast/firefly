@@ -12,6 +12,7 @@ from .input_color import InputColor
 from .input_datetime import InputDatetime
 from .input_list import InputList
 from .input_radio import InputRadio
+from .input_combo import InputCombo
 from .input_select import InputSelect
 from .input_switch import InputSwitch
 from .input_text import InputText
@@ -45,7 +46,7 @@ editor_map = {
     "datetime": InputDatetime,
     "color": InputColor,
     "boolean": InputSwitch,
-    "select": InputSelect,
+    "select": InputCombo,
     "list": InputList,
 }
 

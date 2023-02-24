@@ -77,12 +77,11 @@ class RundownView(FireflyView):
                         if obj.object_type == "item" and obj["id_asset"] == asset.id
                     ]
                 )
-                log.status("{} is scheduled {}x in this rundown".format(asset, times))
+                log.status(f"[RUNDOWN] {asset} is scheduled {times}x in this rundown")
             if len(self.selected_objects) > 1 and tot_dur:
                 log.status(
-                    "{} objects selected. Total duration {}".format(
-                        len(self.selected_objects), s2time(tot_dur)
-                    )
+                    f"[RUNDOWN] {len(self.selected_objects)} objects selected. "
+                    f"Total duration {s2time(tot_dur)}"
                 )
 
         super(FireflyView, self).selectionChanged(selected, deselected)

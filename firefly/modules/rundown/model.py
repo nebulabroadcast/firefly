@@ -67,7 +67,7 @@ class RundownModel(FireflyViewModel):
         QApplication.processEvents()
         self.parent().setCursor(Qt.CursorShape.WaitCursor)
         self.beginResetModel()
-        log.status("Loading rundown. Please wait...")
+        log.status("[RUNDOWN] Loading. Please wait...")
 
         required_assets = []
 
@@ -115,7 +115,7 @@ class RundownModel(FireflyViewModel):
 
         self.endResetModel()
         self.parent().setCursor(Qt.CursorShape.ArrowCursor)
-        log.status(f"Rundown loaded in {time.time() - self.load_start_time:.03f}s")
+        log.status(f"[RUNDOWN] Loaded in {time.time() - self.load_start_time:.03f}s")
 
         if self.current_callback:
             self.current_callback()

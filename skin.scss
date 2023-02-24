@@ -411,3 +411,34 @@ QScrollBar::sub-line:horizontal,
 QScrollBar::sub-line:vertical {
 	background: none;
 }
+
+// Calendar
+
+QCalendarWidget {
+
+
+    QToolButton#qt_calendar_prevmonth {
+      // todo
+    }
+    
+    QToolButton#qt_calendar_nextmonth {
+    }
+
+  QAbstractItemView:enabled {
+    font-size:20px;  
+    color: rgb(180, 180, 180);  
+    background-color: black;  
+    selection-background-color: rgb(64, 64, 64); 
+    selection-color: rgb(0, 255, 0); 
+  }
+
+  QWidget#qt_calendar_navigationbar { 
+    padding: 20px;
+    margin-bottom: 20px !important;
+  }
+
+  QAbstractItemView:disabled { 
+    color: rgb(64, 64, 64); 
+  }
+
+} // QCalendarWidget

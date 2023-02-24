@@ -14,6 +14,9 @@ class InputRadio(QWidget):
         self._original_value = value
         self._options = []
 
+        self._layout = QHBoxLayout()
+        self._layout.setContentsMargins(0, 0, 0, 0)
+
         self.set_field_options(**kwargs)
         self.set_value(value)
 
@@ -37,15 +40,13 @@ class InputRadio(QWidget):
                         "description": csmeta.get("description", opt_value),
                     }
                 )
+        elif options := kwargs.get("options"):
+            self._options = options
 
         self._current_index = None
         self._buttons = []
-        self._layout = QHBoxLayout()
-        self._layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self._layout)
-
-        if self._options:
-            self.build_options()
+        self.build_options()
 
     def clear(self):
         for i, button in enumerate(self._buttons):

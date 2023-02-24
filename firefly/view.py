@@ -134,6 +134,7 @@ class FireflyView(QTableView):
         self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.setShowGrid(False)
         self.setAlternatingRowColors(True)
+
         self.selected_objects = []
         self.focus_enabled = True
 

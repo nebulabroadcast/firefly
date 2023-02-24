@@ -34,13 +34,13 @@ class MCRButton(QPushButton):
         else:
             bg_col = "#565656"
         self.setStyleSheet(
-            """
+            f"""
             MCRButton {{
                 font-size:14px;
                 color: #eeeeee;
                 width: 80px;
                 height:30px;
-                border: 2px solid {};
+                border: 2px solid {bg_col};
                 text-transform: uppercase;
             }}
 
@@ -50,9 +50,7 @@ class MCRButton(QPushButton):
 
             MCRButton:pressed {{
                 border: 2px solid #00a5c3;
-            }}""".format(
-                bg_col
-            )
+            }}"""
         )
 
         if on_click:
@@ -64,16 +62,14 @@ class MCRLabel(QLabel):
         super(MCRLabel, self).__init__(parent)
         self.head = head
         self.setStyleSheet(
-            """
+            f"""
                 background-color: #161616;
                 padding:5px;
                 margin:3px;
                 font:16px;
                 font-weight: bold;
-                color : {};
-            """.format(
-                tcolor
-            )
+                color : {tcolor};
+            """
         )
         self.set_text(default)
 

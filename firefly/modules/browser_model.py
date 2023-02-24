@@ -79,7 +79,7 @@ class BrowserModel(FireflyViewModel):
                 return format_header(self.header_data[col])
             elif role == Qt.ItemDataRole.ToolTipRole:
                 desc = format_description(self.header_data[col])
-                return "<p>{}</p>".format(desc) if desc else None
+                return f"<p>{desc}</p>" if desc else None
             elif role == Qt.ItemDataRole.DecorationRole:
                 sq = self.parent().parent().search_query
                 if self.header_data[col] == sq["order_by"]:

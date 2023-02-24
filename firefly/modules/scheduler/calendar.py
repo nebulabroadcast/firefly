@@ -238,7 +238,7 @@ class SchedulerDayWidget(SchedulerVerticalBar):
 
         e_start_time = time.strftime("%H:%M", time.localtime(drop_ts))
         e_end_time = time.strftime("%H:%M", time.localtime(drop_ts + max(300, exp_dur)))
-        log.status(f"Start time: {e_start_time} End time: {e_end_time}")
+        log.status(f"[SCHEDULER] Start time: {e_start_time} End time: {e_end_time}")
 
     def mouseMoveEvent(self, e):
         my = e.pos().y()
@@ -681,7 +681,7 @@ class SchedulerCalendar(QWidget):
 
     def set_initial_zoom_level(self):
         zoomlevel = self.parent().app_state.get("scheduler_zoom", 0)
-        log.status("Setting scheduler zoom level to", zoomlevel)
+        log.status("[SCHEDULER] Setting zoom level to", zoomlevel)
         self.zoom.setValue(zoomlevel)
 
     @property

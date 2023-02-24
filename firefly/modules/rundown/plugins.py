@@ -1,12 +1,11 @@
 import functools
-import json
 
 from PySide6.QtWidgets import QFormLayout, QHBoxLayout, QPushButton, QTabWidget, QWidget
 
 import firefly
 from firefly.api import api
+from firefly.components.input_text import InputText
 from firefly.log import log
-from firefly.widgets import FireflySelect, FireflyString
 
 
 class PlayoutPlugin(QWidget):
@@ -14,20 +13,21 @@ class PlayoutPlugin(QWidget):
         super(PlayoutPlugin, self).__init__(parent)
 
         self.id_channel = parent.id_channel
-        self.id_plugin = data["id"]
+        self.name = data["name"]
         self.title = data["title"]
         self.slots = {}
-
         self.buttons = []
+
         button_layout = QHBoxLayout()
         layout = QFormLayout()
 
         for i, slot in enumerate(data.get("slots", [])):
             slot_type = slot["type"]
             slot_name = slot["name"]
+            slot_title = slot.get("title", slot_name)
 
             if slot_type == "action":
-                self.buttons.append(QPushButton(slot["title"]))
+                self.buttons.append(QPushButton(slot_title))
                 self.buttons[-1].clicked.connect(
                     functools.partial(self.execute, slot_name)
                 )
@@ -35,7 +35,7 @@ class PlayoutPlugin(QWidget):
                 continue
 
             if slot_type == "text":
-                self.slots[slot_name] = FireflyString(self)
+                self.slots[slot_name] = InputText(self)
             elif slot_type == "select":
                 if not slot["values"]:
                     continue
@@ -47,13 +47,13 @@ class PlayoutPlugin(QWidget):
                 self.slots[slot_name].set_value(min([r["value"] for r in values]))
             else:
                 continue
-            layout.addRow(slot["title"], self.slots[slot_name])
+            layout.addRow(slot_title, self.slots[slot_name])
 
         if self.buttons:
             layout.addRow("", button_layout)
         self.setLayout(layout)
 
-    def execute(self, name):
+    def execute(self, action: str):
         data = {}
         for slot in self.slots:
             data[slot] = self.slots[slot].get_value()
@@ -61,12 +61,14 @@ class PlayoutPlugin(QWidget):
         response = api.playout(
             action="plugin_exec",
             id_channel=self.id_channel,
-            id_plugin=self.id_plugin,
-            action_name=name,
-            data=json.dumps(data),
+            payload={
+                "name": self.name,
+                "action": action,
+                "data": data,
+            },
         )
         if response:
-            log.info(f"{self.title} action '{name}' executed succesfully.")
+            log.info(f"{self.title} action '{action}' executed succesfully.")
         else:
             log.error(
                 f"[PLUGINS] Plugin error {response.response}\n\n{response.message}"
