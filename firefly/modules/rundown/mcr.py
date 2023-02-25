@@ -184,12 +184,8 @@ class MCR(QWidget):
         if status["fps"] != self.fps:
             self.fps = status["fps"]
 
-        if status.get("time_unit", "f") == "f":
-            self.pos = (status["position"] + 1) / self.fps
-            dur = status["duration"] / self.fps
-        else:
-            self.pos = status["position"] + (1 / self.fps)
-            dur = status["duration"]
+        self.pos = status["position"] + (1 / self.fps)
+        dur = status["duration"]
 
         self.btn_loop.setEnabled(True)
         if status.get("loop") != self.btn_loop.isChecked():
@@ -216,14 +212,17 @@ class MCR(QWidget):
             else:
                 self.progress_bar.setMaximum(PROGRESS_BAR_RESOLUTION)
 
-        if self.current != status["current_title"]:
-            self.current = status["current_title"]
+        new_current_title = status.get("current_title") or "(no clip)"
+        new_cued_title = status.get("cued_title") or "(no clip)"
+
+        if self.current != new_current_title:
+            self.current = new_current_title
             self.display_current.set_text(self.current)
             self.request_display_resize = True
 
         cueing = status.get("cueing", False)
-        if self.cued != status["cued_title"] or self.cueing != cueing:
-            self.cued = status["cued_title"]
+        if self.cued != new_cued_title or self.cueing != cueing:
+            self.cued = new_cued_title
             if cueing:
                 self.display_cued.set_text(f"<font color='yellow'>{self.cued}</font>")
             else:
