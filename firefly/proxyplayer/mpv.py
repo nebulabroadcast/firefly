@@ -48,7 +48,12 @@ from ctypes import (
 from functools import partial, wraps
 
 if os.name == "nt":
-    backend = CDLL("mpv-1.dll")
+    current_dir = os.getcwd()
+    mpv_local_path = os.path.join(current_dir, "mpv-1.dll")
+    if os.path.exists(mpv_local_path):
+        backend = CDLL(mpv_local_path)
+    else:
+        backend = CDLL("mpv-1.dll")
     fs_enc = "utf-8"
 else:
     import locale

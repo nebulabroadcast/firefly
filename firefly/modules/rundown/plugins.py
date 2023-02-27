@@ -99,6 +99,6 @@ class PlayoutPlugins(QTabWidget):
             log.error(f"[PLUGINS] Unable to load playout plugins:\n{response.message}")
             return
 
-        for plugin in response["plugins"] or []:
+        for plugin in response.get("plugins") or []:
             self.plugins.append(PlayoutPlugin(self, plugin))
             self.addTab(self.plugins[-1], plugin.get("title", "unknown"))
