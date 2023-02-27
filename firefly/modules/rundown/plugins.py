@@ -5,6 +5,7 @@ from PySide6.QtWidgets import QFormLayout, QHBoxLayout, QPushButton, QTabWidget,
 import firefly
 from firefly.api import api
 from firefly.components.input_text import InputText
+from firefly.components.input_combo import InputCombo
 from firefly.log import log
 
 
@@ -37,14 +38,11 @@ class PlayoutPlugin(QWidget):
             if slot_type == "text":
                 self.slots[slot_name] = InputText(self)
             elif slot_type == "select":
-                if not slot["values"]:
+                options = slot.get("options", [])
+                print(options)
+                if not slot["options"]:
                     continue
-                values = [
-                    {"value": val, "alias": ali, "role": "option"}
-                    for val, ali in slot["values"]
-                ]
-                self.slots[slot_name] = FireflySelect(self, data=values)
-                self.slots[slot_name].set_value(min([r["value"] for r in values]))
+                self.slots[slot_name] = InputCombo(self, options=options)
             else:
                 continue
             layout.addRow(slot_title, self.slots[slot_name])

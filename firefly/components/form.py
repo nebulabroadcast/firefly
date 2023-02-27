@@ -9,11 +9,10 @@ from firefly.metadata import meta_types
 from firefly.settings import FolderField
 
 from .input_color import InputColor
+from .input_combo import InputCombo
 from .input_datetime import InputDatetime
 from .input_list import InputList
 from .input_radio import InputRadio
-from .input_combo import InputCombo
-from .input_select import InputSelect
 from .input_switch import InputSwitch
 from .input_text import InputText
 from .input_textarea import InputTextarea
