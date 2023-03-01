@@ -6,8 +6,8 @@ from firefly import settings
 from firefly.enum import ContentType, MediaType, ObjectStatus, QCState
 
 if TYPE_CHECKING:
-    from firefly.objects.base import BaseObject
     from firefly.metadata import MetaType
+    from firefly.objects.base import BaseObject
 
 
 def format_cs_values(metatype: "MetaType", values: list[str]) -> str:

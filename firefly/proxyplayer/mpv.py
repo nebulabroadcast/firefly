@@ -4,17 +4,20 @@
 # Python MPV library module
 # Copyright (C) 2017 Sebastian Götte <code@jaseg.net>
 #
-# This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General
-# Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU Affero General
+# Public License as published by the Free Software Foundation,
+# either version 3 of the License, or (at your option) any
 # later version.
 #
-# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-# warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied
+# warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU Affero General Public License for more
 # details.
 #
-# You should have received a copy of the GNU Affero General Public License along with this program.  If not, see
-# <http://www.gnu.org/licenses/>.
-#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import collections
 import ctypes.util
@@ -23,29 +26,47 @@ import re
 import sys
 import threading
 import traceback
-from ctypes import *
+from ctypes import (
+    CDLL,
+    CFUNCTYPE,
+    POINTER,
+    Structure,
+    Union,
+    c_char,
+    c_char_p,
+    c_double,
+    c_int,
+    c_int64,
+    c_size_t,
+    c_ulong,
+    c_ulonglong,
+    c_void_p,
+    cast,
+    create_string_buffer,
+    sizeof,
+)
 from functools import partial, wraps
-from warnings import warn
 
 if os.name == "nt":
-    backend = CDLL("mpv-1.dll")
+    current_dir = os.getcwd()
+    mpv_local_path = os.path.join(current_dir, "mpv-1.dll")
+    if os.path.exists(mpv_local_path):
+        backend = CDLL(mpv_local_path)
+    else:
+        backend = CDLL("mpv-1.dll")
     fs_enc = "utf-8"
 else:
     import locale
 
     lc, enc = locale.getlocale(locale.LC_NUMERIC)
-    # libmpv requires LC_NUMERIC to be set to "C". Since messing with global variables everyone else relies upon is
+    # libmpv requires LC_NUMERIC to be set to "C".
+    # Since messing with global variables everyone else relies upon is
     # still better than segfaulting, we are setting LC_NUMERIC to "C".
     locale.setlocale(locale.LC_NUMERIC, "C")
 
     sofile = ctypes.util.find_library("mpv")
     if sofile is None:
-        raise OSError(
-            "Cannot find libmpv in the usual places. Depending on your distro, you may try installing an "
-            "mpv-devel or mpv-libs package. If you have libmpv around but this script can't find it, maybe consult "
-            "the documentation for ctypes.util.find_library which this script uses to look up the library "
-            "filename."
-        )
+        raise OSError("Cannot find libmpv in the usual places.")
     backend = CDLL(sofile)
     fs_enc = sys.getfilesystemencoding()
 
@@ -89,7 +110,8 @@ class ErrorCode(object):
         -6: lambda *a: TypeError("Tried to set mpv option using wrong format", *a),
         -7: lambda *a: ValueError("Invalid value for mpv option", *a),
         -8: lambda *a: AttributeError("mpv property does not exist", *a),
-        # Currently (mpv 0.18.1) there is a bug causing a PROPERTY_FORMAT error to be returned instead of
+        # Currently (mpv 0.18.1) there is a bug causing a
+        # PROPERTY_FORMAT error to be returned instead of
         # INVALID_PARAMETER when setting a property-mapped option to an invalid value.
         -9: lambda *a: TypeError(
             "Tried to get/set mpv property using wrong format, or passed invalid value",
@@ -425,7 +447,7 @@ def bytes_free_errcheck(res, func, *args):
 def notnull_errcheck(res, func, *args):
     if res is None:
         raise RuntimeError(
-            "Underspecified error in MPV when calling {} with args {!r}: NULL pointer returned."
+            "Underspecified error in MPV calling {} with args {!r}: NULL returned."
             "Please consult your local debugger.".format(func.__name__, args)
         )
     return res
@@ -516,7 +538,9 @@ _handle_gl_func("mpv_opengl_cb_uninit_gl", [], c_int)
 
 
 def _mpv_coax_proptype(value, proptype=str):
-    """Intelligently coax the given python value into something that can be understood as a proptype property."""
+    """Intelligently coax the given python value into something
+    that can be understood as a proptype property.
+    """
     if type(value) is bytes:
         return value
     elif type(value) is bool:
@@ -532,9 +556,11 @@ def _mpv_coax_proptype(value, proptype=str):
 
 
 def _make_node_str_list(l):
-    """Take a list of python objects and make a MPV string node array from it.
+    """Take a list of python objects and make a MPV
+    string node array from it.
 
-    As an example, the python list ``l = [ "foo", 23, false ]`` will result in the following MPV node object::
+    As an example, the python list ``l = [ "foo", 23, false ]``
+    will result in the following MPV node object::
 
         struct mpv_node {
             .format = MPV_NODE_ARRAY,
@@ -601,7 +627,8 @@ def _event_loop(
                 ev = devent["event"]
                 log_handler(ev["level"], ev["prefix"], ev["text"])
             if eid == MpvEventID.CLIENT_MESSAGE:
-                # {'event': {'args': ['key-binding', 'foo', 'u-', 'g']}, 'reply_userdata': 0, 'error': 0, 'event_id': 16}
+                # {'event': {'args': ['key-binding', 'foo', 'u-', 'g']},
+                #'reply_userdata': 0, 'error': 0, 'event_id': 16}
                 target, *args = devent["event"]["args"]
                 if target in message_handlers:
                     message_handlers[target](*args)
@@ -645,7 +672,7 @@ class _OSDPropertyProxy(_PropertyProxy):
 
     def __setattr__(self, _name, _value):
         raise AttributeError(
-            "OSD properties are read-only. Please use the regular property API for writing."
+            "OSD properties are read-only. Use the regular property API for writing."
         )
 
 

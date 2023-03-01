@@ -1,27 +1,7 @@
 import os
 
-from nxtools import log_traceback, logging
-from PySide6.QtCore import (QAbstractTableModel, QDate, QEvent, QItemSelection,
-                            QItemSelectionModel, QMimeData, QModelIndex, QRect,
-                            QSettings, QSortFilterProxyModel, QThread, QTimer,
-                            QUrl, QUrlQuery)
-from PySide6.QtGui import (QAction, QActionGroup, QBrush, QColor, QDrag, QFont,
-                           QFontDatabase, QFontMetrics, QIcon, QLinearGradient,
-                           QPainter, QPalette, QPen, QPixmap, Qt)
-from PySide6.QtNetwork import QNetworkAccessManager, QNetworkRequest
-from PySide6.QtWidgets import (QAbstractItemDelegate, QAbstractItemView,
-                               QApplication, QCalendarWidget, QCheckBox,
-                               QColorDialog, QComboBox, QDialog,
-                               QDialogButtonBox, QFileDialog, QFormLayout,
-                               QFrame, QGridLayout, QHBoxLayout, QInputDialog,
-                               QLabel, QLineEdit, QMainWindow, QMenu,
-                               QMessageBox, QProgressBar, QPushButton,
-                               QScrollArea, QSizePolicy, QSlider, QSpinBox,
-                               QSplashScreen, QSplitter, QStyle,
-                               QStyleOptionComboBox, QStyleOptionMenuItem,
-                               QStylePainter, QTableView, QTabWidget,
-                               QTextEdit, QToolBar, QToolButton, QVBoxLayout,
-                               QWidget)
+from PySide6.QtCore import QSettings, Qt
+from PySide6.QtGui import QColor, QFont, QPixmap
 
 import firefly
 
@@ -48,7 +28,6 @@ class AppSettings:
 
 
 app_settings = AppSettings()
-logging.name = app_settings["name"]
 
 
 def get_app_state(path):
@@ -65,7 +44,7 @@ if os.path.exists(skin_path):
     try:
         app_skin = open(skin_path).read()
     except Exception:
-        log_traceback("Unable to read stylesheet")
+        print("Unable to read stylesheet")
 
 
 class FontLib:

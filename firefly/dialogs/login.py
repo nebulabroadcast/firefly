@@ -1,7 +1,8 @@
+from PySide6.QtWidgets import QDialog, QFormLayout, QLineEdit, QMessageBox, QPushButton
+
 from firefly.api import api
 from firefly.config import config
-from firefly.qt import (QDialog, QFormLayout, QLineEdit, QMessageBox,
-                        QPushButton, app_skin)
+from firefly.qt import app_skin
 
 
 class LoginDialog(QDialog):

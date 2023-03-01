@@ -2,12 +2,20 @@ import math
 import time
 
 from nxtools import s2tc
+from PySide6.QtCore import QTimer
+from PySide6.QtWidgets import (
+    QApplication,
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QProgressBar,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
 
 import firefly
 from firefly.api import api
-from firefly.qt import (QApplication, QGridLayout, QHBoxLayout, QLabel,
-                        QProgressBar, QPushButton, QTimer, QVBoxLayout,
-                        QWidget)
 
 PROGRESS_BAR_RESOLUTION = 1000
 
@@ -26,13 +34,13 @@ class MCRButton(QPushButton):
         else:
             bg_col = "#565656"
         self.setStyleSheet(
-            """
+            f"""
             MCRButton {{
                 font-size:14px;
                 color: #eeeeee;
                 width: 80px;
                 height:30px;
-                border: 2px solid {};
+                border: 2px solid {bg_col};
                 text-transform: uppercase;
             }}
 
@@ -42,9 +50,7 @@ class MCRButton(QPushButton):
 
             MCRButton:pressed {{
                 border: 2px solid #00a5c3;
-            }}""".format(
-                bg_col
-            )
+            }}"""
         )
 
         if on_click:
@@ -56,16 +62,14 @@ class MCRLabel(QLabel):
         super(MCRLabel, self).__init__(parent)
         self.head = head
         self.setStyleSheet(
-            """
+            f"""
                 background-color: #161616;
                 padding:5px;
                 margin:3px;
                 font:16px;
                 font-weight: bold;
-                color : {};
-            """.format(
-                tcolor
-            )
+                color : {tcolor};
+            """
         )
         self.set_text(default)
 
@@ -180,12 +184,8 @@ class MCR(QWidget):
         if status["fps"] != self.fps:
             self.fps = status["fps"]
 
-        if status.get("time_unit", "f") == "f":
-            self.pos = (status["position"] + 1) / self.fps
-            dur = status["duration"] / self.fps
-        else:
-            self.pos = status["position"] + (1 / self.fps)
-            dur = status["duration"]
+        self.pos = status["position"] + (1 / self.fps)
+        dur = status["duration"]
 
         self.btn_loop.setEnabled(True)
         if status.get("loop") != self.btn_loop.isChecked():
@@ -212,14 +212,17 @@ class MCR(QWidget):
             else:
                 self.progress_bar.setMaximum(PROGRESS_BAR_RESOLUTION)
 
-        if self.current != status["current_title"]:
-            self.current = status["current_title"]
+        new_current_title = status.get("current_title") or "(no clip)"
+        new_cued_title = status.get("cued_title") or "(no clip)"
+
+        if self.current != new_current_title:
+            self.current = new_current_title
             self.display_current.set_text(self.current)
             self.request_display_resize = True
 
         cueing = status.get("cueing", False)
-        if self.cued != status["cued_title"] or self.cueing != cueing:
-            self.cued = status["cued_title"]
+        if self.cued != new_cued_title or self.cueing != cueing:
+            self.cued = new_cued_title
             if cueing:
                 self.display_cued.set_text(f"<font color='yellow'>{self.cued}</font>")
             else:

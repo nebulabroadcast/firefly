@@ -1,12 +1,14 @@
 import functools
 import json
 
-from nxtools import log_traceback, logging
+from PySide6.QtCore import QMimeData, Qt, QUrl
+from PySide6.QtWidgets import QApplication
 
 import firefly
 from firefly.api import api
+from firefly.log import log
 from firefly.objects import Asset
-from firefly.qt import QApplication, QMimeData, Qt, QUrl, pixlib
+from firefly.qt import pixlib
 from firefly.view import FireflyViewModel, format_description, format_header
 
 DEFAULT_HEADER_DATA = ["title", "duration", "id_folder"]
@@ -38,7 +40,7 @@ class BrowserModel(FireflyViewModel):
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
 
         if not response:
-            logging.error(response.message)
+            log.error(response.message)
 
         # Pagination
 
@@ -77,7 +79,7 @@ class BrowserModel(FireflyViewModel):
                 return format_header(self.header_data[col])
             elif role == Qt.ItemDataRole.ToolTipRole:
                 desc = format_description(self.header_data[col])
-                return "<p>{}</p>".format(desc) if desc else None
+                return f"<p>{desc}</p>" if desc else None
             elif role == Qt.ItemDataRole.DecorationRole:
                 sq = self.parent().parent().search_query
                 if self.header_data[col] == sq["order_by"]:
@@ -121,5 +123,5 @@ class BrowserModel(FireflyViewModel):
             mimeData.setUrls(urls)
             return mimeData
         except Exception:
-            log_traceback()
+            log.traceback()
             return

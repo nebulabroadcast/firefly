@@ -1,5 +1,8 @@
-from firefly.qt import (QAction, QDrag, QIcon, QMimeData, Qt, QToolBar,
-                        QToolButton, pixlib)
+from PySide6.QtCore import QMimeData, Qt
+from PySide6.QtGui import QAction, QDrag, QIcon
+from PySide6.QtWidgets import QToolBar, QToolButton
+
+from firefly.qt import pixlib
 from firefly.widgets import ChannelDisplay, ToolBarStretcher
 
 EMPTY_EVENT_DATA = '[{"id" : 0, "title" : "Empty event"}]'.encode("ascii")

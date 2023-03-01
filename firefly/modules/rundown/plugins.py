@@ -1,13 +1,12 @@
 import functools
-import json
 
-from nxtools import logging
+from PySide6.QtWidgets import QFormLayout, QHBoxLayout, QPushButton, QTabWidget, QWidget
 
 import firefly
 from firefly.api import api
-from firefly.qt import (QFormLayout, QHBoxLayout, QPushButton, QTabWidget,
-                        QWidget)
-from firefly.widgets import FireflySelect, FireflyString
+from firefly.components.input_text import InputText
+from firefly.components.input_combo import InputCombo
+from firefly.log import log
 
 
 class PlayoutPlugin(QWidget):
@@ -15,20 +14,21 @@ class PlayoutPlugin(QWidget):
         super(PlayoutPlugin, self).__init__(parent)
 
         self.id_channel = parent.id_channel
-        self.id_plugin = data["id"]
+        self.name = data["name"]
         self.title = data["title"]
         self.slots = {}
-
         self.buttons = []
+
         button_layout = QHBoxLayout()
         layout = QFormLayout()
 
         for i, slot in enumerate(data.get("slots", [])):
             slot_type = slot["type"]
             slot_name = slot["name"]
+            slot_title = slot.get("title", slot_name)
 
             if slot_type == "action":
-                self.buttons.append(QPushButton(slot["title"]))
+                self.buttons.append(QPushButton(slot_title))
                 self.buttons[-1].clicked.connect(
                     functools.partial(self.execute, slot_name)
                 )
@@ -36,25 +36,22 @@ class PlayoutPlugin(QWidget):
                 continue
 
             if slot_type == "text":
-                self.slots[slot_name] = FireflyString(self)
+                self.slots[slot_name] = InputText(self)
             elif slot_type == "select":
-                if not slot["values"]:
+                options = slot.get("options", [])
+                print(options)
+                if not slot["options"]:
                     continue
-                values = [
-                    {"value": val, "alias": ali, "role": "option"}
-                    for val, ali in slot["values"]
-                ]
-                self.slots[slot_name] = FireflySelect(self, data=values)
-                self.slots[slot_name].set_value(min([r["value"] for r in values]))
+                self.slots[slot_name] = InputCombo(self, options=options)
             else:
                 continue
-            layout.addRow(slot["title"], self.slots[slot_name])
+            layout.addRow(slot_title, self.slots[slot_name])
 
         if self.buttons:
             layout.addRow("", button_layout)
         self.setLayout(layout)
 
-    def execute(self, name):
+    def execute(self, action: str):
         data = {}
         for slot in self.slots:
             data[slot] = self.slots[slot].get_value()
@@ -62,14 +59,16 @@ class PlayoutPlugin(QWidget):
         response = api.playout(
             action="plugin_exec",
             id_channel=self.id_channel,
-            id_plugin=self.id_plugin,
-            action_name=name,
-            data=json.dumps(data),
+            payload={
+                "name": self.name,
+                "action": action,
+                "data": data,
+            },
         )
         if response:
-            logging.info(f"{self.title} action '{name}' executed succesfully.")
+            log.info(f"{self.title} action '{action}' executed succesfully.")
         else:
-            logging.error(
+            log.error(
                 f"[PLUGINS] Plugin error {response.response}\n\n{response.message}"
             )
 
@@ -87,7 +86,7 @@ class PlayoutPlugins(QTabWidget):
         if not firefly.user.can("mcr", self.id_channel):
             return
 
-        logging.debug("[PLUGINS] Loading playout plugins")
+        log.debug("[PLUGINS] Loading playout plugins")
         for idx in reversed(range(self.count())):
             widget = self.widget(idx)
             self.removeTab(idx)
@@ -95,11 +94,9 @@ class PlayoutPlugins(QTabWidget):
 
         response = api.playout(action="plugin_list", id_channel=self.id_channel)
         if not response:
-            logging.error(
-                f"[PLUGINS] Unable to load playout plugins:\n{response.message}"
-            )
+            log.error(f"[PLUGINS] Unable to load playout plugins:\n{response.message}")
             return
 
-        for plugin in response["plugins"] or []:
+        for plugin in response.get("plugins") or []:
             self.plugins.append(PlayoutPlugin(self, plugin))
             self.addTab(self.plugins[-1], plugin.get("title", "unknown"))

@@ -1,7 +1,23 @@
 import copy
 import functools
 
-from nxtools import log_traceback, logging
+from nxtools import s2time
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QAction, QIcon
+from PySide6.QtWidgets import (
+    QAbstractItemView,
+    QApplication,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMenu,
+    QMessageBox,
+    QPushButton,
+    QTabWidget,
+    QToolBar,
+    QVBoxLayout,
+    QWidget,
+)
 
 import firefly
 from firefly.api import api
@@ -9,11 +25,9 @@ from firefly.base_module import BaseModule
 from firefly.dialogs.batch_ops import show_batch_ops_dialog
 from firefly.dialogs.send_to import show_send_to_dialog
 from firefly.enum import ObjectStatus
+from firefly.log import log
 from firefly.objects import asset_cache
-from firefly.qt import (QAbstractItemView, QAction, QApplication, QHBoxLayout,
-                        QIcon, QLabel, QLineEdit, QMenu, QMessageBox,
-                        QPushButton, Qt, QTabWidget, QToolBar, QVBoxLayout,
-                        QWidget, app_skin, pixlib)
+from firefly.qt import app_skin, pixlib
 from firefly.view import FireflyView
 
 from .browser_model import BrowserModel
@@ -60,17 +74,20 @@ class FireflyBrowserView(FireflyView):
                 tot_dur += obj.duration
 
         if self.selected_objects:
-            asset_id = self.selected_objects[-1].id
-            asset = asset_cache[asset_id]
+            ids = [obj.id for obj in self.selected_objects]
+            mtimes = [obj["mtime"] for obj in self.selected_objects]
+
+            asset_cache.request(list(zip(ids, mtimes)))
+            asset = asset_cache[ids[0]]
             if not asset:
                 asset_cache.wait()
-                asset = asset_cache[asset_id]
+                asset = asset_cache[ids[0]]
             self.main_window.focus(asset)
 
             if len(self.selected_objects) > 1 and tot_dur:
-                logging.debug(
+                log.status(
                     f"[BROWSER] {len(self.selected_objects)} objects selected. "
-                    "Total duration {durstr}"
+                    f"Total duration {s2time(tot_dur)}"
                 )
         super(FireflyView, self).selectionChanged(selected, deselected)
 
@@ -96,7 +113,7 @@ class FireflyBrowserView(FireflyView):
         val = obj.show(key)
 
         QApplication.clipboard().setText(str(val))
-        logging.info(f'Copied "{val}" to clipboard')
+        log.status(f'[BROWSER] Copied "{val}" to clipboard')
 
     def set_page(self, current_page, page_count):
         self.current_page = current_page
@@ -441,7 +458,7 @@ class BrowserTab(QWidget):
         else:
             return
         if not response:
-            logging.error("Unable to trash:\n\n" + response.message)
+            log.error("Unable to trash:\n\n" + response.message)
             return
         self.refresh_assets(*objects, request_data=True)
 
@@ -455,11 +472,11 @@ class BrowserTab(QWidget):
             return
         response = api.ops(
             operations=[
-                {"id": id, "data": {"status": ObjectStatus.CREATING}} for id in objects
+                {"id": id, "data": {"status": ObjectStatus.OFFLINE}} for id in objects
             ]
         )
         if not response:
-            logging.error("Unable to untrash:\n\n" + response.message)
+            log.error("Unable to untrash:\n\n" + response.message)
             return
         self.refresh_assets(*objects, request_data=True)
 
@@ -487,7 +504,7 @@ class BrowserTab(QWidget):
         else:
             return
         if not response:
-            logging.error("Unable to archive:\n\n" + response.message)
+            log.error("Unable to archive:\n\n" + response.message)
             return
         self.refresh_assets(*objects, request_data=True)
 
@@ -506,13 +523,13 @@ class BrowserTab(QWidget):
             ]
         )
         if not response:
-            logging.error("Unable to unarchive:\n\n" + response.message)
+            log.error("Unable to unarchive:\n\n" + response.message)
             return
         self.refresh_assets(*objects, request_data=True)
 
     def on_choose_columns(self):
         # TODO
-        logging.error("Not implemented")
+        log.error("Not implemented")
 
     def on_copy_result(self):
         result = ""
@@ -579,8 +596,8 @@ class BrowserModule(BaseModule):
                 self.new_tab(title, **tabcfg)
                 created_tabs += 1
             except Exception:
-                log_traceback()
-                logging.warning("Unable to restore tab")
+                log.traceback()
+                log.warning("Unable to restore tab")
         if not created_tabs:
             self.new_tab()
 

@@ -1,11 +1,14 @@
 import functools
 import pprint
 
+from PySide6.QtCore import QAbstractTableModel, QSortFilterProxyModel, Qt
+from PySide6.QtGui import QColor
+from PySide6.QtWidgets import QAbstractItemView, QTableView
+
 import firefly
 from firefly.enum import Colors
 from firefly.metadata import meta_types
-from firefly.qt import (QAbstractItemView, QAbstractTableModel, QColor,
-                        QSortFilterProxyModel, Qt, QTableView, fontlib, pixlib)
+from firefly.qt import fontlib, pixlib
 
 
 @functools.lru_cache(maxsize=100)
@@ -131,6 +134,7 @@ class FireflyView(QTableView):
         self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.setShowGrid(False)
         self.setAlternatingRowColors(True)
+
         self.selected_objects = []
         self.focus_enabled = True
 

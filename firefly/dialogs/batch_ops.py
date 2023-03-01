@@ -1,12 +1,19 @@
-from nxtools import logging
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QDialog,
+    QDialogButtonBox,
+    QFrame,
+    QMessageBox,
+    QScrollArea,
+    QVBoxLayout,
+)
 
 import firefly
 from firefly.api import api
+from firefly.components.form import MetadataForm
 from firefly.enum import MetaClass
+from firefly.log import log
 from firefly.metadata import meta_types
-from firefly.qt import (QDialog, QDialogButtonBox, QFrame, QMessageBox,
-                        QScrollArea, Qt, QVBoxLayout)
-from firefly.widgets import MetaEditor
 
 ERR = "** ERROR **"
 
@@ -18,7 +25,7 @@ class BatchOpsDialog(QDialog):
         self.setWindowTitle(f"Batch modify: {len(self.objects)} assets")
         id_folder = self.objects[0]["id_folder"]
         self.fields = firefly.settings.get_folder(id_folder)
-        self.form = MetaEditor(self, self.fields)
+        self.form = MetadataForm(self, self.fields)
 
         if self.form:
             for key, conf in self.fields:
@@ -79,7 +86,7 @@ class BatchOpsDialog(QDialog):
         if reply == QMessageBox.StandardButton.Yes:
             pass
         else:
-            logging.info("Save aborted")
+            log.info("Save aborted")
             return
 
         response = api.set(
@@ -88,7 +95,7 @@ class BatchOpsDialog(QDialog):
         )
 
         if not response:
-            logging.error(response.message)
+            log.error(response.message)
 
         self.response = True
         self.close()

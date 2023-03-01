@@ -1,7 +1,7 @@
 from nxtools import s2tc
-
-from firefly.qt import (QAction, QColor, QIcon, QLineEdit, QPainter,
-                        QSizePolicy, Qt, QToolBar, QWidget)
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QAction, QColor, QIcon, QPainter
+from PySide6.QtWidgets import QLineEdit, QSizePolicy, QToolBar, QWidget
 
 
 class TimecodeWindow(QLineEdit):

@@ -4,7 +4,8 @@ import sys
 import time
 from typing import Any
 
-from nxtools import critical_error, log_traceback, logging
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QApplication, QMessageBox, QSplashScreen
 
 import firefly
 from firefly.api import api
@@ -12,11 +13,11 @@ from firefly.config import config
 from firefly.dialogs.login import show_login_dialog
 from firefly.dialogs.site_select import show_site_select_dialog
 from firefly.filesystem import load_filesystem
+from firefly.log import log
 from firefly.main_window import FireflyMainWidget, FireflyMainWindow
 from firefly.metadata import clear_cs_cache
 from firefly.objects import asset_cache
-from firefly.qt import (QApplication, QMessageBox, QSplashScreen, Qt, app_dir,
-                        app_settings, app_skin, pixlib)
+from firefly.qt import app_dir, app_settings, app_skin, pixlib
 
 
 def check_login(wnd):
@@ -72,11 +73,11 @@ class FireflyApplication(QApplication):
         except FileNotFoundError:
             pass
         except Exception:
-            log_traceback()
+            log.traceback()
         config.site.token = session_id
 
         if not (init_response := check_login(self.splash)):
-            logging.error("Unable to log in")
+            log.error("Unable to log in")
             sys.exit(0)
 
         firefly.user.update(init_response["user"])
@@ -97,8 +98,8 @@ class FireflyApplication(QApplication):
         try:
             self.exec()
         except Exception:
-            log_traceback()
-        logging.info("Shutting down")
+            log.traceback()
+        log.info("Shutting down")
         self.on_exit()
 
     def on_exit(self):
@@ -114,7 +115,7 @@ class FireflyApplication(QApplication):
             while not self.main_window.listener.halted:
                 time.sleep(0.1)
                 if i > 10:
-                    logging.warning(
+                    log.warning(
                         "Unable to shutdown listener. Forcing quit", handlers=False
                     )
                     break
@@ -135,7 +136,8 @@ class FireflyApplication(QApplication):
         if source is None:
             response = api.init()
             if not response:
-                critical_error("Unable to load site settings")
+                log.error("Unable to load site settings")
+                sys.exit(1)
             source = response["settings"]
 
         firefly.settings.update(source)

@@ -1,9 +1,12 @@
 import copy
 
-from nxtools import logging, s2tc
+from nxtools import s2tc
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QAction
+from PySide6.QtWidgets import QInputDialog, QMenu
 
+from firefly.log import log
 from firefly.metadata import meta_types
-from firefly.qt import QAction, QInputDialog, QMenu, Qt
 from firefly.view import FireflyView, FireflyViewModel
 
 __all__ = ["FireflySubclipsView"]
@@ -90,7 +93,7 @@ class FireflySubclipsView(FireflyView):
     def create_subclip(self, mark_in, mark_out):
         fps = self.parent().current_asset["video/fps_f"]
         if mark_in and mark_out and mark_in > mark_out:
-            logging.error("Unable to create subclip. In point must precede out point")
+            log.error("Unable to create subclip. In point must precede out point")
             return
         text, ok = QInputDialog.getText(
             self,
@@ -154,7 +157,7 @@ class FireflySubclipsView(FireflyView):
         mark_in = self.parent().player.mark_in
         mark_out = self.parent().player.mark_out
         if mark_in and mark_out and mark_in > mark_out:
-            logging.error("Unable to modify subclip. In point must precede out point")
+            log.error("Unable to modify subclip. In point must precede out point")
             return
 
         self.model.beginResetModel()

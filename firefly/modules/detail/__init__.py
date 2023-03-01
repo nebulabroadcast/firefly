@@ -1,100 +1,26 @@
 import time
 
-from nxtools import format_time, logging
+from nxtools import format_time
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QFontDatabase
+from PySide6.QtWidgets import (
+    QHBoxLayout,
+    QMessageBox,
+    QTabWidget,
+    QTextEdit,
+    QVBoxLayout,
+)
 
 import firefly
 from firefly.api import api
 from firefly.base_module import BaseModule
 from firefly.enum import ObjectStatus
+from firefly.log import log
 from firefly.metadata import meta_types
-from firefly.modules.detail_subclips import FireflySubclipsView
-from firefly.modules.detail_toolbars import detail_toolbar, preview_toolbar
+from firefly.modules.detail.editor import AssetEditor
+from firefly.modules.detail.preview import AssetPreview
+from firefly.modules.detail.toolbars import detail_toolbar
 from firefly.objects import Asset, asset_cache
-from firefly.proxyplayer import VideoPlayer
-from firefly.qt import (QApplication, QFontDatabase, QFrame, QHBoxLayout,
-                        QMessageBox, QScrollArea, Qt, QTabWidget, QTextEdit,
-                        QVBoxLayout, QWidget, pixlib)
-from firefly.widgets import MetaEditor
-
-
-class DetailTabMain(QWidget):
-    def __init__(self, parent):
-        super(DetailTabMain, self).__init__(parent)
-        self.fields = []
-        self.widgets = {}
-        self.layout = QVBoxLayout()
-        self.form = False
-        self.id_folder = False
-        self.status = -1
-        self.has_focus = False
-
-        self.scroll_area = QScrollArea(self)
-        self.scroll_area.setFrameStyle(QFrame.Shape.NoFrame)
-        self.scroll_area.setWidgetResizable(True)
-        self.scroll_area.setContentsMargins(0, 0, 0, 0)
-        self.scroll_area.setVerticalScrollBarPolicy(
-            Qt.ScrollBarPolicy.ScrollBarAlwaysOn
-        )
-
-        mwidget = QWidget()
-        mwidget.setLayout(self.layout)
-        self.scroll_area.setWidget(mwidget)
-
-        scroll_layout = QVBoxLayout()
-        scroll_layout.addWidget(self.scroll_area)
-        self.setLayout(scroll_layout)
-
-    def load(self, asset, **kwargs):
-        id_folder = kwargs.get("id_folder", asset["id_folder"])
-        if id_folder != self.id_folder or kwargs.get("force"):
-            if not id_folder:
-                self.fields = []
-            else:
-                self.fields = firefly.settings.get_folder(id_folder).fields
-
-            if self.form:
-                # SRSLY. I've no idea what I'm doing here
-                self.layout.removeWidget(self.form)
-                self.form.deleteLater()
-                QApplication.processEvents()
-                self.form.destroy()
-                QApplication.processEvents()
-                self.form = None
-            for i in reversed(range(self.layout.count())):
-                self.layout.itemAt(i).widget().deleteLater()
-
-            self.form = MetaEditor(self, self.fields)
-            self.layout.addWidget(self.form)
-            self.id_folder = id_folder
-            self.status = asset["status"]
-
-        if self.form:
-            for field in self.fields:
-                if meta_types[field.name].type in ["select", "list"]:
-                    self.form.inputs[field.name].set_options(
-                        asset.meta_types[field.name].cslist
-                    )
-                self.form[field.name] = asset[field.name]
-            self.form.set_defaults()
-
-        if self.form:
-            enabled = firefly.user.can("asset_edit", id_folder)
-            self.form.setEnabled(enabled)
-
-    def on_focus(self):
-        pass
-
-    def search_by_key(self, key, id_view=False):
-        b = self.parent().parent().parent().main_window.browser
-        id_view = id_view or b.tabs.widget(b.tabs.currentIndex()).id_view
-        view_title = firefly.settings.get_view(id_view).title
-        asset = self.parent().parent().parent().asset
-        b.new_tab(
-            f"{view_title}: {asset.show(key)} ({meta_types[key].title})",
-            id_view=id_view,
-            conds=[f"'{key}' = '{self.form[key]}'"],
-        )
-        b.redraw_tabs()
 
 
 class MetaList(QTextEdit):
@@ -165,115 +91,24 @@ class DetailTabTechnical(MetaList):
         self.setText(data)
 
 
-class DetailTabPreview(QWidget):
-    def __init__(self, parent):
-        super(DetailTabPreview, self).__init__(parent)
-        layout = QVBoxLayout()
-        self.player = VideoPlayer(self, pixlib)
-        self.subclips = FireflySubclipsView(self)
-        toolbar = preview_toolbar(self)
-
-        layout.addWidget(toolbar, 0)
-        layout.addWidget(self.player, 3)
-        layout.addWidget(self.subclips, 1)
-        self.setLayout(layout)
-        self.subclips.hide()
-        self.has_focus = False
-        self.loaded = False
-        self.changed = {}
-
-    @property
-    def current_asset(self):
-        return self.parent().parent().parent().asset
-
-    def load(self, asset, **kwargs):
-        self.loaded = False
-        self.changed = {}
-        if self.has_focus:
-            self.load_video()
-        self.subclips.load()
-
-    def load_video(self):
-        if self.current_asset and not self.loaded:
-            proxy_url = f"{firefly.settings.server_url}/proxy/{self.current_asset.id}"
-            logging.debug(f"[DETAIL] Opening {self.current_asset} preview: {proxy_url}")
-            self.player.fps = self.current_asset.fps
-            if self.current_asset["poster_frame"]:
-                markers = {
-                    "poster_frame": {"position": self.current_asset["poster_frame"]}
-                }
-            else:
-                markers = {}
-            self.player.load(
-                proxy_url,
-                mark_in=self.current_asset["mark_in"],
-                mark_out=self.current_asset["mark_out"],
-                markers=markers,
-            )
-            self.loaded = True
-
-    def on_focus(self):
-        self.load_video()
-
-    def set_poster(self):
-        self.changed["poster_frame"] = self.player.position
-        self.player.markers["poster_frame"] = {"position": self.player.position}
-        self.player.region_bar.update()
-
-    def go_to_poster(self):
-        pos = self.player.markers.get("poster_frame", {}).get("position", 0)
-        if pos:
-            self.player.seek(pos)
-
-    def save_marks(self):
-        if (
-            self.player.mark_in
-            and self.player.mark_out
-            and self.player.mark_in >= self.player.mark_out
-        ):
-            logging.error("Unable to save marks. In point must precede out point")
-        else:
-            self.changed["mark_in"] = self.player.mark_in
-            self.changed["mark_out"] = self.player.mark_out
-
-    def restore_marks(self):
-        pass
-
-    def create_subclip(self):
-        if not self.subclips.isVisible():
-            self.subclips.show()
-        if (
-            not (self.player.mark_in and self.player.mark_out)
-        ) or self.player.mark_in >= self.player.mark_out:
-            logging.error("Unable to create subclip. Invalid region selected.")
-            return
-        self.subclips.create_subclip(self.player.mark_in, self.player.mark_out)
-
-    def manage_subclips(self):
-        if self.subclips.isVisible():
-            self.subclips.hide()
-        else:
-            self.subclips.show()
-
-
 class DetailTabs(QTabWidget):
     def __init__(self, parent):
         super(DetailTabs, self).__init__()
 
-        self.tab_main = DetailTabMain(self)
+        self.tab_editor = AssetEditor(self)
         self.tab_extended = DetailTabExtended(self)
         self.tab_technical = DetailTabTechnical(self)
-        self.tab_preview = DetailTabPreview(self)
+        self.tab_preview = AssetPreview(self)
         self.tabBar().setVisible(False)
 
-        self.addTab(self.tab_main, "MAIN")
+        self.addTab(self.tab_editor, "EDITOR")
         self.addTab(self.tab_extended, "EXTENDED")
         self.addTab(self.tab_technical, "TECHNICAL")
         self.addTab(self.tab_preview, "PREVIEW")
 
         self.currentChanged.connect(self.on_switch)
         self.setCurrentIndex(0)
-        self.tabs = [self.tab_main, self.tab_extended, self.tab_technical]
+        self.tabs = [self.tab_editor, self.tab_extended, self.tab_technical]
         self.tabs.append(self.tab_preview)
 
     def on_switch(self, *args):
@@ -314,7 +149,7 @@ class DetailModule(BaseModule):
 
     @property
     def form(self):
-        return self.detail_tabs.tab_main.form
+        return self.detail_tabs.tab_editor.form
 
     @property
     def preview(self):
@@ -360,7 +195,7 @@ class DetailModule(BaseModule):
         if not isinstance(asset, Asset):
             return
 
-        logging.debug(f"[DETAIL] Focusing {asset}")
+        log.status(f"[DETAIL] Focusing {asset}")
 
         if self._is_loading:
             self._load_queue = [asset]
@@ -407,9 +242,9 @@ class DetailModule(BaseModule):
         if self._load_queue:
             self.focus(self._load_queue)
 
-    def on_folder_changed(self):
+    def on_folder_changed(self, new_folder: int):
         data = {key: self.form[key] for key in self.form.changed}
-        self.detail_tabs.load(self.asset, id_folder=self.folder_select.get_value())
+        self.detail_tabs.load(self.asset, id_folder=new_folder)
         for key in data:
             if key in self.form.inputs:
                 self.form[key] = data[key]
@@ -464,7 +299,7 @@ class DetailModule(BaseModule):
         else:
             data["id_folder"] = self.folder_select.get_value()
             data["duration"] = self.duration.get_value()
-            for key in self.form.keys():
+            for key in self.form.changed:
                 data[key] = self.form[key]
 
         if self.preview.changed:
@@ -473,9 +308,9 @@ class DetailModule(BaseModule):
         self.setCursor(Qt.CursorShape.BusyCursor)
         response = api.set(id=self.asset.id, data=data)
         if not response:
-            logging.error(response.message)
+            log.error(response.message)
         else:
-            logging.debug("[DETAIL] Set method responded", response.response)
+            log.debug("[DETAIL] Set method responded", response.response)
             try:
                 aid = response["id"]
             except Exception:
@@ -503,7 +338,7 @@ class DetailModule(BaseModule):
             id=self.asset.id, data={"qc/state": state, "qc/report": report}
         )
         if not response:
-            logging.error(response.message)
+            log.error(response.message)
             return
         try:
             aid = response["id"]

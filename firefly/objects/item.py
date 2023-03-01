@@ -10,7 +10,7 @@ class Item(BaseObject):
         key = key.lower().strip()
         if key not in self.meta:
             if key == "id_asset":
-                return 0
+                return None
             elif self.asset:
                 return self.asset[key]
             else:
@@ -20,7 +20,7 @@ class Item(BaseObject):
     @property
     def asset(self):
         if not self["id_asset"]:
-            return False
+            return None
         return asset_cache.get(self["id_asset"])
 
     @property
@@ -29,13 +29,13 @@ class Item(BaseObject):
             return self.asset.id_folder
         return self.meta.get("id_folder")
 
-    def mark_in(self, new_val=False):
-        if new_val:
+    def mark_in(self, new_val=None):
+        if new_val is not None:
             self["mark_in"] = new_val
         return max(float(self["mark_in"] or 0), 0)
 
-    def mark_out(self, new_val=False):
-        if new_val:
+    def mark_out(self, new_val=None):
+        if new_val is not None:
             self["mark_out"] = new_val
         return max(float(self["mark_out"] or 0), 0)
 

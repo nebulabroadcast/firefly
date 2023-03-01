@@ -2,18 +2,30 @@ import functools
 import json
 import time
 
-from nxtools import datestr2ts, format_time, logging, s2tc, s2time
+from nxtools import datestr2ts, format_time, s2tc, s2time
+from PySide6.QtCore import QMimeData, QRect, Qt, QTimer
+from PySide6.QtGui import QAction, QColor, QDrag, QFont, QLinearGradient, QPainter, QPen
+from PySide6.QtWidgets import (
+    QApplication,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QMenu,
+    QMessageBox,
+    QScrollArea,
+    QSizePolicy,
+    QSlider,
+    QVBoxLayout,
+    QWidget,
+)
 
 import firefly
 from firefly.api import api
 from firefly.dialogs.event import show_event_dialog
 from firefly.helpers.scheduling import can_append
+from firefly.log import log
 from firefly.objects import Asset, Event
-from firefly.qt import (QAction, QApplication, QColor, QDrag, QFont, QFrame,
-                        QHBoxLayout, QLabel, QLinearGradient, QMenu,
-                        QMessageBox, QMimeData, QPainter, QPen, QRect,
-                        QScrollArea, QSizePolicy, QSlider, Qt, QVBoxLayout,
-                        QWidget, app_skin)
+from firefly.qt import app_skin
 
 from .utils import suggested_duration, text_shorten
 
@@ -22,13 +34,13 @@ MINS_PER_DAY = 60 * 24
 SECS_PER_WEEK = SECS_PER_DAY * 7
 SAFE_OVERRUN = 5  # Do not warn if overrun < 5 mins
 CLOCKBAR_WIDTH = 45
-COLOR_CALENDAR_BACKGROUND = QColor("#161616")
-COLOR_DAY_BACKGROUND = QColor("#323232")
+COLOR_CALENDAR_BACKGROUND = QColor("#1f1e26")
+COLOR_DAY_BACKGROUND = QColor("#302c3a")
 
 TIME_PENS = [
-    (60, QPen(QColor("#999999"), 2, Qt.PenStyle.SolidLine)),
+    (60, QPen(QColor("#ababab"), 2, Qt.PenStyle.SolidLine)),
     (15, QPen(QColor("#999999"), 1, Qt.PenStyle.SolidLine)),
-    (5, QPen(QColor("#444444"), 1, Qt.PenStyle.SolidLine)),
+    (5, QPen(QColor("#403035"), 1, Qt.PenStyle.SolidLine)),
 ]
 
 RUN_PENS = [
@@ -224,9 +236,9 @@ class SchedulerDayWidget(SchedulerVerticalBar):
         qp.setBrush(QColor(200, 200, 200, 128))
         qp.drawRect(0, base_t, self.width(), base_h)
 
-        e_start_time = (time.strftime("%H:%M", time.localtime(drop_ts)),)
+        e_start_time = time.strftime("%H:%M", time.localtime(drop_ts))
         e_end_time = time.strftime("%H:%M", time.localtime(drop_ts + max(300, exp_dur)))
-        logging.debug(f"Start time: {e_start_time} End time: {e_end_time}")
+        log.status(f"[SCHEDULER] Start time: {e_start_time} End time: {e_end_time}")
 
     def mouseMoveEvent(self, e):
         my = e.pos().y()
@@ -355,7 +367,7 @@ class SchedulerDayWidget(SchedulerVerticalBar):
         )
 
         if not firefly.user.can("scheduler_edit", self.id_channel):
-            logging.error("You are not allowed to modify schedule of this channel.")
+            log.error("You are not allowed to modify schedule of this channel.")
             self.calendar.drag_source = False
             self.calendar.dragging = False
             return
@@ -380,7 +392,7 @@ class SchedulerDayWidget(SchedulerVerticalBar):
                             return
 
             if evt.keyboardModifiers() & Qt.KeyboardModifier.AltModifier:
-                logging.info(
+                log.info(
                     f"Creating event from {self.calendar.dragging}"
                     f"at time {format_time(self.cursor_time)}"
                 )
@@ -426,35 +438,35 @@ class SchedulerDayWidget(SchedulerVerticalBar):
                     move = False
 
             if move:
-                event["start"] = drop_ts
                 if not event.id:
-                    logging.debug("Creating empty event")
                     # Create empty event. Event edit dialog is enforced.
-                    if response := show_event_dialog(
-                        self,
-                        id_channel=self.id_channel,
-                        start=drop_ts,
-                        date=self.calendar.date,
-                    ):
-                        self.calendar.set_data(response["events"])
+                    self.exectute_event_dialog(start=drop_ts)
                 else:
-                    # Just dragging events around. Instant save
-                    self.calendar.setCursor(Qt.CursorShape.ArrowCursor)
+                    # Moving existing event around. Instant save
                     if response := api.scheduler(
                         id_channel=self.id_channel,
                         date=self.calendar.date,
                         events=[
                             {
                                 "id": event.id,
-                                "start": event["start"],
+                                "start": drop_ts,
                             }
                         ],
                     ):
                         self.calendar.set_data(response["events"])
-
         self.calendar.setCursor(Qt.CursorShape.ArrowCursor)
         self.calendar.drag_source = False
         self.calendar.dragging = False
+        self.update()
+
+    def exectute_event_dialog(self, **kwargs):
+        kwargs["id_channel"] = self.id_channel
+        kwargs["date"] = self.calendar.date
+        QTimer.singleShot(100, functools.partial(self._execute_event_dialog, kwargs))
+
+    def _execute_event_dialog(self, payload):
+        if response := show_event_dialog(self, **payload):
+            self.calendar.set_data(response["events"])
 
     def contextMenuEvent(self, event):
         if not self.cursor_event:
@@ -502,7 +514,7 @@ class SchedulerDayWidget(SchedulerVerticalBar):
             return
         cursor_event = self.calendar.selected_event
         if not firefly.user.can("scheduler_edit", self.id_channel):
-            logging.error("You are not allowed to modify schedule of this channel.")
+            log.error("You are not allowed to modify schedule of this channel.")
             return
 
         ret = QMessageBox.question(
@@ -522,10 +534,10 @@ class SchedulerDayWidget(SchedulerVerticalBar):
             )
             self.calendar.setCursor(Qt.CursorShape.ArrowCursor)
             if response:
-                logging.info(f"{cursor_event} deleted")
+                log.info(f"{cursor_event} deleted")
                 self.calendar.set_data(response["events"])
             else:
-                logging.error(response.message)
+                log.error(response.message)
                 self.calendar.load()
 
     def wheelEvent(self, event):
@@ -561,11 +573,13 @@ class SchedulerDayHeaderWidget(QLabel):
         super(SchedulerDayHeaderWidget, self).__init__(parent)
         self.setStyleSheet(
             """
-                background-color:#161616;
+                background-color: #24202e;
                 text-align:center;
                 qproperty-alignment: AlignCenter;
                 font-size:14px;
-                min-height:24px"""
+                padding: 8px;
+
+            """
         )
         self.dow = dow
         self.start_time = 0
@@ -578,9 +592,9 @@ class SchedulerDayHeaderWidget(QLabel):
         self.start_time = start_time
         t = format_time(start_time, "%a %Y-%m-%d")
         if start_time < time.time() - SECS_PER_DAY:
-            self.setText(f"<font color='red'>{t}</font>")
+            self.setText(f"<font color='#ff5f5f'>{t}</font>")
         elif start_time > time.time():
-            self.setText(f"<font color='green'>{t}</font>")
+            self.setText(f"<font color='#5fff5f'>{t}</font>")
         else:
             self.setText(t)
 
@@ -651,13 +665,10 @@ class SchedulerCalendar(QWidget):
             Qt.ScrollBarPolicy.ScrollBarAlwaysOn
         )
 
-        zoomlevel = self.parent().app_state.get("scheduler_zoom", 0)
         self.zoom = QSlider(Qt.Orientation.Horizontal)
         self.zoom.setMinimum(0)
         self.zoom.setMaximum(10000)
         self.zoom.valueChanged.connect(self.on_zoom)
-        logging.debug("Setting scheduler zoom level to", zoomlevel)
-        self.zoom.setValue(zoomlevel)
 
         layout = QVBoxLayout()
         layout.addLayout(header_layout)
@@ -665,6 +676,13 @@ class SchedulerCalendar(QWidget):
         layout.addWidget(self.zoom, 0)
         self.setLayout(layout)
         self.setMinimumHeight(450)
+
+        QTimer.singleShot(100, self.set_initial_zoom_level)
+
+    def set_initial_zoom_level(self):
+        zoomlevel = self.parent().app_state.get("scheduler_zoom", 0)
+        log.status("[SCHEDULER] Setting zoom level to", zoomlevel)
+        self.zoom.setValue(zoomlevel)
 
     @property
     def id_channel(self):
@@ -698,7 +716,7 @@ class SchedulerCalendar(QWidget):
         response = api.scheduler(id_channel=self.id_channel, date=self.date)
 
         if not response:
-            logging.error(response.message)
+            log.error(response.message)
             self.setCursor(Qt.CursorShape.ArrowCursor)
             return
 
@@ -728,12 +746,25 @@ class SchedulerCalendar(QWidget):
         self.parent().open_rundown(start_time, event)
 
     def on_zoom(self):
+        # Calculate the zoom ratio
         ratio = max(1, self.zoom.value() / 1000.0)
+
+        # Calculate the new height of the scroll widget
         h = int(self.scroll_area.height() * ratio)
+
+        # Calculate the current position of the scrollbar relative to the total height
         pos = self.scroll_area.verticalScrollBar().value() / self.scroll_widget.height()
+
+        # Calculate the new position of the scrollbar
+        # to center the currently visible area
+        new_pos = (
+            (pos * self.scroll_widget.height() + 0.5 * self.scroll_area.height()) / h
+        ) - (0.5 * self.scroll_area.height() / h)
+
+        # Set the new minimum height of the scroll widget
+        # and update the scrollbar position
         self.scroll_widget.setMinimumHeight(h)
-        self.scroll_area.verticalScrollBar().setValue(int(pos * h))
-        self.parent().app_state["scheduler_zoom"] = self.zoom.value()
+        self.scroll_area.verticalScrollBar().setValue(int(new_pos * h))
 
     def resizeEvent(self, evt):
         self.zoom.setMinimum(self.scroll_area.height())

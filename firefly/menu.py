@@ -1,9 +1,10 @@
 from functools import partial
 
+from PySide6.QtGui import QAction, QActionGroup
+
 import firefly
 from firefly.config import config
 from firefly.dialogs.about import show_about_dialog
-from firefly.qt import QAction, QActionGroup
 
 # FAKE DICT for the settings originally stored in config,
 # but should be eventually moved to the settings

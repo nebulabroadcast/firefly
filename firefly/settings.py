@@ -23,6 +23,7 @@ class FolderField(SettingsModel):
     format: str | None = None
     order: str | None = None
     filter: str | None = None
+    required: bool = False
 
 
 class FolderSettings(SettingsModel):

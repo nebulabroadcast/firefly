@@ -2,13 +2,14 @@ import functools
 import json
 import time
 
-from nxtools import log_traceback, logging
+from PySide6.QtCore import QUrl
+from PySide6.QtNetwork import QNetworkAccessManager, QNetworkRequest
+from PySide6.QtWidgets import QApplication
 
 import firefly
 from firefly.config import config
+from firefly.log import log
 from firefly.objects import asset_cache
-from firefly.qt import (QApplication, QNetworkAccessManager, QNetworkRequest,
-                        QUrl)
 
 
 class NebulaResponse:
@@ -63,7 +64,7 @@ class NebulaAPI:
             self.manager = QNetworkAccessManager()
 
         is_async = " async" if callback == -1 else ""
-        logging.info(f"Executing {endpoint} request{is_async}")
+        log.info(f"Executing {endpoint} request{is_async}")
 
         endpoint = "/api/" + endpoint
         data = json.dumps(kwargs).encode("ascii")
@@ -83,7 +84,7 @@ class NebulaAPI:
                 query.finished.connect(functools.partial(self.handler, query, callback))
             self.queries.append(query)
         except Exception:
-            log_traceback()
+            log.traceback()
             if callback:
                 r = NebulaResponse(400, "Unable to send request")
                 if callback == -1:
@@ -110,7 +111,7 @@ class NebulaAPI:
             try:
                 payload = json.loads(data)
             except Exception:
-                log_traceback("Unable to parse JSON")
+                log.traceback("Unable to parse JSON")
                 print(data)
                 return NebulaResponse(500, f"Unable to parse response from {url}")
         else:

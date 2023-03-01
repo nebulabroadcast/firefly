@@ -30,6 +30,12 @@ jobs:
         with:
           file: 'pyproject.toml'
           field: 'tool.poetry.version'
+
+      - name: Download libmpv
+        run: |
+          $url = 'https://repo.imm.cz/mpv-1.dll'
+          $path = './dist/mpv-1.dll'
+          Invoke-WebRequest -Uri $url -OutFile $path
           
       - name: Create zip
         uses: thedoctor0/zip-release@0.7.1
@@ -42,8 +48,8 @@ jobs:
         with:
           artifacts: dist/firefly-${{ steps.get_version.outputs.value }}-win.zip
           tag: v${{ steps.get_version.outputs.value }}
-          name: Firefly v${{ steps.get_version.outputs.value }}
-          body: Firefly ${{ steps.get_version.outputs.value }}
+          name: Firefly ${{ steps.get_version.outputs.value }}
+          body: Firefly version ${{ steps.get_version.outputs.value }}
           allowUpdates: true
           draft: true
           prerelease: false

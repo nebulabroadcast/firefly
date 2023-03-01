@@ -1,11 +1,14 @@
 import functools
 
-from nxtools import format_time, logging
+from nxtools import format_time
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QAction, QColor
+from PySide6.QtWidgets import QApplication, QMenu
 
 from firefly.api import api
 from firefly.enum import Colors, JobState
+from firefly.log import log
 from firefly.objects import asset_cache
-from firefly.qt import QAction, QApplication, QColor, QMenu, Qt
 from firefly.view import FireflyView, FireflyViewModel
 
 DEFAULT_HEADER_DATA = [
@@ -126,7 +129,7 @@ class JobsModel(FireflyViewModel):
         data = []
         response = api.jobs(**self.request_data)
         if not response:
-            logging.error(response.message)
+            log.error(response.message)
         else:
             request_assets = []
             for row in response["jobs"]:
@@ -188,16 +191,16 @@ class FireflyJobsView(FireflyView):
         for job in jobs:
             response = api.jobs(restart=job)
             if not response:
-                logging.error(response.message)
+                log.error(response.message)
             else:
-                logging.info(response.message)
+                log.info(response.message)
         self.model.load()
 
     def on_abort(self, jobs):
         for job in jobs:
             response = api.jobs(abort=job)
             if not response:
-                logging.error(response.message)
+                log.error(response.message)
             else:
-                logging.info(response.message)
+                log.info(response.message)
             self.model.load()

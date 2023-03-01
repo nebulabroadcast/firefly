@@ -1,9 +1,9 @@
 import re
 
 from nxtools import format_time
+from PySide6.QtGui import QFontMetrics
 
 from firefly.metadata import meta_types
-from firefly.qt import QFontMetrics
 
 
 def suggested_duration(dur):

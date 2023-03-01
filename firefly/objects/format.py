@@ -198,7 +198,10 @@ class FormatDuration(CellFormat):
         if obj.get("loop"):
             return "--:--:--:--"
         if obj.object_type in ["asset", "item"] and obj["duration"]:
-            t = s2time(obj.duration)
+            if obj["video/fps_f"]:
+                t = s2tc(obj.duration, obj["video/fps_f"])
+            else:
+                t = s2time(obj.duration)
             if obj.object_type == "asset" and obj["subclips"]:
                 t += "*"
             return t

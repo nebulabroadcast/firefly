@@ -21,6 +21,7 @@ $color-bkg-secondary : $color-surface-01;
 $color-border: $color-surface-05;
 $color-highlight: $color-cyan;
 
+
 QMainWindow, 
 QDialog,
 QToolBar,
@@ -148,9 +149,19 @@ QTabBar::tab {
   padding-left: 8px;
   padding-right: 8px;
   background-color: $color-surface-02;
-  border: 0
+  border: 0;
   //border: 1px solid $color-border;
   //border-bottom: 0;
+
+  &:first {
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+  }
+
+  &:last {
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+  }
 }
 
 QTabBar::tab:selected {
@@ -170,6 +181,7 @@ QComboBox,
 QPushButton,
 QToolButton,
 QTextEdit,
+QDateTimeEdit,
 QSpinBox {
   background-color: $color-surface-04;
   border: 1px solid $color-border;
@@ -198,13 +210,19 @@ QTextEdit{
 // BUTTONS
 
 QPushButton, QToolButton{
-  &:checked{
-    border: 1px solid $color-highlight;
-  }
-
   &:hover{
     background-color: $color-surface-06;
   }
+
+  &:checked{
+    background-color: $color-highlight;
+    color: $color-surface-01;
+
+    &:hover{
+      background-color: $color-highlight;
+    }
+  }
+
 
   &:pressed{
     border: $color-highlight;
@@ -299,17 +317,6 @@ QProgressBar {
 }
 
 
-QSlider::groove:horizontal {
-  background: $color-bkg-secondary;
-  height: 16px;
-  margin: 0 0 0 0;
-}
-
-QSlider::handle:horizontal {
-  background: gray;
-  height: 15px;
-  width: 15px;
-}
 
 .FireflyTimecode,
 .TimecodeWindow {
@@ -332,25 +339,58 @@ QSlider::handle:horizontal {
   min-width: 300px;
 }
 
+/* Slider */
+
+QSlider::groove:horizontal {
+  background: $color-surface-03;
+  height: 16px;
+  margin: 0 0 0 0;
+  max-width: 200px;
+}
+
+QSlider::handle:horizontal {
+  background: $color-surface-04;
+  height: 15px;
+  width: 15px;
+  border-radius: 50%;
+}
+
+
+
 /* SCROLL BARS */
+
+$scrollbar-width: 12px;
 
 QScrollBar{
   background: $color-bkg-primary;
   &:horizontal {
-    height: 16px;
-    padding-left: 24px;
-    padding-right: 24px;
+    height: $scrollbar-width;
+    //padding-left: 24px;
+    //padding-right: 24px;
   }
 
   &:vertical {
     background: $color-bkg-primary;
-    width: 16px;
-    padding-top: 24px;
-    padding-bottom: 24px;
+    width: $scrollbar-width;
+   // padding-top: 24px;
+   // padding-bottom: 24px;
   }
 }
 
+//handle
+QScrollBar::handle:horizontal {
+  background: $color-surface-04;
+  min-width: 64px;
+  border-radius: $scrollbar-width / 2;
+}
 
+QScrollBar::handle:vertical {
+  background: $color-surface-04;
+  min-height: 64px;
+  border-radius: $scrollbar-width / 2;
+}
+
+// track background
 QScrollBar::add-page:horizontal,
 QScrollBar::sub-page:horizontal {
   background: none;
@@ -361,22 +401,44 @@ QScrollBar::sub-page:vertical {
   background: none;
 }
 
-QScrollBar::handle:horizontal {
-  background: $color-surface-04;
-  min-width: 64px;
-}
-
-QScrollBar::handle:vertical {
-  background: $color-surface-04;
-  min-height: 64px;
-}
-
+// corners
 QScrollBar::add-line:horizontal,
 QScrollBar::add-line:vertical {
-	background: none;
+	background: None;
 }
 
 QScrollBar::sub-line:horizontal,
 QScrollBar::sub-line:vertical {
 	background: none;
 }
+
+// Calendar
+
+QCalendarWidget {
+
+
+    QToolButton#qt_calendar_prevmonth {
+      // todo
+    }
+    
+    QToolButton#qt_calendar_nextmonth {
+    }
+
+  QAbstractItemView:enabled {
+    font-size:20px;  
+    color: rgb(180, 180, 180);  
+    background-color: black;  
+    selection-background-color: rgb(64, 64, 64); 
+    selection-color: rgb(0, 255, 0); 
+  }
+
+  QWidget#qt_calendar_navigationbar { 
+    padding: 20px;
+    margin-bottom: 20px !important;
+  }
+
+  QAbstractItemView:disabled { 
+    color: rgb(64, 64, 64); 
+  }
+
+} // QCalendarWidget

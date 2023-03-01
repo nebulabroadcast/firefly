@@ -1,13 +1,15 @@
 import json
 import time
 
-from nxtools import format_time, logging
+from nxtools import format_time
+from PySide6.QtCore import QMimeData, Qt, QUrl
+from PySide6.QtWidgets import QApplication
 
 import firefly
 from firefly.api import api
 from firefly.dialogs.rundown import PlaceholderDialog, SubclipSelectDialog
+from firefly.log import log
 from firefly.objects import Asset, Event, Item, asset_cache
-from firefly.qt import QApplication, QMimeData, Qt, QUrl
 from firefly.view import FireflyViewModel
 
 DEFAULT_COLUMNS = [
@@ -59,13 +61,13 @@ class RundownModel(FireflyViewModel):
     def load_callback(self, response):
         self.parent().setCursor(Qt.CursorShape.ArrowCursor)
         if not response:
-            logging.error(response.message)
+            log.error(response.message)
             return
 
         QApplication.processEvents()
         self.parent().setCursor(Qt.CursorShape.WaitCursor)
         self.beginResetModel()
-        logging.info("Loading rundown. Please wait...")
+        log.status("[RUNDOWN] Loading. Please wait...")
 
         required_assets = []
 
@@ -79,6 +81,8 @@ class RundownModel(FireflyViewModel):
 
         i = 0
         for row in response["rows"]:
+            row.update(row.get("meta", {}))
+            row.pop("meta", None)
             row["rundown_row"] = i
             row["rundown_scheduled"] = row["scheduled_time"]
             row["rundown_broadcast"] = row["broadcast_time"]
@@ -97,11 +101,11 @@ class RundownModel(FireflyViewModel):
             elif row["type"] == "item":
                 item = Item(meta=row)
                 item.id_channel = self.id_channel
-                if row["id_asset"]:
+                if row.get("id_asset"):
                     item._asset = asset_cache.get(row["id_asset"])
                     required_assets.append([row["id_asset"], row["asset_mtime"]])
                 else:
-                    item._asset = False
+                    item._asset = None
                 self.object_data.append(item)
                 i += 1
             else:
@@ -111,9 +115,7 @@ class RundownModel(FireflyViewModel):
 
         self.endResetModel()
         self.parent().setCursor(Qt.CursorShape.ArrowCursor)
-        logging.goodnews(
-            f"Rundown loaded in {time.time() - self.load_start_time:.03f}s"
-        )
+        log.status(f"[RUNDOWN] Loaded in {time.time() - self.load_start_time:.03f}s")
 
         if self.current_callback:
             self.current_callback()
@@ -201,9 +203,10 @@ class RundownModel(FireflyViewModel):
             else:
                 for obj in items:
                     if action == Qt.DropAction.CopyAction:
-                        obj["id"] = False
-                    elif not obj.get("id", False):
-                        item_role = obj.get("item_role", False)
+                        obj["id"] = None
+                    elif not obj.get("id"):
+                        item_role = obj.get("item_role", None)
+                        print("ITEM ROLE", item_role)
                         if item_role in ["live", "placeholder"]:
                             dlg = PlaceholderDialog(self.parent(), obj)
                             dlg.exec()
@@ -309,7 +312,7 @@ class RundownModel(FireflyViewModel):
     def order_callback(self, response):
         self.parent().setCursor(Qt.CursorShape.ArrowCursor)
         if not response:
-            logging.error(f"Unable to change bin order: {response.message}")
+            log.error(f"Unable to change bin order: {response.message}")
             return False
         self.load()
         return False

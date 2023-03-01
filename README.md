@@ -11,14 +11,14 @@ Firefly is a desktop client application for [Nebula](https://github.com/nebulabr
 Installation
 ------------
 
-### Linux
+### Running from source (all platforms)
 
  - Install Python 3.10+ and Poetry.
  - Clone this repository.
  - Run `poetry install` to install dependencies.
  - Run `poetry run python -m firefly` to start the application.
 
-The following packages are also needed, in case you don't have them already installed,
+The following packages may be needed on Linux, in case you don't have them already installed,
 run `sudo apt install libmpv1 libxcb-util1` on Ubuntu or `sudo apt install libmpv1 libxcb-util0` on Debian.
 
 ### Windows

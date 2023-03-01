@@ -1,8 +1,8 @@
-from nxtools import logging
+from PySide6.QtWidgets import QVBoxLayout
 
 from firefly.base_module import BaseModule
 from firefly.helpers.scheduling import date_offset, get_this_monday
-from firefly.qt import QVBoxLayout
+from firefly.log import log
 
 from .calendar import SchedulerCalendar
 from .toolbar import scheduler_toolbar
@@ -61,15 +61,15 @@ class SchedulerModule(BaseModule):
         )
 
     def on_channel_changed(self):
-        logging.debug(f"[SCHEDULER] setting channel to {self.id_channel}")
+        log.debug(f"[SCHEDULER] setting channel to {self.id_channel}")
         self.load()
 
     def refresh_events(self, events):
         for id_event in events:
             if id_event in self.calendar.event_ids:
-                logging.debug(
+                log.debug(
                     f"[SCHEDULER] Event id {id_event} has been changed."
-                    "Reloading calendar"
+                    " Reloading calendar"
                 )
                 self.load()
                 break

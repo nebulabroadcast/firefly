@@ -1,13 +1,22 @@
 import queue
 import time
 
-from nxtools import log_traceback, logging
-from nxtools.logging import ERROR, INFO, WARNING
+from PySide6.QtCore import Qt, QTimer
+from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import (
+    QApplication,
+    QMainWindow,
+    QSplitter,
+    QTabWidget,
+    QVBoxLayout,
+    QWidget,
+)
 
 import firefly
 from firefly.api import api
 from firefly.config import config
 from firefly.listener import SeismicListener
+from firefly.log import log
 from firefly.menu import create_menu
 from firefly.modules import (
     BrowserModule,
@@ -17,22 +26,7 @@ from firefly.modules import (
     SchedulerModule,
 )
 from firefly.objects import asset_cache
-from firefly.qt import (
-    QApplication,
-    QIcon,
-    QMainWindow,
-    QMessageBox,
-    QSplitter,
-    Qt,
-    QTabWidget,
-    QTimer,
-    QVBoxLayout,
-    QWidget,
-    app_settings,
-    app_skin,
-    get_app_state,
-    pixlib,
-)
+from firefly.qt import app_settings, app_skin, get_app_state, pixlib
 
 
 class FireflyMainWidget(QWidget):
@@ -89,6 +83,7 @@ class FireflyMainWidget(QWidget):
         # Layout
 
         self.main_splitter = QSplitter(Qt.Orientation.Horizontal)
+        self.main_splitter.setHandleWidth(12)
         self.main_splitter.addWidget(self.browser)
         self.main_splitter.addWidget(self.tabs)
         self.main_splitter.splitterMoved.connect(self.main_window.save_window_state)
@@ -111,7 +106,7 @@ class FireflyMainWidget(QWidget):
             self.detail.check_changed()
         self.main_window.listener.halt()
         QApplication.quit()
-        logging.debug("[MAIN WINDOW] Window closed")
+        log.debug("[MAIN WINDOW] Window closed")
 
     @property
     def app(self):
@@ -170,7 +165,8 @@ class FireflyMainWindow(QMainWindow):
         title += f" ({firefly.user}@{config.site.name})"
         self.setWindowTitle(title)
         self.setAttribute(Qt.WidgetAttribute.WA_AlwaysShowToolTips)
-        logging.handlers = [self.log_handler]
+
+        log.main_window = self
         self.listener = SeismicListener()
 
         self.seismic_timer = QTimer(self)
@@ -190,11 +186,7 @@ class FireflyMainWindow(QMainWindow):
                 self.set_channel(self.id_channel)
                 break
 
-        logging.info("[MAIN WINDOW] Firefly is ready")
-
-    #
-    #
-    #
+        log.info("[MAIN WINDOW] Firefly is ready")
 
     @property
     def app_state(self):
@@ -225,19 +217,7 @@ class FireflyMainWindow(QMainWindow):
             try:
                 self.app_state = state.value("main_window/app")
             except Exception:
-                log_traceback()
-
-    def log_handler(self, **kwargs):
-        message_type = kwargs.get("message_type", INFO)
-        message = kwargs.get("message", "")
-        if not message:
-            return
-        if message_type == WARNING:
-            QMessageBox.warning(self, "Warning", message)
-        elif message_type == ERROR:
-            QMessageBox.critical(self, "Error", message)
-        else:
-            self.statusBar().showMessage(message, 10000)
+                log.traceback()
 
     def closeEvent(self, event):
         self.save_state()
@@ -304,7 +284,7 @@ class FireflyMainWindow(QMainWindow):
 
     def logout(self):
         response = api.logout(api="1")
-        logging.info(response["message"])
+        log.info(response["message"])
         self.close()
 
     def exit(self):
@@ -390,7 +370,7 @@ class FireflyMainWindow(QMainWindow):
                     self.detail.focus(self.detail.asset, force=True)
 
     def load_settings(self):
-        logging.info("[MAIN WINDOW] Reloading system settings")
+        log.info("[MAIN WINDOW] Reloading system settings")
         self.app.load_settings()
         self.refresh()
 
@@ -407,7 +387,7 @@ class FireflyMainWindow(QMainWindow):
     def on_seismic_timer(self):
         now = time.time()
         if now - self.listener.last_msg > 5:
-            logging.debug(
+            log.debug(
                 "[MAIN WINDOW] No seismic message received. Something may be wrong"
             )
             self.listener.last_msg = time.time()
@@ -428,7 +408,7 @@ class FireflyMainWindow(QMainWindow):
             and message.data["object_type"] == "asset"
         ):
             objects = message.data["objects"]
-            logging.debug(f"[MAIN WINDOW] {len(objects)} asset(s) have been changed")
+            log.debug(f"[MAIN WINDOW] {len(objects)} asset(s) have been changed")
             asset_cache.request([[aid, message.timestamp + 1] for aid in objects])
             return
 
@@ -441,7 +421,7 @@ class FireflyMainWindow(QMainWindow):
                 module.seismic_handler(message)
 
     def on_assets_update(self, *assets):
-        logging.debug(f"[MAIN WINDOW] Updating {len(assets)} assets in views")
+        log.debug(f"[MAIN WINDOW] Updating {len(assets)} assets in views")
 
         self.browser.refresh_assets(*assets)
         self.detail.refresh_assets(*assets)

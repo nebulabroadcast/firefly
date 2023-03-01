@@ -4,10 +4,10 @@ import time
 from typing import Any
 
 import websocket
-from nxtools import log_traceback, logging
+from PySide6.QtCore import QThread
 
 from firefly.config import config
-from firefly.qt import QThread
+from firefly.log import log
 
 if config.debug:
     websocket.enableTrace(True)
@@ -46,7 +46,7 @@ class SeismicListener(QThread):
     def run(self):
         addr = config.site.host.replace("http", "ws", 1) + "/ws"
         while self.should_run:
-            logging.debug(f"[LISTENER] Connecting to {addr}", handlers=False)
+            log.debug(f"[LISTENER] Connecting to {addr}", handlers=False)
             self.halted = False
             self.ws = websocket.WebSocketApp(
                 addr,
@@ -58,11 +58,11 @@ class SeismicListener(QThread):
             self.ws.run_forever()
             self.active = False
 
-        logging.debug("[LISTENER] halted", handlers=False)
+        log.debug("[LISTENER] halted", handlers=False)
         self.halted = True
 
     def on_open(self, *args):
-        logging.goodnews("[LISTENER] connected", handlers=False)
+        log.success("[LISTENER] connected", handlers=False)
         self.ws.send(
             json.dumps(
                 {
@@ -76,33 +76,34 @@ class SeismicListener(QThread):
     def on_message(self, *args):
         data = args[-1]
         if not self.active:
-            logging.goodnews("[LISTENER] Got first message!", handlers=False)
+            log.success("[LISTENER] Got first message!", handlers=False)
             self.active = True
         try:
             original_payload = json.loads(data)
             message = SeismicMessage(**original_payload)
         except Exception:
-            log_traceback(handlers=False)
-            logging.debug(f"[LISTENER] Malformed message: {data}", handlers=False)
+            log.traceback(handlers=False)
+            log.debug(f"[LISTENER] Malformed message: {data}", handlers=False)
             return
 
         self.last_msg = time.time()
 
-        if message.data and message.data.get("initiator", None) == config.client_id:
-            return
+        if initiator := message.data.get("initiator"):
+            if message.data and initiator == config.client_id:
+                return
 
         self.queue.put(message)
 
     def on_error(self, *args):
         error = args[-1]
-        logging.error(error, handlers=False)
+        log.warning(error, handlers=False)
 
     def on_close(self, *args):
         self.active = False
         if self.should_run:
-            logging.warning("[LISTENER] connection interrupted", handlers=False)
+            log.warning("[LISTENER] connection interrupted", handlers=False)
 
     def halt(self):
-        logging.debug("[LISTENER] Shutting down")
+        log.debug("[LISTENER] Shutting down")
         self.should_run = False
         self.ws.close()

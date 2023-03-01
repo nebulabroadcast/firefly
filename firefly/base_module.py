@@ -1,5 +1,6 @@
+from PySide6.QtWidgets import QWidget
+
 import firefly
-from firefly.qt import QWidget
 
 
 class BaseModule(QWidget):

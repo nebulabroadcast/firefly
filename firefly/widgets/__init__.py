@@ -1,14 +1,8 @@
-import functools
+from PySide6.QtWidgets import QLabel, QLineEdit, QPushButton, QSizePolicy, QWidget
 
-import firefly
-from firefly.metadata import meta_types
-from firefly.qt import (QAction, QGridLayout, QLabel, QMenu, QPushButton,
-                        QSizePolicy, Qt, QWidget)
+from .combo import FireflySelect
 
-from .combo import FireflyList, FireflyRadio, FireflySelect
-from .simple import (FireflyBoolean, FireflyColorPicker, FireflyDatetime,
-                     FireflyInteger, FireflyNumeric, FireflyString,
-                     FireflyText, FireflyTimecode)
+assert FireflySelect
 
 
 class ChannelDisplay(QLabel):
@@ -25,52 +19,23 @@ class ActionButton(QPushButton):
     pass
 
 
-class FireflyNotImplementedEditor(QLabel):
+class FireflyString(QLineEdit):
     def __init__(self, parent, **kwargs):
-        super(FireflyNotImplementedEditor, self).__init__(parent)
-        self.val = None
+        super(FireflyString, self).__init__(parent)
+        self.default = self.get_value()
 
     def set_value(self, value):
+        if value == self.get_value():
+            return
         self.setText(str(value))
-        self.val = value
-        self.default = value
-
-    def set_options(self, *args, **kwargs):
-        pass
+        self.default = self.get_value()
 
     def get_value(self):
-        return self.val
-
-    def setReadOnly(self, *args, **kwargs):
-        pass
+        return self.text()
 
 
-# TODO
-class FireflyRegions(FireflyNotImplementedEditor):
-    pass
-
-
-class FireflyFraction(FireflyNotImplementedEditor):
-    pass
-
-
-meta_editors = {
-    "string": FireflyString,
-    "text": FireflyText,
-    "integer": FireflyInteger,
-    "numeric": FireflyNumeric,
-    "boolean": FireflyBoolean,
-    "datetime": FireflyDatetime,
-    "timecode": FireflyTimecode,
-    "object": FireflyRegions,
-    "fraction": FireflyFraction,
-    "select": FireflySelect,
-    # "list": FireflyList,
-    "color": FireflyColorPicker,
-    "radio": FireflyRadio,
-}
-
-
+"""
+# DEPRECATED
 class MetaEditor(QWidget):
     def __init__(self, parent, keys, **kwargs):
         super(MetaEditor, self).__init__(parent)
@@ -168,3 +133,5 @@ class MetaEditor(QWidget):
         self.defaults = {}
         for key in self.keys():
             self.defaults[key] = self[key]
+
+"""

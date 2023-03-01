@@ -2,12 +2,12 @@ import json
 import os
 import time
 
-from nxtools import log_traceback, logging
+from PySide6.QtWidgets import QApplication
 
 import firefly
 from firefly.config import config
 from firefly.enum import ContentType, MediaType, ObjectStatus
-from firefly.qt import QApplication
+from firefly.log import log
 
 from .base import BaseObject
 
@@ -73,7 +73,7 @@ class AssetCache:
     def __getitem__(self, key):
         key = int(key)
         if key not in self.data:
-            logging.debug("Direct loading asset id", key)
+            log.debug("Direct loading asset id", key)
             self.request([[key, 0]])
             return Asset()
         asset = self.data[key]
@@ -100,18 +100,15 @@ class AssetCache:
 
         asset_count = len(to_update)
         if asset_count < 10:
-            logging.info(
-                "Requesting data for asset(s) ID: {}".format(
-                    ", ".join([str(k) for k in to_update])
-                )
-            )
+            ids = ", ".join([str(k) for k in to_update])
+            log.info(f"Requesting data for asset(s) ID: {ids}")
         else:
-            logging.info("Requesting data for {} assets".format(asset_count))
+            log.info(f"Requesting data for {asset_count} assets")
         self.api.get(self.on_response, ids=to_update)
 
     def on_response(self, response):
         if response.is_error:
-            logging.error(response.message)
+            log.error(response.message)
             self.busy = False
             return False
         ids = []
@@ -123,7 +120,7 @@ class AssetCache:
             self.data[id_asset] = Asset(meta=meta)
             ids.append(id_asset)
         self.busy = False
-        logging.debug("Updated {} assets in cache".format(len(ids)))
+        log.debug(f"Updated {len(ids)} assets in cache")
         if self.handler:
             self.handler(*ids)
         return True
@@ -144,16 +141,13 @@ class AssetCache:
         try:
             data = json.load(open(self.cache_path))
         except Exception:
-            log_traceback(f"Corrupted cache file '{self.cache_path}'")
+            log.traceback(f"Corrupted cache file '{self.cache_path}'")
             return
 
         for meta in data:
             self.data[int(meta["id"])] = Asset(meta=meta)
-        logging.debug(
-            "Loaded {} assets from cache in {:.03f}s".format(
-                len(self.data), time.time() - start_time
-            )
-        )
+        elapsed = time.time() - start_time
+        log.debug(f"Loaded {len(self.data)} assets from cache in {elapsed:.03f}s")
 
     def save(self):
         if len(self.data) > CACHE_LIMIT:
@@ -162,12 +156,12 @@ class AssetCache:
             for t in to_rm[:-CACHE_LIMIT]:
                 del self.data[t]
 
-        logging.info("Saving {} assets to local cache".format(len(self.data)))
+        log.info(f"Saving {len(self.data)} assets to local cache")
         start_time = time.time()
         data = [asset.meta for asset in self.data.values()]
         with open(self.cache_path, "w") as f:
             json.dump(data, f)
-        logging.debug("Cache updated in {:.03f}s".format(time.time() - start_time))
+        log.debug(f"Cache updated in {(time.time() - start_time):.03f}s")
 
 
 asset_cache = AssetCache()

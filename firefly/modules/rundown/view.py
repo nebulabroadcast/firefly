@@ -1,16 +1,18 @@
 from functools import partial
 
-from nxtools import logging, s2time
+from nxtools import s2time
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QAction
+from PySide6.QtWidgets import QAbstractItemView, QApplication, QMenu, QMessageBox
 
 import firefly
 from firefly.api import api
 from firefly.dialogs.event import show_event_dialog
-from firefly.dialogs.rundown import (PlaceholderDialog, show_split_dialog,
-                                     show_trim_dialog)
+from firefly.dialogs.rundown import PlaceholderDialog, show_trim_dialog
 from firefly.dialogs.send_to import show_send_to_dialog
+from firefly.dialogs.split_item import show_split_dialog
 from firefly.enum import RunMode
-from firefly.qt import (QAbstractItemView, QAction, QApplication, QMenu,
-                        QMessageBox, Qt)
+from firefly.log import log
 from firefly.view import FireflyView
 
 from .model import RundownModel
@@ -75,12 +77,11 @@ class RundownView(FireflyView):
                         if obj.object_type == "item" and obj["id_asset"] == asset.id
                     ]
                 )
-                logging.info("{} is scheduled {}x in this rundown".format(asset, times))
+                log.status(f"[RUNDOWN] {asset} is scheduled {times}x in this rundown")
             if len(self.selected_objects) > 1 and tot_dur:
-                logging.info(
-                    "{} objects selected. Total duration {}".format(
-                        len(self.selected_objects), s2time(tot_dur)
-                    )
+                log.status(
+                    f"[RUNDOWN] {len(self.selected_objects)} objects selected. "
+                    f"Total duration {s2time(tot_dur)}"
                 )
 
         super(FireflyView, self).selectionChanged(selected, deselected)
@@ -254,7 +255,7 @@ class RundownView(FireflyView):
 
     def on_set_loop(self):
         if not self.parent().can_edit:
-            logging.error("You are not allowed to modify this rundown")
+            log.error("You are not allowed to modify this rundown")
             return
         mode = not self.selected_objects[0]["loop"]
         QApplication.processEvents()
@@ -274,13 +275,13 @@ class RundownView(FireflyView):
 
         QApplication.restoreOverrideCursor()
         if not response:
-            logging.error(response.message)
+            log.error(response.message)
             return
         self.model().load()
 
     def on_set_mode(self, mode):
         if not self.parent().can_edit:
-            logging.error("You are not allowed to modify this rundown")
+            log.error("You are not allowed to modify this rundown")
             return
         QApplication.processEvents()
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
@@ -296,7 +297,7 @@ class RundownView(FireflyView):
         )
         QApplication.restoreOverrideCursor()
         if not response:
-            logging.error(response.message)
+            log.error(response.message)
             return
         self.model().load()
 
@@ -331,10 +332,10 @@ class RundownView(FireflyView):
     def on_solve(self, solver):
         QApplication.processEvents()
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
-        response = api.solve(id_item=self.selected_objects[0]["id"], solver=solver)
+        response = api.solve(items=[self.selected_objects[0]["id"]], solver=solver)
         QApplication.restoreOverrideCursor()
         if not response:
-            logging.error(response.message)
+            log.error(response.message)
         self.model().load()
         self.parent().main_window.scheduler.load()
 
@@ -347,10 +348,10 @@ class RundownView(FireflyView):
         )
 
         if items and not self.parent().can_edit:
-            logging.error("You are not allowed to modify this rundown items")
+            log.error("You are not allowed to modify this rundown items")
             return
         elif events and not self.parent().can_schedule:
-            logging.error("You are not allowed to modify this rundown blocks")
+            log.error("You are not allowed to modify this rundown blocks")
             return
 
         if events or len(items) > 10:
@@ -372,10 +373,8 @@ class RundownView(FireflyView):
             response = api.delete(object_type="item", ids=items)
             QApplication.restoreOverrideCursor()
             if not response:
-                logging.error(response.message)
+                log.error(response.message)
                 return
-            else:
-                logging.info("Item deleted: {}".format(response.message))
 
         if events:
             QApplication.processEvents()
@@ -383,10 +382,8 @@ class RundownView(FireflyView):
             response = api.schedule(delete=events, id_channel=self.parent().id_channel)
             QApplication.restoreOverrideCursor()
             if not response:
-                logging.error(response.message)
+                log.error(response.message)
                 return
-            else:
-                logging.info("Event deleted: {}".format(response.message))
 
         self.selectionModel().clear()
         self.model().load()
@@ -400,7 +397,7 @@ class RundownView(FireflyView):
                 if obj.object_type == "item" and obj["id_asset"]
             ]
         )
-        show_send_to_dialog(self, objs)
+        show_send_to_dialog(self, list(objs))
         self.model().load()
 
     def on_edit_item(self):
@@ -424,7 +421,7 @@ class RundownView(FireflyView):
             return
         response = api.set(object_type=obj.object_type, id=obj.id, data=data)
         if not response:
-            logging.error(response.message)
+            log.error(response.message)
             return
         self.model().load()
 
@@ -451,7 +448,7 @@ class RundownView(FireflyView):
                         payload={"id_item": obj.id},
                     )
                     if not response:
-                        logging.error(response.message)
+                        log.error(response.message)
                     self.clearSelection()
 
         # Event edit

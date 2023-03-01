@@ -1,6 +1,6 @@
 # TODO
 
-from firefly.qt import QAbstractItemView, QDialog, QHBoxLayout, QListWidget
+from PySide6.QtWidgets import QAbstractItemView, QDialog, QHBoxLayout, QListWidget
 
 
 class ColumnsSelectDialog(QDialog):
