@@ -94,7 +94,7 @@ class RundownModel(FireflyViewModel):
                 self.object_data[-1]["start"] = row["scheduled_time"]
                 i += 1
                 self.event_ids.append(row["id"])
-                if not row["duration"]:
+                if row["is_empty"]:
                     meta = {"title": "(Empty event)", "id_bin": row["id_bin"]}
                     self.object_data.append(Item(meta=meta))
                     i += 1
