@@ -24,3 +24,4 @@ mpv-1.dll
 poetry.lock
 linux/
 firefly.dist-info
+build.bat
