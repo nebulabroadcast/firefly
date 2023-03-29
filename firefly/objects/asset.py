@@ -101,9 +101,9 @@ class AssetCache:
         asset_count = len(to_update)
         if asset_count < 10:
             ids = ", ".join([str(k) for k in to_update])
-            log.info(f"Requesting data for asset(s) ID: {ids}")
+            log.debug(f"Requesting data for asset(s) ID: {ids}")
         else:
-            log.info(f"Requesting data for {asset_count} assets")
+            log.debug(f"Requesting data for {asset_count} assets")
         self.api.get(self.on_response, ids=to_update)
 
     def on_response(self, response):

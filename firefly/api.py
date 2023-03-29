@@ -64,7 +64,7 @@ class NebulaAPI:
             self.manager = QNetworkAccessManager()
 
         is_async = " async" if callback == -1 else ""
-        log.info(f"Executing {endpoint} request{is_async}")
+        log.debug(f"Executing {endpoint} request{is_async}")
 
         endpoint = "/api/" + endpoint
         data = json.dumps(kwargs).encode("ascii")

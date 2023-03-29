@@ -21,6 +21,8 @@ from .model import RundownModel
 class RundownView(FireflyView):
     def __init__(self, parent):
         super(RundownView, self).__init__(parent)
+        self.setAcceptDrops(True)
+        self.setDropIndicatorShown(True)
         self.activated.connect(self.on_activate)
         self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.setModel(RundownModel(self))

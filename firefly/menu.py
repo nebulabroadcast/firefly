@@ -136,10 +136,10 @@ def create_menu(wnd):
         action_import_template.triggered.connect(wnd.import_template)
         wnd.menu_scheduler.addAction(action_import_template)
 
-        action_export_template = QAction("Export", wnd)
-        action_export_template.setStatusTip("Export current week as template")
-        action_export_template.triggered.connect(wnd.export_template)
-        wnd.menu_scheduler.addAction(action_export_template)
+        # action_export_template = QAction("Export", wnd)
+        # action_export_template.setStatusTip("Export current week as template")
+        # action_export_template.triggered.connect(wnd.export_template)
+        # wnd.menu_scheduler.addAction(action_export_template)
 
         #
         # Rundown

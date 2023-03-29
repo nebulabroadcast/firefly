@@ -2,6 +2,7 @@ import enum
 import sys
 import traceback
 
+from firefly.config import config
 from PySide6.QtWidgets import QMainWindow, QMessageBox
 
 
@@ -27,6 +28,8 @@ class Logger:
 
     def __call__(self, level: LogLevel, *args, **kwargs):
         if level < self.level:
+            return
+        if level < LogLevel.INFO and not config.debug:
             return
         print(
             f"{level.name.upper():<8}",
