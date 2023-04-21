@@ -81,7 +81,9 @@ class RundownModel(FireflyViewModel):
 
         i = 0
         for row in response["rows"]:
-            row.update(row.get("meta", {}))
+            for key, value in row.get("meta", {}).items():
+                if key not in row:
+                    row[key] = value
             row.pop("meta", None)
             row["rundown_row"] = i
             row["rundown_scheduled"] = row["scheduled_time"]
