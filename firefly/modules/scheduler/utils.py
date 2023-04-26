@@ -1,10 +1,10 @@
-import re
 import os
+import re
 
 from nxtools import format_time, xml
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFontMetrics
-from PySide6.QtWidgets import QFileDialog, QApplication
+from PySide6.QtWidgets import QApplication, QFileDialog
 
 from firefly.api import api
 from firefly.log import log

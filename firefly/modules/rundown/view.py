@@ -343,10 +343,22 @@ class RundownView(FireflyView):
 
     def on_delete(self):
         items = list(
-            set([obj.id for obj in self.selected_objects if obj.object_type == "item" and obj.id])
+            set(
+                [
+                    obj.id
+                    for obj in self.selected_objects
+                    if obj.object_type == "item" and obj.id
+                ]
+            )
         )
         events = list(
-            set([obj.id for obj in self.selected_objects if obj.object_type == "event" and obj.id])
+            set(
+                [
+                    obj.id
+                    for obj in self.selected_objects
+                    if obj.object_type == "event" and obj.id
+                ]
+            )
         )
 
         if items and not self.parent().can_edit:

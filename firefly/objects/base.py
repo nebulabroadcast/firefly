@@ -87,7 +87,6 @@ class BaseObject:
             if mtype:
                 return self.meta.get(key, self.meta_types[key].default)
 
-
     def __setitem__(self, key, value):
         """Set a metadata value
 

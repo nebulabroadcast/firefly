@@ -2,8 +2,9 @@ import enum
 import sys
 import traceback
 
-from firefly.config import config
 from PySide6.QtWidgets import QMainWindow, QMessageBox
+
+from firefly.config import config
 
 
 def indent(text: str, level: int = 4) -> str:

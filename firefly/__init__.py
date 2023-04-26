@@ -1,4 +1,4 @@
-__version__ = "6.0.0-RC1"
+__version__ = "6.0.0"
 
 from firefly.config import config
 from firefly.settings import Settings
