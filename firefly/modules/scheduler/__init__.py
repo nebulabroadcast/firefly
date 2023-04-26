@@ -6,6 +6,7 @@ from firefly.log import log
 
 from .calendar import SchedulerCalendar
 from .toolbar import scheduler_toolbar
+from .utils import import_template
 
 
 class SchedulerModule(BaseModule):
@@ -22,6 +23,9 @@ class SchedulerModule(BaseModule):
         layout.addWidget(self.calendar, 1)
 
         self.setLayout(layout)
+
+    def import_template(self, day_offset=0):
+        import_template(self, day_offset=day_offset)
 
     def load(self):
         self.calendar.load()

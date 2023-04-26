@@ -18,7 +18,7 @@ class InputColor(QPushButton):
 
     def set_value(self, value):
         self._value = value
-        self.setStyleSheet(f"background-color: #{self.color:06x}")
+        self.setStyleSheet(f"background-color: #{self._value:06x}")
 
     def setReadOnly(self, stat):
         self.setEnabled(not stat)

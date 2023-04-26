@@ -11,6 +11,7 @@ from firefly.settings import FolderField
 from .input_color import InputColor
 from .input_combo import InputCombo
 from .input_datetime import InputDatetime
+from .input_integer import InputInteger
 from .input_list import InputList
 from .input_radio import InputRadio
 from .input_switch import InputSwitch
@@ -43,6 +44,7 @@ editor_map = {
     "text": InputTextarea,
     "timecode": InputTimecode,
     "datetime": InputDatetime,
+    "integer": InputInteger,
     "color": InputColor,
     "boolean": InputSwitch,
     "select": InputCombo,

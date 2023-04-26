@@ -4,8 +4,8 @@ from PySide6.QtWidgets import QFormLayout, QHBoxLayout, QPushButton, QTabWidget,
 
 import firefly
 from firefly.api import api
-from firefly.components.input_text import InputText
 from firefly.components.input_combo import InputCombo
+from firefly.components.input_text import InputText
 from firefly.log import log
 
 

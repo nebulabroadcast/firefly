@@ -17,13 +17,7 @@ lint: check_version
 	poetry run mypy firefly
 
 build: check_version skin
-	poetry run pyinstaller -y \
-		--clean \
-		--dist dist \
-		--name firefly \
-		--icon images/firefly.ico \
-		--onefile firefly/__main__.py
-
+	poetry run pyinstaller -y firefly.windows.spec
 	cp -r images dist/images
 	cp -r skin.css dist/skin.css
 	

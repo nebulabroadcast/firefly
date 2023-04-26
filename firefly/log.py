@@ -4,6 +4,8 @@ import traceback
 
 from PySide6.QtWidgets import QMainWindow, QMessageBox
 
+from firefly.config import config
+
 
 def indent(text: str, level: int = 4) -> str:
     return text.replace("\n", f"\n{' '*level}")
@@ -27,6 +29,8 @@ class Logger:
 
     def __call__(self, level: LogLevel, *args, **kwargs):
         if level < self.level:
+            return
+        if level < LogLevel.INFO and not config.debug:
             return
         print(
             f"{level.name.upper():<8}",

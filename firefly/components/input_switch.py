@@ -64,6 +64,9 @@ class InputSwitch(QCheckBox):
 
         self.stateChanged.connect(self.setup_animation)
 
+    def setReadOnly(self, value: bool):
+        self.setEnabled(not value)
+
     def sizeHint(self):
         return QSize(58, 45)
 

@@ -38,7 +38,7 @@ class AssetPreview(QWidget):
 
     def load_video(self):
         if self.current_asset and not self.loaded:
-            proxy_url = f"{firefly.settings.server_url}/proxy/{self.current_asset.id}"
+            proxy_url = f"{firefly.config.site.host}/proxy/{self.current_asset.id}"
             log.debug(f"[DETAIL] Opening {self.current_asset} preview: {proxy_url}")
             proxy_url += f"?token={firefly.config.site.token}"
             self.player.fps = self.current_asset.fps
