@@ -15,7 +15,13 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-          
+
+      - name: Download libmpv
+        run: |
+          $url = 'https://repo.imm.cz/mpv-1.dll'
+          $path = './mpv-1.dll'
+          Invoke-WebRequest -Uri $url -OutFile $path
+
       - name: Build exe with pyinstaller
         shell: bash
         run: |
@@ -32,12 +38,6 @@ jobs:
           file: 'pyproject.toml'
           field: 'tool.poetry.version'
 
-      - name: Download libmpv
-        run: |
-          $url = 'https://repo.imm.cz/mpv-1.dll'
-          $path = './mpv-1.dll'
-          Invoke-WebRequest -Uri $url -OutFile $path
-          
       - name: Create zip
         uses: thedoctor0/zip-release@0.7.1
         with:
