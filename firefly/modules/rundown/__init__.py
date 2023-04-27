@@ -329,7 +329,7 @@ class RundownModule(BaseModule):
                 self.refresh_assets(*message.data["objects"])
 
         elif message.topic == "job_progress":
-            if self.playout_config.send_action == message.data["id_action"]:
+            if self.playout_config.send_action == message.data.get("id_action", -1):
                 model = self.view.model()
                 for row, obj in enumerate(model.object_data):
                     if obj["id_asset"] == message.data["id_asset"]:
