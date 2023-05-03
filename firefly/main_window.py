@@ -98,7 +98,7 @@ class FireflyMainWidget(QWidget):
             self.switch_tab(current_tab)
         else:
             self.on_switch_tab()
-
+        self.main_window.statusBar().showMessage("Firefly is ready")
         self.tabs.currentChanged.connect(self.on_switch_tab)
 
     def on_close(self):
