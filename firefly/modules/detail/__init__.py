@@ -325,17 +325,20 @@ class DetailModule(BaseModule):
             self.focus(asset_cache[self.asset.id], silent=True)
 
     def on_set_qc(self, state):
-        state_name = {0: "New", 3: "Rejected", 4: "Approved"}[state]
-        report = (
-            f"{format_time(time.time())} : {firefly.user} "
-            f"flagged the asset as {state_name}"
-        )
-
-        if self.asset["qc/report"]:
-            report = self.asset["qc/report"] + "\n" + report
+        #state_name = {0: "New", 3: "Rejected", 4: "Approved"}[state]
+        # report = (
+        #     f"{format_time(time.time())} : {firefly.user} "
+        #     f"flagged the asset as {state_name}"
+        # )
+        #
+        # if self.asset["qc/report"]:
+        #     report = self.asset["qc/report"] + "\n" + report
 
         response = api.set(
-            id=self.asset.id, data={"qc/state": state, "qc/report": report}
+            id=self.asset.id, data={
+                "qc/state": state, 
+                #"qc/report": report
+                }
         )
         if not response:
             log.error(response.message)

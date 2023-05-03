@@ -144,7 +144,6 @@ class RundownModel(FireflyViewModel):
                 self.dataChanged.emit(
                     self.index(row, 0), self.index(row, len(self.header_data) - 1)
                 )
-                break
 
     def flags(self, index):
         flags = super(RundownModel, self).flags(index)
