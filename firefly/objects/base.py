@@ -83,7 +83,9 @@ class BaseObject:
         if key not in self.meta_types:
             return self.meta.get(key, None)
         else:
-            return self.meta.get(key, self.meta_types[key].default)
+            mtype = self.meta_types[key]
+            if mtype:
+                return self.meta.get(key, self.meta_types[key].default)
 
     def __setitem__(self, key, value):
         """Set a metadata value

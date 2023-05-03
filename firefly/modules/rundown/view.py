@@ -343,10 +343,22 @@ class RundownView(FireflyView):
 
     def on_delete(self):
         items = list(
-            set([obj.id for obj in self.selected_objects if obj.object_type == "item"])
+            set(
+                [
+                    obj.id
+                    for obj in self.selected_objects
+                    if obj.object_type == "item" and obj.id
+                ]
+            )
         )
         events = list(
-            set([obj.id for obj in self.selected_objects if obj.object_type == "event"])
+            set(
+                [
+                    obj.id
+                    for obj in self.selected_objects
+                    if obj.object_type == "event" and obj.id
+                ]
+            )
         )
 
         if items and not self.parent().can_edit:
@@ -381,7 +393,7 @@ class RundownView(FireflyView):
         if events:
             QApplication.processEvents()
             QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
-            response = api.schedule(delete=events, id_channel=self.parent().id_channel)
+            response = api.scheduler(delete=events, id_channel=self.parent().id_channel)
             QApplication.restoreOverrideCursor()
             if not response:
                 log.error(response.message)
