@@ -300,6 +300,9 @@ class FormatTitle(CellFormat):
     def font(self, obj, **kwargs):
         if obj.object_type == "event":
             return "bold"
+        elif obj.object_type == "item":
+            if obj.get("is_primary"):
+                return "bold"
 
 
 format_helpers_list = [

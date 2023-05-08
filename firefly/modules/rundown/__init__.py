@@ -178,7 +178,8 @@ class RundownModule(BaseModule):
 
     def on_channel_changed(self):
         self.load(do_update_header=True)
-        self.plugins.load()
+        if self.plugins:
+            self.plugins.load()
 
         if self.mcr:
             self.mcr.on_channel_changed()
