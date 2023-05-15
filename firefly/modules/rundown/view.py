@@ -125,6 +125,11 @@ class RundownView(FireflyView):
                     action_split.triggered.connect(self.on_split)
                     menu.addAction(action_split)
 
+                    action_set_primary = QAction("Set as primary", self)
+                    action_set_primary.setStatusTip("Set selected item as primary")
+                    action_set_primary.triggered.connect(self.on_set_primary)
+                    menu.addAction(action_set_primary)
+
             if obj_set[0] == "item" and (
                 self.selected_objects[0]["id_asset"]
                 or self.selected_objects[0]["item_role"] == "live"
@@ -329,6 +334,22 @@ class RundownView(FireflyView):
             tail_items,
             id_channel=self.id_channel,
         )
+        self.model().load()
+
+    def on_set_primary(self):
+        item = self.selected_objects[0]
+        asset = item._asset
+        if not asset:
+            return
+
+        emeta = {}
+        for field in self.playout_config.fields:
+            key = field.name
+            if key in asset.meta:
+                emeta[key] = asset.meta[key]
+        emeta["id_asset"] = asset.id
+
+        api.set(object_type="event", id=item["id_event"], data=emeta)
         self.model().load()
 
     def on_solve(self, solver):

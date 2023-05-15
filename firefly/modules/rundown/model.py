@@ -105,6 +105,8 @@ class RundownModel(FireflyViewModel):
                 item.id_channel = self.id_channel
                 if row.get("id_asset"):
                     item._asset = asset_cache.get(row["id_asset"])
+                    item._asset.meta.pop("mark_in", None)
+                    item._asset.meta.pop("mark_out", None)
                     required_assets.append([row["id_asset"], row["asset_mtime"]])
                 else:
                     item._asset = None
@@ -144,7 +146,6 @@ class RundownModel(FireflyViewModel):
                 self.dataChanged.emit(
                     self.index(row, 0), self.index(row, len(self.header_data) - 1)
                 )
-                break
 
     def flags(self, index):
         flags = super(RundownModel, self).flags(index)

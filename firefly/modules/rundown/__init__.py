@@ -178,7 +178,8 @@ class RundownModule(BaseModule):
 
     def on_channel_changed(self):
         self.load(do_update_header=True)
-        self.plugins.load()
+        if self.plugins:
+            self.plugins.load()
 
         if self.mcr:
             self.mcr.on_channel_changed()
@@ -298,20 +299,34 @@ class RundownModule(BaseModule):
             if message.data["id_channel"] != self.id_channel:
                 return
 
+            affected_items = [
+                self.current_item,
+                self.cued_item,
+                message.data["current_item"],
+                message.data["cued_item"],
+            ]
+
+            do_refresh = False
             if message.data["current_item"] != self.current_item:
                 self.current_item = message.data["current_item"]
-                self.view.model().refresh_items([self.current_item])
+                self.cued_item = message.data["cued_item"]
+                do_refresh = True
 
             if message.data["cued_item"] != self.cued_item:
                 model = self.view.model()
+                self.current_item = message.data["current_item"]
                 self.cued_item = message.data["cued_item"]
-                for obj in model.object_data:
-                    if obj.object_type == "item" and obj.id == self.cued_item:
-                        if self.mcr and self.mcr.isVisible():
+
+                if self.mcr.isVisible():
+                    for obj in model.object_data:
+                        if obj.object_type == "item" and obj.id == self.cued_item:
                             self.load()
-                        else:
-                            self.view.model().refresh_items([self.current_item])
-                        break
+                            break
+                else:
+                    do_refresh = True
+
+            if do_refresh:
+                self.view.model().refresh_items(affected_items)
 
             if self.mcr:
                 self.mcr.seismic_handler(message)
@@ -329,7 +344,7 @@ class RundownModule(BaseModule):
                 self.refresh_assets(*message.data["objects"])
 
         elif message.topic == "job_progress":
-            if self.playout_config.send_action == message.data["id_action"]:
+            if self.playout_config.send_action == message.data.get("id_action", -1):
                 model = self.view.model()
                 for row, obj in enumerate(model.object_data):
                     if obj["id_asset"] == message.data["id_asset"]:

@@ -53,6 +53,8 @@ class InputDatetime(QWidget):
             self.clear_button.setText("Clear")
             self.clear_button.clicked.connect(self.clear_value)
             layout.addWidget(self.clear_button, 0)
+        else:
+            self.clear_button = None
 
         self.setLayout(layout)
         self.set_value(value)
@@ -91,4 +93,5 @@ class InputDatetime(QWidget):
     def setReadOnly(self, value):
         self._read_only = value
         self.end_edit()
-        self.clear_button.setEnabled(not value)
+        if self.clear_button:
+            self.clear_button.setEnabled(not value)
