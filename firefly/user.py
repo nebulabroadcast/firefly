@@ -15,15 +15,15 @@ class FireflyUser:
         self.meta.update(meta)
 
     @property
-    def language(self):
+    def language(self) -> str:
         """Return the preferred language of the user."""
         return "cs"
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self.meta["login"]
 
-    def can(self, action: str, value: Any = None, anyval=False) -> bool:
+    def can(self, action: str, value: Any = None, anyval: bool = False) -> bool:
         if self["is_admin"]:
             return True
         key = f"can/{action}"
