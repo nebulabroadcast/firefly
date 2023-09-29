@@ -440,7 +440,7 @@ class SchedulerDayWidget(SchedulerVerticalBar):
             if move:
                 if not event.id:
                     # Create empty event. Event edit dialog is enforced.
-                    self.exectute_event_dialog(start=drop_ts)
+                    self.execute_event_dialog(start=drop_ts)
                 else:
                     # Moving existing event around. Instant save
                     if response := api.scheduler(
@@ -459,7 +459,7 @@ class SchedulerDayWidget(SchedulerVerticalBar):
         self.calendar.dragging = False
         self.update()
 
-    def exectute_event_dialog(self, **kwargs):
+    def execute_event_dialog(self, **kwargs):
         kwargs["id_channel"] = self.id_channel
         kwargs["date"] = self.calendar.date
         QTimer.singleShot(100, functools.partial(self._execute_event_dialog, kwargs))
