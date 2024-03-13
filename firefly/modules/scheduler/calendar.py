@@ -183,7 +183,7 @@ class SchedulerDayWidget(SchedulerVerticalBar):
 
         TEXT_SIZE = 9
         base_t = self.ts2pos(event["start"])
-        base_h = self.min_size * (event["duration"] / 60)
+        base_h = self.min_size * (event.duration / 60)
         evt_h = self.ts2pos(end) - base_t
 
         if event["color"]:
@@ -223,7 +223,7 @@ class SchedulerDayWidget(SchedulerVerticalBar):
         if type(self.calendar.dragging) == Asset:
             exp_dur = suggested_duration(self.calendar.dragging.duration)
         elif type(self.calendar.dragging) == Event:
-            exp_dur = self.calendar.dragging["duration"]
+            exp_dur = self.calendar.dragging.duration
         else:
             return
 
@@ -251,7 +251,7 @@ class SchedulerDayWidget(SchedulerVerticalBar):
 
             if end >= ts > event["start"] >= self.start_time:
                 self.cursor_event = event
-                diff = event["start"] + event["duration"] - end
+                diff = event["start"] + event.duration - end
                 if diff < 0:
                     diff = "Remaining: " + s2tc(abs(diff))
                 else:
@@ -274,8 +274,8 @@ class SchedulerDayWidget(SchedulerVerticalBar):
             return
 
         self.calendar.drag_offset = ts - event["start"]
-        if self.calendar.drag_offset > event["duration"]:
-            self.calendar.drag_offset = event["duration"]
+        if self.calendar.drag_offset > event.duration:
+            self.calendar.drag_offset = event.duration
 
         encodedData = json.dumps([event.meta])
         mimeData = QMimeData()
@@ -375,7 +375,7 @@ class SchedulerDayWidget(SchedulerVerticalBar):
         elif type(self.calendar.dragging) == Asset:
             for event in self.calendar.events:
                 if event["start"] == drop_ts:
-                    if event["duration"]:
+                    if event.duration:
                         ret = QMessageBox.question(
                             self,
                             "Overwrite",
@@ -427,7 +427,7 @@ class SchedulerDayWidget(SchedulerVerticalBar):
                 ret = QMessageBox.question(
                     self,
                     "Move event",
-                    f"Do you really want to move {self.cursor_event}?"
+                    f"Do you really want to move {event}?"
                     f"\n\nFrom: {format_time(event['start'])}"
                     f"\nTo: {format_time(drop_ts)}",
                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
