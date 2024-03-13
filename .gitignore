@@ -1,5 +1,7 @@
 __pycache__
 *.py[cod]
+.python-version
+.venv
 vendor/
 
 # Build
