@@ -427,7 +427,7 @@ class SchedulerDayWidget(SchedulerVerticalBar):
                 ret = QMessageBox.question(
                     self,
                     "Move event",
-                    f"Do you really want to move {self.cursor_event}?"
+                    f"Do you really want to move {event}?"
                     f"\n\nFrom: {format_time(event['start'])}"
                     f"\nTo: {format_time(drop_ts)}",
                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
