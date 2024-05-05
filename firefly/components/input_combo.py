@@ -43,7 +43,8 @@ class InputCombo(QComboBox):
 
         self.clear()
         for opt in self._options:
-            self.addItem(opt["title"])
+            title = opt.get("title") or opt.get("value", "Unknown")
+            self.addItem(title)
 
     def setReadOnly(self, val: bool) -> None:
         self.setEnabled(not val)
