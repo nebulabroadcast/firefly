@@ -22,7 +22,7 @@ PROGRESS_BAR_RESOLUTION = 1000
 
 class MCRButton(QPushButton):
     def __init__(self, title, parent=None, on_click=False, checkable=False):
-        super(MCRButton, self).__init__(parent)
+        super().__init__(parent)
         self.setText(title)
         self.setCheckable(checkable)
         if title == "Freeze":
@@ -59,7 +59,7 @@ class MCRButton(QPushButton):
 
 class MCRLabel(QLabel):
     def __init__(self, head, default, parent=None, tcolor="#eeeeee"):
-        super(MCRLabel, self).__init__(parent)
+        super().__init__(parent)
         self.head = head
         self.setStyleSheet(
             f"""
@@ -79,7 +79,7 @@ class MCRLabel(QLabel):
 
 class MCR(QWidget):
     def __init__(self, parent):
-        super(MCR, self).__init__(parent)
+        super().__init__(parent)
 
         self.progress_bar = QProgressBar(self)
         self.progress_bar.setTextVisible(False)
@@ -231,11 +231,11 @@ class MCR(QWidget):
             self.request_display_resize = True
 
     def show(self, *args, **kwargs):
-        super(MCR, self).show(*args, **kwargs)
+        super().show(*args, **kwargs)
         self.display_timer.start(40)
 
     def hide(self, *args, **kwargs):
-        super(MCR, self).hide(*args, **kwargs)
+        super().hide(*args, **kwargs)
         self.display_timer.stop()
 
     def on_channel_changed(self):

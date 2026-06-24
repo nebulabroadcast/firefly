@@ -22,7 +22,7 @@ from firefly.objects import Asset, asset_cache
 
 class MetaList(QTextEdit):
     def __init__(self, parent):
-        super(MetaList, self).__init__(parent)
+        super().__init__(parent)
         fixed_font = QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont)
         self.setCurrentFont(fixed_font)
         self.setReadOnly(True)
@@ -90,7 +90,7 @@ class DetailTabTechnical(MetaList):
 
 class DetailTabs(QTabWidget):
     def __init__(self, parent):
-        super(DetailTabs, self).__init__()
+        super().__init__()
 
         self.tab_editor = AssetEditor(self)
         self.tab_extended = DetailTabExtended(self)
@@ -130,7 +130,7 @@ class DetailTabs(QTabWidget):
 
 class DetailModule(BaseModule):
     def __init__(self, parent):
-        super(DetailModule, self).__init__(parent)
+        super().__init__(parent)
         self.asset = self._is_loading = self._load_queue = False
         toolbar_layout = QHBoxLayout()
 
@@ -180,7 +180,7 @@ class DetailModule(BaseModule):
                 self,
                 "Save changes?",
                 f"Following data has been changed in the {self.asset}"
-                + "\n\n"
+                 "\n\n"
                 + "\n".join([meta_types[k].title for k in changed]),
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             )

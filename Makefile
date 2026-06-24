@@ -1,20 +1,20 @@
 .PHONY=skin
-VERSION=$(shell poetry run python -c 'import firefly; print(firefly.__version__)')
+VERSION=$(shell uv run python -c 'import firefly; print(firefly.__version__)')
 
 run: skin
-	poetry run python -m firefly
+	uv run python -m firefly
 
 skin:
-	poetry run qtsass -o skin.css skin.scss
+	uv run qtsass -o skin.css skin.scss
 
 check_version:
-	sed -i "s/version = \".*\"/version = \"$(VERSION)\"/" pyproject.toml
+	uv version $(VERSION)
 
 lint: check_version
-	poetry run isort firefly
-	poetry run black firefly
-	poetry run flake8 firefly
-	poetry run mypy firefly
+	uv run ruff check . --select=I --fix
+	uv run ruff format .
+	uv run ruff check . --fix
+	uv run mypy .
 
 build: check_version skin
 	poetry run pyinstaller -y firefly.windows.spec

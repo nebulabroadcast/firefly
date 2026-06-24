@@ -22,7 +22,7 @@ from firefly.settings import FolderField
 
 class PlaceholderDialog(QDialog):
     def __init__(self, parent, meta):
-        super(PlaceholderDialog, self).__init__(parent)
+        super().__init__(parent)
         self.setWindowTitle("Rundown placeholder")
 
         self.ok = False
@@ -64,7 +64,7 @@ class PlaceholderDialog(QDialog):
 
 class SubclipSelectDialog(QDialog):
     def __init__(self, parent, asset):
-        super(SubclipSelectDialog, self).__init__(parent)
+        super().__init__(parent)
         self.setModal(True)
         self.setWindowTitle(f"Select {asset} subclip to use")
         self.ok = False
@@ -133,8 +133,8 @@ class SubclipSelectDialog(QDialog):
 
 class TrimDialog(QDialog):
     def __init__(self, parent, item):
-        super(TrimDialog, self).__init__(parent)
-        self.setWindowTitle("Trim {}".format(item))
+        super().__init__(parent)
+        self.setWindowTitle(f"Trim {item}")
 
         self.ok = False
         self.item = item

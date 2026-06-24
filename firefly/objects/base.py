@@ -23,9 +23,9 @@ class BaseObject:
         meta = kwargs.get("meta", {})
         if id:
             assert type(id) == int, f"{self.object_type} ID must be integer"
-        assert (
-            meta is not None
-        ), f"Unable to load {self.object_type}. Meta must not be 'None'"
+        assert meta is not None, (
+            f"Unable to load {self.object_type}. Meta must not be 'None'"
+        )
         assert hasattr(meta, "keys"), "Incorrect meta!"
         for key in meta:
             self.meta[key] = meta[key]

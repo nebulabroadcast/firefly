@@ -31,7 +31,7 @@ from firefly.qt import app_settings, app_skin, get_app_state, pixlib
 
 class FireflyMainWidget(QWidget):
     def __init__(self, main_window):
-        super(FireflyMainWidget, self).__init__(main_window)
+        super().__init__(main_window)
         self.main_window = main_window
         current_tab = self.main_window.app_state.get("current_module", 0)
         self.perform_on_switch_tab = True
@@ -146,7 +146,7 @@ class FireflyMainWidget(QWidget):
 
 class FireflyMainWindow(QMainWindow):
     def __init__(self, parent, MainWidgetClass):
-        super(FireflyMainWindow, self).__init__()
+        super().__init__()
 
         self.subscribers = []
         asset_cache.api = api

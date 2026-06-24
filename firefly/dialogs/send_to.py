@@ -10,7 +10,7 @@ from firefly.widgets import ActionButton
 
 class SendToDialog(QDialog):
     def __init__(self, parent, title, actions=list[tuple[int, str]]):
-        super(SendToDialog, self).__init__(parent)
+        super().__init__(parent)
         self.setModal(True)
         self.setWindowTitle(title)
 

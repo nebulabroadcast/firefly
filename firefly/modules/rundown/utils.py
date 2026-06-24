@@ -49,7 +49,7 @@ ITEM_BUTTONS = [
 
 class CalendarDialog(QDialog):
     def __init__(self, parent):
-        super(CalendarDialog, self).__init__(parent)
+        super().__init__(parent)
         self.setWindowTitle("Calendar")
         self.date = False, False, False
         self.setModal(True)
@@ -82,7 +82,7 @@ def day_start(ts, start):
 
 class ItemButton(QToolButton):
     def __init__(self, parent, config):
-        super(ItemButton, self).__init__()
+        super().__init__()
         self.button_config = config
         self.pressed.connect(self.startDrag)
         self.setIcon(QIcon(pixlib[self.button_config["icon"]]))
@@ -148,7 +148,6 @@ def rundown_toolbar(wnd):
     toolbar.addAction(action_day_next)
 
     if firefly.user.can("rundown_edit", anyval=True):
-
         toolbar.addSeparator()
 
         for btn_config in ITEM_BUTTONS:

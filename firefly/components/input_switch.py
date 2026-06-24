@@ -15,7 +15,6 @@ from PySide6.QtWidgets import QCheckBox
 
 
 class InputSwitch(QCheckBox):
-
     _transparent_pen = QPen(Qt.transparent)
     _light_grey_pen = QPen(Qt.lightGray)
 

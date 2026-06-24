@@ -39,7 +39,7 @@ def check_login(wnd):
 
 class FireflyApplication(QApplication):
     def __init__(self, **kwargs):
-        super(FireflyApplication, self).__init__(sys.argv)
+        super().__init__(sys.argv)
         self.app_state = {"name": "firefly", "title": f"Firefly {firefly.__version__}"}
         self.app_state_path = os.path.join(app_dir, f"{app_settings['name']}.appstate")
         self.setStyleSheet(app_skin)

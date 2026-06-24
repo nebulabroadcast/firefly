@@ -51,7 +51,7 @@ RUN_PENS = [
 
 class SchedulerVerticalBar(QWidget):
     def __init__(self, parent):
-        super(SchedulerVerticalBar, self).__init__(parent)
+        super().__init__(parent)
         self.calendar = parent
         self.setMouseTracking(True)
 
@@ -84,7 +84,7 @@ class SchedulerVerticalBar(QWidget):
 
 class SchedulerClockBar(SchedulerVerticalBar):
     def __init__(self, parent):
-        super(SchedulerClockBar, self).__init__(parent)
+        super().__init__(parent)
         self.setMinimumWidth(CLOCKBAR_WIDTH)
         self.setMaximumWidth(CLOCKBAR_WIDTH)
         self.day_start = [6, 0]  # default
@@ -109,7 +109,7 @@ class SchedulerClockBar(SchedulerVerticalBar):
 
 class SchedulerDayWidget(SchedulerVerticalBar):
     def __init__(self, parent):
-        super(SchedulerDayWidget, self).__init__(parent)
+        super().__init__(parent)
         self.setMinimumWidth(100)
         self.start_time = 0
         self.setAcceptDrops(True)
@@ -565,12 +565,12 @@ class SchedulerDayWidget(SchedulerVerticalBar):
                     self.last_wheel_direction = -1
 
         else:
-            super(SchedulerDayWidget, self).wheelEvent(event)
+            super().wheelEvent(event)
 
 
 class SchedulerDayHeaderWidget(QLabel):
     def __init__(self, parent, dow):
-        super(SchedulerDayHeaderWidget, self).__init__(parent)
+        super().__init__(parent)
         self.setStyleSheet(
             """
                 background-color: #24202e;
@@ -623,7 +623,7 @@ class SchedulerDayHeaderWidget(QLabel):
 
 class SchedulerCalendar(QWidget):
     def __init__(self, parent):
-        super(SchedulerCalendar, self).__init__(parent)
+        super().__init__(parent)
         self.week_start_time = self.week_end_time = 0
         self.events = []
         self.focus_data = []
@@ -740,7 +740,7 @@ class SchedulerCalendar(QWidget):
     def update(self):
         for day_widget in self.days:
             day_widget.update()
-        super(SchedulerCalendar, self).update()
+        super().update()
 
     def open_rundown(self, start_time, event=False):
         self.parent().open_rundown(start_time, event)

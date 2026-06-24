@@ -11,7 +11,7 @@ from firefly.proxyplayer.utils import RegionBar, TimecodeWindow, get_navbar
 
 class VideoPlayer(QWidget):
     def __init__(self, parent=None, pixlib=None):
-        super(VideoPlayer, self).__init__(parent)
+        super().__init__(parent)
 
         self.pixlib = pixlib
 

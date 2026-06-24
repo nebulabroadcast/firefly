@@ -20,7 +20,7 @@ ERR = "** ERROR **"
 
 class BatchOpsDialog(QDialog):
     def __init__(self, parent, objects):
-        super(BatchOpsDialog, self).__init__(parent)
+        super().__init__(parent)
         self.objects = sorted(objects, key=lambda obj: obj.id)
         self.setWindowTitle(f"Batch modify: {len(self.objects)} assets")
         id_folder = self.objects[0]["id_folder"]
@@ -77,7 +77,7 @@ class BatchOpsDialog(QDialog):
             "Save changes?",
             "{}".format(
                 "\n".join(
-                    " - {}".format(meta_types[k].alias) for k in self.form.changed
+                    f" - {meta_types[k].alias}" for k in self.form.changed
                 )
             ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,

@@ -22,7 +22,7 @@ from .input_timecode import InputTimecode
 
 class NotImplementeWidget(QLabel):
     def __init__(self, parent, value=None, **kwargs):
-        super(NotImplementeWidget, self).__init__(parent)
+        super().__init__(parent)
         self.set_value(value)
         self.default = value
 

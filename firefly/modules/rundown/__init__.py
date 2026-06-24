@@ -17,7 +17,7 @@ from .view import RundownView
 
 class RundownModule(BaseModule):
     def __init__(self, parent):
-        super(RundownModule, self).__init__(parent)
+        super().__init__(parent)
         self.start_time = 0
         self.current_item = False
         self.cued_item = False

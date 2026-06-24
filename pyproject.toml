@@ -1,6 +1,6 @@
 [project]
 name = "firefly"
-version = "6.0.1"
+version = "6.0.3"
 description = "Desktop client application for Nebula - Open source media asset management and broadcast automation system."
 requires-python = ">=3.10,<3.12"
 

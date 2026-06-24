@@ -89,7 +89,7 @@ colors = {
 
 class JobsModel(FireflyViewModel):
     def __init__(self, *args, **kwargs):
-        super(JobsModel, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.request_data = {"view": "active"}
 
     def headerData(
@@ -143,7 +143,7 @@ class JobsModel(FireflyViewModel):
 
 class FireflyJobsView(FireflyView):
     def __init__(self, parent):
-        super(FireflyJobsView, self).__init__(parent)
+        super().__init__(parent)
         self.model = JobsModel(self)
         self.model.header_data = DEFAULT_HEADER_DATA
         self.setModel(self.model)

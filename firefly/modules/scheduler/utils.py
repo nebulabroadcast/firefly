@@ -56,7 +56,7 @@ def dump_template(calendar):
         result += "    <day>\n"
         for event in day:
             clock = format_time(event["start"], "%H:%M")
-            result += f"        <event time=\"{clock}\"> <!-- {event['title']} -->\n"
+            result += f'        <event time="{clock}"> <!-- {event["title"]} -->\n'
             for key in event.meta:
                 if meta_types[key]["ns"] != "m":
                     continue

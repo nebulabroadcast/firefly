@@ -28,7 +28,7 @@ DEFAULT_COLUMNS = [
 
 class RundownModel(FireflyViewModel):
     def __init__(self, *args, **kwargs):
-        super(RundownModel, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.event_ids = []
         self.load_start_time = 0
 
@@ -148,7 +148,7 @@ class RundownModel(FireflyViewModel):
                 )
 
     def flags(self, index):
-        flags = super(RundownModel, self).flags(index)
+        flags = super().flags(index)
         if index.isValid():
             obj = self.object_data[index.row()]
             if obj.id and obj.object_type == "item":

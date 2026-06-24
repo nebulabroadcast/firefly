@@ -91,7 +91,7 @@ class BrowserModel(FireflyViewModel):
         return None
 
     def flags(self, index):
-        flags = super(BrowserModel, self).flags(index)
+        flags = super().flags(index)
         if index.isValid():
             if self.object_data[index.row()].id:
                 flags |= Qt.ItemFlag.ItemIsDragEnabled

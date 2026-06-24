@@ -23,7 +23,7 @@ STATUS_FG_COLORS = {
 DEFAULT_FOLDER = {"color": 0xAAAAAA, "title": "-"}
 
 
-class CellFormat(object):
+class CellFormat:
     key = "none"
 
     def display(self, obj, **kwargs):

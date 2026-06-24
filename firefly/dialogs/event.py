@@ -19,7 +19,7 @@ default_fields = [
 
 class EventDialog(QDialog):
     def __init__(self, parent, **kwargs):
-        super(EventDialog, self).__init__(parent)
+        super().__init__(parent)
         self.setWindowTitle("Scheduler")
         self.kwargs = kwargs
         self.setStyleSheet(app_skin)

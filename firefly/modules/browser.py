@@ -35,7 +35,7 @@ from .browser_model import BrowserModel
 
 class SearchWidget(QLineEdit):
     def __init__(self, parent):
-        super(SearchWidget, self).__init__(parent)
+        super().__init__(parent)
         self.browser = parent
 
     def keyPressEvent(self, event):
@@ -50,7 +50,7 @@ class SearchWidget(QLineEdit):
 
 class FireflyBrowserView(FireflyView):
     def __init__(self, parent):
-        super(FireflyBrowserView, self).__init__(parent)
+        super().__init__(parent)
         self.current_page = 1
         self.page_count = 1
         self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
@@ -143,7 +143,7 @@ class PagerButton(QPushButton):
 class Pager(QWidget):
     def __init__(self, parent):
         layout = QHBoxLayout()
-        super(Pager, self).__init__(parent)
+        super().__init__(parent)
         self._parent = parent
 
         self.btn_prev = PagerButton()
@@ -175,7 +175,7 @@ class Pager(QWidget):
 
 class BrowserTab(QWidget):
     def __init__(self, parent, **kwargs):
-        super(BrowserTab, self).__init__(parent)
+        super().__init__(parent)
         self._parent = parent
         self.loading = False
         self.title = False
@@ -559,7 +559,7 @@ class BrowserTab(QWidget):
 
 class BrowserModule(BaseModule):
     def __init__(self, parent):
-        super(BrowserModule, self).__init__(parent)
+        super().__init__(parent)
         self.tabs = QTabWidget(self)
         self.tabs.setTabsClosable(True)
         self.tabs.tabCloseRequested.connect(self.close_tab)

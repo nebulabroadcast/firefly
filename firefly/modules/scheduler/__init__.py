@@ -11,7 +11,7 @@ from .utils import import_template
 
 class SchedulerModule(BaseModule):
     def __init__(self, parent):
-        super(SchedulerModule, self).__init__(parent)
+        super().__init__(parent)
         toolbar = scheduler_toolbar(self)
         self.date, self.week_number = get_this_monday()
         self.calendar = SchedulerCalendar(self)
@@ -30,8 +30,7 @@ class SchedulerModule(BaseModule):
     def load(self):
         self.calendar.load()
         header = (
-            f"Week from {self.date} ({self.week_number})"
-            f" - {self.playout_config.name}"
+            f"Week from {self.date} ({self.week_number}) - {self.playout_config.name}"
         )
         self.channel_display.setText(header)
 

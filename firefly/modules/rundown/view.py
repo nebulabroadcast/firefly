@@ -20,7 +20,7 @@ from .model import RundownModel
 
 class RundownView(FireflyView):
     def __init__(self, parent):
-        super(RundownView, self).__init__(parent)
+        super().__init__(parent)
         self.setAcceptDrops(True)
         self.setDropIndicatorShown(True)
         self.activated.connect(self.on_activate)
@@ -134,7 +134,6 @@ class RundownView(FireflyView):
                 self.selected_objects[0]["id_asset"]
                 or self.selected_objects[0]["item_role"] == "live"
             ):
-
                 mode_menu = menu.addMenu("Run mode")
 
                 action_mode_auto = QAction("&Auto", self)
@@ -470,7 +469,6 @@ class RundownView(FireflyView):
         obj = self.model().object_data[mi.row()]
         can_mcr = firefly.user.can("mcr", self.id_channel)
         if obj.object_type == "item":
-
             if obj.id:
                 if obj["item_role"] == "placeholder":
                     self.on_edit_item()
@@ -495,7 +493,7 @@ class RundownView(FireflyView):
         self.clearSelection()
 
     def dragMoveEvent(self, event):
-        super(RundownView, self).dragMoveEvent(event)
+        super().dragMoveEvent(event)
         if event.mimeData().hasFormat("application/nx.item"):
             if event.keyboardModifiers() & Qt.KeyboardModifier.AltModifier:
                 event.setDropAction(Qt.DropAction.CopyAction)

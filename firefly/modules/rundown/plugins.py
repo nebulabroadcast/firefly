@@ -11,7 +11,7 @@ from firefly.log import log
 
 class PlayoutPlugin(QWidget):
     def __init__(self, parent, data):
-        super(PlayoutPlugin, self).__init__(parent)
+        super().__init__(parent)
 
         self.id_channel = parent.id_channel
         self.name = data["name"]
@@ -75,7 +75,7 @@ class PlayoutPlugin(QWidget):
 
 class PlayoutPlugins(QTabWidget):
     def __init__(self, parent):
-        super(PlayoutPlugins, self).__init__(parent)
+        super().__init__(parent)
         self.plugins = []
 
     @property

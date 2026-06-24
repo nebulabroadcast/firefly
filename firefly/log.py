@@ -8,7 +8,7 @@ from firefly.config import config
 
 
 def indent(text: str, level: int = 4) -> str:
-    return text.replace("\n", f"\n{' '*level}")
+    return text.replace("\n", f"\n{' ' * level}")
 
 
 class LogLevel(enum.IntEnum):

@@ -10,7 +10,7 @@ EMPTY_EVENT_DATA = '[{"id" : 0, "title" : "Empty event"}]'.encode("ascii")
 
 class EmptyEventButton(QToolButton):
     def __init__(self, parent):
-        super(EmptyEventButton, self).__init__()
+        super().__init__()
         self.pressed.connect(self.startDrag)
         self.setIcon(QIcon(pixlib["empty-event"]))
         self.setToolTip("Drag this to scheduler to create empty event.")

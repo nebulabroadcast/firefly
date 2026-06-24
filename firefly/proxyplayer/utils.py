@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QLineEdit, QSizePolicy, QToolBar, QWidget
 
 class TimecodeWindow(QLineEdit):
     def __init__(self, parent=None):
-        super(TimecodeWindow, self).__init__(parent)
+        super().__init__(parent)
         self.setText("00:00:00:00")
         self.setInputMask("99:99:99:99")
 
@@ -30,13 +30,13 @@ class TimecodeWindow(QLineEdit):
 
 class ToolBarStretcher(QWidget):
     def __init__(self, parent):
-        super(ToolBarStretcher, self).__init__(parent)
+        super().__init__(parent)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
 
 class RegionBar(QWidget):
     def __init__(self, parent):
-        super(RegionBar, self).__init__(parent)
+        super().__init__(parent)
         self.marks_color = QColor("#009fbc")
         self.bad_marks_color = QColor("#9f0000")
         self.setFixedHeight(6)

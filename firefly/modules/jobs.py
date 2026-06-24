@@ -25,7 +25,7 @@ class SearchWidget(QLineEdit):
 
 class JobsModule(BaseModule):
     def __init__(self, parent):
-        super(JobsModule, self).__init__(parent)
+        super().__init__(parent)
 
         self.view = FireflyJobsView(self)
 

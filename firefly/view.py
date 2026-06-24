@@ -27,7 +27,7 @@ def format_description(key):
 
 class FireflyViewModel(QAbstractTableModel):
     def __init__(self, parent):
-        super(FireflyViewModel, self).__init__(parent)
+        super().__init__(parent)
         self.object_data = []
         self.header_data = []
         self.changed_objects = []
@@ -108,7 +108,7 @@ class FireflyViewModel(QAbstractTableModel):
 
 class FireflySortModel(QSortFilterProxyModel):
     def __init__(self, model):
-        super(FireflySortModel, self).__init__()
+        super().__init__()
         self.setSourceModel(model)
         self.setDynamicSortFilter(True)
         self.setSortLocaleAware(True)
@@ -123,7 +123,7 @@ class FireflySortModel(QSortFilterProxyModel):
 
 class FireflyView(QTableView):
     def __init__(self, parent):
-        super(FireflyView, self).__init__(parent)
+        super().__init__(parent)
         self.verticalHeader().setVisible(False)
         self.setWordWrap(False)
         self.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
