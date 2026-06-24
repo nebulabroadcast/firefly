@@ -14,6 +14,9 @@ try:
 except OSError:
     has_mpv = False
     log.warning("Unable to load MPV libraries. Video preview will not be available.")
+except Exception:
+    log.traceback("Error loading MPV libraries. Video preview will not be available.")
+    has_mpv = False
 
 
 class DummyPlayer:
