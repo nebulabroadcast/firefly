@@ -1,7 +1,6 @@
-from nxtools import s2tc, s2time
-
 import firefly
 from firefly.enum import Colors, ObjectStatus, RunMode
+from firefly.helpers.timecode import s2tc, s2time
 
 RUNDOWN_EVENT_BACKGROUND_COLOR = "#0f0f0f"
 

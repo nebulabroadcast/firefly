@@ -111,6 +111,7 @@ SYMBOLS: dict[str, str | tuple[str, str]] = {
     "calendar": "calendar_month",
     "cancel": "close",
     "clear-in": "line_start_circle",
+    "clear-marks": "backspace",
     "clear-out": "line_end_circle",
     "create-subclip": "content_cut",
     "dropdown-arrow": "arrow_drop_down",

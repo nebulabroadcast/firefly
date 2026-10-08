@@ -1,13 +1,13 @@
 import json
 import time
 
-from nxtools import format_time
 from PySide6.QtCore import QMimeData, Qt, QUrl
 from PySide6.QtWidgets import QApplication
 
 import firefly
 from firefly.api import api
 from firefly.dialogs.rundown import PlaceholderDialog, SubclipSelectDialog
+from firefly.helpers.format import format_time
 from firefly.log import log
 from firefly.objects import Asset, Event, Item, asset_cache
 from firefly.view import FireflyViewModel

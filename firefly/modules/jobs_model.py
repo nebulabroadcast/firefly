@@ -1,12 +1,12 @@
 import functools
 
-from nxtools import format_time
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction, QColor
 from PySide6.QtWidgets import QApplication, QMenu
 
 from firefly.api import api
 from firefly.enum import Colors, JobState
+from firefly.helpers.format import format_time
 from firefly.log import log
 from firefly.objects import asset_cache
 from firefly.view import FireflyView, FireflyViewModel

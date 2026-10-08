@@ -1,6 +1,6 @@
 import json
+import uuid
 
-from nxtools import get_guid
 from pydantic import BaseModel, Field
 
 
@@ -16,7 +16,7 @@ class SiteConfiguration(BaseModel):
 class FireflyConfig(BaseModel):
     """Firefly configuration model."""
 
-    client_id: str = Field(default_factory=get_guid, title="Client ID")
+    client_id: str = Field(default_factory=lambda: str(uuid.uuid1()), title="Client ID")
     debug: bool = Field(False, title="Debug mode")
 
     sites: list[SiteConfiguration] = Field(

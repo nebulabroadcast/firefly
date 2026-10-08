@@ -1,10 +1,11 @@
 import os
-
-from nxtools import PLATFORM
+import sys
 
 import firefly
 from firefly.config import config
 from firefly.log import log
+
+PLATFORM = "windows" if sys.platform == "win32" else "unix"
 
 if PLATFORM == "windows":
     import ctypes

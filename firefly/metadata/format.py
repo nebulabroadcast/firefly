@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING, Any
 
-from nxtools import format_filesize, format_time, s2tc
-
 from firefly import settings
 from firefly.enum import ContentType, MediaType, ObjectStatus, QCState
+from firefly.helpers.format import format_filesize, format_time
+from firefly.helpers.timecode import s2tc
 
 if TYPE_CHECKING:
     from firefly.metadata import MetaType

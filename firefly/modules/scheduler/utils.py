@@ -1,12 +1,13 @@
 import os
 import re
+from xml.etree import ElementTree
 
-from nxtools import format_time, xml
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFontMetrics
 from PySide6.QtWidgets import QApplication, QFileDialog
 
 from firefly.api import api
+from firefly.helpers.format import format_time
 from firefly.log import log
 from firefly.metadata import meta_types
 from firefly.objects import Event, Item
@@ -113,7 +114,7 @@ def import_template(scheduler, day_offset=0):
     QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
     try:
         feed = open(file_path, "rb").read().decode("utf-8")
-        data = xml(feed)
+        data = ElementTree.XML(feed)
     except Exception:
         QApplication.restoreOverrideCursor()
         log.traceback()

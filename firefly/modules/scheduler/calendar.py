@@ -2,7 +2,6 @@ import functools
 import json
 import time
 
-from nxtools import datestr2ts, format_time, s2tc, s2time
 from PySide6.QtCore import QMimeData, QRect, Qt, QTimer
 from PySide6.QtGui import QAction, QColor, QDrag, QFont, QLinearGradient, QPainter, QPen
 from PySide6.QtWidgets import (
@@ -22,7 +21,9 @@ from PySide6.QtWidgets import (
 import firefly
 from firefly.api import api
 from firefly.dialogs.event import show_event_dialog
+from firefly.helpers.format import datestr2ts, format_time
 from firefly.helpers.scheduling import can_append
+from firefly.helpers.timecode import s2tc, s2time
 from firefly.log import log
 from firefly.objects import Asset, Event
 from firefly.qt import app_skin

@@ -1,10 +1,10 @@
 import copy
 from typing import Any
 
-from nxtools import unaccent
 from pydantic import BaseModel
 
 import firefly
+from firefly.helpers.format import unaccent
 
 from .utils import CachedObject, filter_match
 

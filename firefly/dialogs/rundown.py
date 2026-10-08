@@ -1,6 +1,5 @@
 import functools
 
-from nxtools import s2tc
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QApplication,
@@ -12,6 +11,7 @@ from PySide6.QtWidgets import (
 
 from firefly.api import api
 from firefly.components.form import MetadataForm
+from firefly.helpers.timecode import s2tc
 from firefly.log import log
 from firefly.settings import FolderField
 

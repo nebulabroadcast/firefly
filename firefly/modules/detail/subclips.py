@@ -1,10 +1,10 @@
 import copy
 
-from nxtools import s2tc
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QInputDialog, QMenu
 
+from firefly.helpers.timecode import s2tc
 from firefly.log import log
 from firefly.metadata import meta_types
 from firefly.view import FireflyView, FireflyViewModel

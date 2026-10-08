@@ -1,8 +1,9 @@
 import re
 
-from nxtools import s2tc, tc2s
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtWidgets import QLineEdit
+
+from firefly.helpers.timecode import s2tc, tc2s
 
 
 class InputTimecode(QLineEdit):

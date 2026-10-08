@@ -1,11 +1,13 @@
 import functools
+import math
 
-from PySide6.QtCore import Qt, QTimer, Slot
+from PySide6.QtCore import Qt, QTimer, QUrl
 from PySide6.QtGui import QIcon
 from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer
 from PySide6.QtMultimediaWidgets import QVideoWidget
 from PySide6.QtWidgets import QHBoxLayout, QSlider, QVBoxLayout, QWidget
 
+from firefly.log import log
 from firefly.proxyplayer.utils import RegionBar, TimecodeWindow, get_navbar
 
 
@@ -108,6 +110,10 @@ class VideoPlayer(QWidget):
         self.navbar.setFocus()
 
         self.player.playbackStateChanged.connect(self.playback_state_changed)
+        self.player.positionChanged.connect(self.on_position_change)
+        self.player.durationChanged.connect(self.on_duration_change)
+        self.player.errorOccurred.connect(self.on_error)
+        self.player.mediaStatusChanged.connect(self.on_media_status)
 
         # Displays updater
 
@@ -123,17 +129,22 @@ class VideoPlayer(QWidget):
     def frame_dur(self):
         return 1 / self.fps
 
+    def snap(self, position):
+        """Round a position (seconds) down to the start of its frame."""
+        return math.floor(position * self.fps + 1e-6) / self.fps
+
     def load(self, path, mark_in=0, mark_out=0, markers={}):
-        if self.player.playbackState() != QMediaPlayer.StoppedState:
+        if self.player.playbackState() != QMediaPlayer.PlaybackState.StoppedState:
             self.player.stop()
 
         self.loaded = False
         self.markers = markers
+        self.position = 0
+        self.duration = 0
 
-        self.player.setSource(path)
-        self.player.play()
+        self.player.setSource(QUrl(path))
+        # pausing (rather than stopping) makes the player show the first frame
         self.player.pause()
-        self.loaded = True
 
         self.prev_mark_in = -1
         self.prev_mark_out = -1
@@ -144,17 +155,28 @@ class VideoPlayer(QWidget):
         self.duration_display.set_value(0)
         self.position_display.set_value(0)
 
-    @Slot("QMediaPlayer::PlaybackState")
     def playback_state_changed(self, state):
-        print(self.player.position(), self.player.duration())
-        if self.player.playbackState() == QMediaPlayer.PlayingState:
+        if state == QMediaPlayer.PlaybackState.PlayingState:
             self.action_play.setIcon(QIcon(self.pixlib["pause"]))
         else:
             self.action_play.setIcon(QIcon(self.pixlib["play"]))
 
+    def on_media_status(self, status):
+        # Like mpv's keep-open: stay paused on the last frame instead of
+        # stopping (Qt would restart from the beginning on next play)
+        if status == QMediaPlayer.MediaStatus.EndOfMedia:
+            self.player.pause()
+            self.seek(self.duration)
+
+    def on_error(self, error, message):
+        log.error(f"Video player: {message}")
+
+    def on_position_change(self, value):
+        self.position = self.snap(value / 1000)
+
     def on_duration_change(self, value):
         if value:
-            self.duration = value
+            self.duration = value / 1000
             self.loaded = True
         else:
             self.duration = 0
@@ -196,7 +218,7 @@ class VideoPlayer(QWidget):
     def on_go_end(self):
         if not self.loaded:
             return
-        self.seek(self.duration)
+        self.seek(self.duration - self.frame_dur)
 
     def on_go_in(self):
         if not self.loaded:
@@ -258,12 +280,19 @@ class VideoPlayer(QWidget):
         if isinstance(position, TimecodeWindow):
             position = position.get_value()
             self.setFocus()
-        self.player.setPosition(int(position * 1000))
+        last_frame = max(self.duration - self.frame_dur, 0)
+        position = self.snap(min(max(position, 0), last_frame))
+        # Update immediately, so repeated frame steps accumulate
+        # before the player reports the new position
+        self.position = position
+        # Aim at the middle of the frame: seeking to its exact start returns
+        # the previous frame on proxies that are not intra-only
+        self.player.setPosition(round((position + self.frame_dur / 2) * 1000))
 
     def on_pause(self):
         if not self.loaded:
             return
-        if self.player.playbackState() == QMediaPlayer.PlayingState:
+        if self.player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             self.player.pause()
         else:
             self.player.play()
@@ -290,12 +319,9 @@ class VideoPlayer(QWidget):
         if not self.loaded:
             return
 
-        self.position = self.player.position() / 1000
-        self.duration = self.player.duration() / 1000
-
         if self.position != self.prev_position and self.position is not None:
             self.position_display.set_value(self.position)
-            if self.seek_to is not None:
+            if not self.timeline.isSliderDown():
                 self.timeline.setValue(int(self.position * 100))
             self.prev_position = self.position
 

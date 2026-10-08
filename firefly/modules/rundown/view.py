@@ -1,6 +1,5 @@
 from functools import partial
 
-from nxtools import s2time
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QAbstractItemView, QApplication, QMenu, QMessageBox
@@ -12,6 +11,7 @@ from firefly.dialogs.rundown import PlaceholderDialog, show_trim_dialog
 from firefly.dialogs.send_to import show_send_to_dialog
 from firefly.dialogs.split_item import show_split_dialog
 from firefly.enum import RunMode
+from firefly.helpers.timecode import s2time
 from firefly.log import log
 from firefly.view import FireflyView
 

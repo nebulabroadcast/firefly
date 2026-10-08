@@ -1,7 +1,6 @@
 import copy
 import functools
 
-from nxtools import s2time
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import (
@@ -25,6 +24,7 @@ from firefly.base_module import BaseModule
 from firefly.dialogs.batch_ops import show_batch_ops_dialog
 from firefly.dialogs.send_to import show_send_to_dialog
 from firefly.enum import ObjectStatus
+from firefly.helpers.timecode import s2time
 from firefly.log import log
 from firefly.objects import asset_cache
 from firefly.qt import app_skin, pixlib

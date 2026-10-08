@@ -1,7 +1,6 @@
 import math
 import time
 
-from nxtools import s2tc
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import (
     QApplication,
@@ -16,6 +15,7 @@ from PySide6.QtWidgets import (
 
 import firefly
 from firefly.api import api
+from firefly.helpers.timecode import s2tc
 
 PROGRESS_BAR_RESOLUTION = 1000
 

@@ -1,7 +1,8 @@
-from nxtools import s2tc
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction, QColor, QIcon, QPainter
 from PySide6.QtWidgets import QLineEdit, QSizePolicy, QToolBar, QWidget
+
+from firefly.helpers.timecode import s2tc
 
 
 class TimecodeWindow(QLineEdit):
@@ -92,7 +93,9 @@ def get_navbar(wnd):
     # Invisible actions
     #
 
-    wnd.action_clear_marks = QAction(wnd)
+    wnd.action_clear_marks = QAction(
+        QIcon(wnd.pixlib["clear-marks"]), "Clear marks", wnd
+    )
     wnd.action_clear_marks.setShortcuts(["g"])
     wnd.action_clear_marks.setStatusTip("Clear both marks")
     wnd.action_clear_marks.triggered.connect(wnd.on_clear_marks)
