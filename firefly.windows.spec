@@ -17,6 +17,8 @@ a = Analysis(
         ("images/*.png", "images"),
         ("images/*.ico", "images"),
         ("skin.css", "."),
+        ("fonts/*.ttf", "fonts"),
+        ("fonts/OFL.txt", "fonts"),
         ("mpv-1.dll", "."),
     ],
     win_no_prefer_redirects=False,

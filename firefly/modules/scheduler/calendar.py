@@ -95,7 +95,7 @@ class SchedulerClockBar(SchedulerVerticalBar):
         qp.drawRect(0, 0, self.width(), self.height())
 
         qp.setPen(TIME_PENS[0][1])
-        font = QFont("Sans Serif", 9, QFont.Weight.Light)
+        font = QFont()  # application font
         qp.setFont(font)
 
         for i in range(0, MINS_PER_DAY, self.resolution):
@@ -214,7 +214,7 @@ class SchedulerDayWidget(SchedulerVerticalBar):
             qp.fillRect(erect, lcolor)
 
         qp.setPen(QColor("#e0e0e0"))
-        font = QFont("Sans", TEXT_SIZE)
+        font = QFont()  # application font
         if evt_h > TEXT_SIZE + 15:
             text = text_shorten(event["title"], font, self.width() - 10)
             qp.drawText(6, base_t + TEXT_SIZE + 9, text)
@@ -576,7 +576,6 @@ class SchedulerDayHeaderWidget(QLabel):
                 background-color: #24202e;
                 text-align:center;
                 qproperty-alignment: AlignCenter;
-                font-size:14px;
                 padding: 8px;
 
             """

@@ -32,24 +32,20 @@ class MCRButton(QPushButton):
             bg_col = "#109410"
             self.setToolTip("Start cued clip")
         else:
-            bg_col = "#565656"
+            bg_col = "transparent"
         self.setStyleSheet(
             f"""
             MCRButton {{
-                font-size:14px;
-                color: #eeeeee;
                 width: 80px;
-                height:30px;
-                border: 2px solid {bg_col};
-                text-transform: uppercase;
+                border: 1px solid {bg_col};
             }}
 
             MCRButton:checked {{
-                border: 2px solid #00a5c3;
+                border: 1px solid #0ed3fe;
             }}
 
             MCRButton:pressed {{
-                border: 2px solid #00a5c3;
+                border: 1px solid #0ed3fe;
             }}"""
         )
 
@@ -58,16 +54,18 @@ class MCRButton(QPushButton):
 
 
 class MCRLabel(QLabel):
-    def __init__(self, head, default, parent=None, tcolor="#eeeeee"):
+    def __init__(self, head, default, parent=None, tcolor="#eeeeee", mono=False):
         super().__init__(parent)
         self.head = head
+        font_family = '"Noto Sans Mono", monospace' if mono else '"Noto Sans"'
         self.setStyleSheet(
             f"""
-                background-color: #161616;
-                padding:5px;
-                margin:3px;
-                font:16px;
-                font-weight: bold;
+                background-color: #24202e;
+                padding: 4px 8px;
+                margin: 3px;
+                font-family: {font_family};
+                font-size: 14px;
+                font-weight: 600;
                 color : {tcolor};
             """
         )
@@ -113,14 +111,14 @@ class MCR(QWidget):
         btns_layout.addWidget(self.btn_cue_forward, 0)
         btns_layout.addStretch(1)
 
-        self.display_clock = MCRLabel("CLK", "--:--:--:--")
-        self.display_pos = MCRLabel("POS", "--:--:--:--")
+        self.display_clock = MCRLabel("CLK", "--:--:--:--", mono=True)
+        self.display_pos = MCRLabel("POS", "--:--:--:--", mono=True)
 
         self.display_current = MCRLabel("CUR", "(no clip)", tcolor="#cc0000")
         self.display_cued = MCRLabel("NXT", "(no clip)", tcolor="#00cc00")
 
-        self.display_rem = MCRLabel("REM", "(unknown)")
-        self.display_dur = MCRLabel("DUR", "--:--:--:--")
+        self.display_rem = MCRLabel("REM", "(unknown)", mono=True)
+        self.display_dur = MCRLabel("DUR", "--:--:--:--", mono=True)
 
         info_layout = QGridLayout()
         info_layout.setContentsMargins(0, 0, 0, 0)

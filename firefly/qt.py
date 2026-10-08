@@ -1,7 +1,14 @@
 import os
 
-from PySide6.QtCore import QSettings
-from PySide6.QtGui import QColor, QFont, QPixmap
+from PySide6.QtCore import QSettings, Qt
+from PySide6.QtGui import (
+    QColor,
+    QFont,
+    QFontDatabase,
+    QGuiApplication,
+    QPainter,
+    QPixmap,
+)
 
 import firefly
 
@@ -47,40 +54,40 @@ if os.path.exists(skin_path):
         print("Unable to read stylesheet")
 
 
+def load_fonts():
+    """Register bundled fonts. Requires a running QApplication."""
+    fonts_dir = os.path.join(app_dir, "fonts")
+    if not os.path.isdir(fonts_dir):
+        return
+    for fname in sorted(os.listdir(fonts_dir)):
+        if not fname.endswith(".ttf"):
+            continue
+        if QFontDatabase.addApplicationFont(os.path.join(fonts_dir, fname)) == -1:
+            print(f"Unable to load font {fname}")
+
+
 class FontLib:
     def __init__(self):
         self.data = {}
 
     def load(self):
-
-        font_italic = QFont()
-        font_italic.setItalic(True)
-
-        font_bold = QFont()
-        font_bold.setBold(True)
-
-        font_bolditalic = QFont()
-        font_bolditalic.setBold(True)
-        font_bolditalic.setItalic(True)
-
-        font_boldunderline = QFont()
-        font_boldunderline.setBold(True)
-        font_boldunderline.setUnderline(True)
-
-        font_underline = QFont()
-        font_underline.setUnderline(True)
-
-        font_strikeout = QFont()
-        font_strikeout.setStrikeOut(True)
-
-        self.data = {
-            "bold": font_bold,
-            "italic": font_italic,
-            "bolditalic": font_bolditalic,
-            "underline": font_underline,
-            "boldunderline": font_boldunderline,
-            "strikeout": font_strikeout,
+        # SemiBold rather than Bold: Qt renders bold text on dark backgrounds
+        # much heavier than browsers do
+        styles = {
+            "bold": {"weight": QFont.Weight.DemiBold},
+            "italic": {"italic": True},
+            "bolditalic": {"weight": QFont.Weight.DemiBold, "italic": True},
+            "underline": {"underline": True},
+            "boldunderline": {"weight": QFont.Weight.DemiBold, "underline": True},
+            "strikeout": {"strikeout": True},
         }
+        for name, style in styles.items():
+            font = QFont()
+            font.setWeight(style.get("weight", QFont.Weight.Normal))
+            font.setItalic(style.get("italic", False))
+            font.setUnderline(style.get("underline", False))
+            font.setStrikeOut(style.get("strikeout", False))
+            self.data[name] = font
 
     def __getitem__(self, key):
         if not self.data:
@@ -88,9 +95,94 @@ class FontLib:
         return self.data.get(key)
 
 
+#
+# Icons - Material Symbols, same as the Nebula web frontend.
+# Names map to a symbol, or to (symbol, color) for icons carrying a meaning.
+# Names not listed here fall back to images/<name>.png
+#
+
+ICON_FONT = "Material Symbols Outlined"
+ICON_COLOR = "#d7d4d5"
+ICON_SIZE = 20
+
+SYMBOLS: dict[str, str | tuple[str, str]] = {
+    "accept": "check",
+    "archive": "archive",
+    "calendar": "calendar_month",
+    "cancel": "close",
+    "clear-in": "line_start_circle",
+    "clear-out": "line_end_circle",
+    "create-subclip": "content_cut",
+    "dropdown-arrow": "arrow_drop_down",
+    "empty-event": "calendar_add_on",
+    "fast-backward": "skip_previous",
+    "fast-forward": "skip_next",
+    "goto-in": "first_page",
+    "goto-out": "last_page",
+    "lead-in": "vertical_align_top",
+    "lead-out": "vertical_align_bottom",
+    "live": "live_tv",
+    "manage-subclips": "list",
+    "mark-in": "line_start",
+    "mark-out": "line_end",
+    "mcr": "tune",
+    "next": "chevron_right",
+    "next-more": "keyboard_double_arrow_right",
+    "now": "my_location",
+    "pause": "pause",
+    "placeholder": "crop_free",
+    "play": "play_arrow",
+    "plugins": "extension",
+    "previous": "chevron_left",
+    "previous-more": "keyboard_double_arrow_left",
+    "qc_new": ("radio_button_unchecked", "#9c9c9c"),
+    "qc_failed": ("error", "#ff2404"),
+    "qc_passed": ("check_circle", "#fcde00"),
+    "qc_rejected": ("cancel", "#ff2404"),
+    "qc_approved": ("verified", "#5fff5f"),
+    "refresh": "refresh",
+    "restore-marks": "undo",
+    "save-marks": "save",
+    "search": "search",
+    "set-poster": "image",
+    "show-runs": "history",
+    "smallarrow-down": "arrow_drop_down",
+    "smallarrow-up": "arrow_drop_up",
+    "star": ("star", "#fcde00"),
+    "trash": "delete",
+    "unstar": ("star", "#6b6b6b"),
+}
+
+
+def get_symbol(name: str) -> QPixmap | None:
+    base = name.removesuffix("-sm")
+    spec = SYMBOLS.get(base)
+    if spec is None:
+        return None
+    symbol, color = spec if isinstance(spec, tuple) else (spec, ICON_COLOR)
+    size = 16 if name.endswith("-sm") else ICON_SIZE
+    app = QGuiApplication.instance()
+    dpr = app.devicePixelRatio() if app else 1.0
+
+    pixmap = QPixmap(round(size * dpr), round(size * dpr))
+    pixmap.setDevicePixelRatio(dpr)
+    pixmap.fill(Qt.GlobalColor.transparent)
+    font = QFont(ICON_FONT)
+    font.setPixelSize(size)
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.RenderHint.TextAntialiasing)
+    painter.setFont(font)
+    painter.setPen(QColor(color))
+    painter.drawText(0, 0, size, size, Qt.AlignmentFlag.AlignCenter, symbol)
+    painter.end()
+    return pixmap
+
+
 def get_pix(name):
     if not name:
         return None
+    if (symbol := get_symbol(name)) is not None:
+        return symbol
     if name.startswith("folder_"):
         id_folder = int(name.lstrip("folder_"))
         icn = QPixmap(12, 12)

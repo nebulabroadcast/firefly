@@ -125,13 +125,17 @@ class FireflyView(QTableView):
     def __init__(self, parent):
         super().__init__(parent)
         self.verticalHeader().setVisible(False)
+        self.verticalHeader().setDefaultSectionSize(24)
+        self.horizontalHeader().setDefaultAlignment(
+            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+        )
         self.setWordWrap(False)
         self.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.setDragEnabled(True)
         self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.setShowGrid(False)
-        self.setAlternatingRowColors(True)
+        self.setAlternatingRowColors(False)
 
         self.selected_objects = []
         self.focus_enabled = True

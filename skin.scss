@@ -1,174 +1,277 @@
+// Mirrors the Nebula web frontend (nebula/frontend/src/index.scss and components/*.css)
+
 $color-surface-01: #19161f;
 $color-surface-02: #1f1e26;
 $color-surface-03: #24202e;
 $color-surface-04: #2e2a38;
 $color-surface-05: #302c3a;
-$color-surface-06: #3a3644;
+$color-surface-06: #3a3544;
+$color-surface-07: #413e4e;
+$color-surface-08: #514a5e;
 $color-text: #d7d4d5;
 $color-text-hl: #fbfbfb;
-$color-text-dim: #ababab;
+$color-text-dim: #9c9c9c;
+$color-text-muted: #6b6b6b;
 $color-cyan: #0ed3fe;
 $color-blue: #4600ff;
 $color-magenta: #b000ff;
 $color-violet: #885bff;
-$color-yellow: #ec9e00;
-$color-red: #ff5f5f;
+$color-yellow: #fcde00;
+$color-red: #ff2404;
 $color-green: #5fff5f;
 
 
-$color-bkg-primary : $color-surface-03;
-$color-bkg-secondary : $color-surface-01;
-$color-border: $color-surface-05;
-$color-highlight: $color-cyan;
+$hover-item-background: $color-surface-05;
+$hover-item-color: $color-text-hl;
+$active-item-background: $color-surface-06;
+$active-item-color: $color-cyan;
+
+$input-border-radius: 4px;
+$input-background: $color-surface-04;
+$input-height: 30px;
+// Firefly is denser than the web: inputs and buttons share this total height
+$control-height: 26px;
+$input-padding: 4px;
+$nav-border-radius: 8px;
+$section-gap: 6px;
 
 
-QMainWindow, 
+QMainWindow,
 QDialog,
 QToolBar,
 QMenuBar,
 QWidget,
 QToolTip {
-    background-color: $color-surface-01;
-    color: $color-text;
+  background-color: $color-surface-01;
+  color: $color-text;
 }
 
-QStatusBar,
-QHeaderView {
-    background-color: $color-surface-02;
-    color: $color-text;
-}
-
-QToolBar {
-    background-color: $color-surface-02;
-    spacing: 6px;
-    border-radius: 8px;
-    padding-top: 3px;
-    padding-bottom: 4px;
-    padding-left: 4px;
-    padding-right: 4px;
-    min-height: 38px;
-    max-height: 38px;
-    margin-top: 6px;
-    margin-bottom: 6px;
-}
-
-
-QToolBar::separator{
-    width: 10px;
-    color: red;
+QLabel {
+  background-color: transparent;
 }
 
 QToolTip {
-    border: 1px solid $color-highlight;
-    padding: 3px;
-    line-height: 150%;
+  background-color: $color-surface-03;
+  border: 1px solid $color-surface-06;
+  padding: 4px 6px;
+}
+
+QSplitter::handle {
+  background-color: $color-surface-01;
+
+  &:horizontal {
+    width: $section-gap;
+  }
+
+  &:vertical {
+    height: $section-gap;
+  }
+}
+
+
+/* NAVBAR / TOOLBAR */
+
+QToolBar {
+  background-color: $color-surface-02;
+  border: 0;
+  border-radius: $nav-border-radius;
+  spacing: $section-gap;
+  padding: 4px;
+  margin-top: $section-gap;
+  margin-bottom: $section-gap;
+  qproperty-iconSize: 20px 20px;
+}
+
+// Text-only links, like the web navbar (e.g. jobs: active/finished/failed)
+QToolBar QPushButton[nav="true"] {
+  background-color: transparent;
+  border: 0;
+  padding: 0 8px;
+  color: #b0b0b0;
+
+  &:hover,
+  &:focus {
+    background-color: transparent;
+    color: white;
+  }
+
+  &:checked {
+    background-color: transparent;
+    color: white;
+  }
+}
+
+QToolBar::separator {
+  width: 1px;
+  margin: 4px;
+  background-color: $color-surface-04;
+}
+
+
+/* STATUS BAR */
+
+QStatusBar {
+  background-color: $color-surface-02;
+  color: $color-text-dim;
+  min-height: 24px;
+
+  &::item {
+    border: 0;
+  }
+
+  QLabel {
+    padding: 0 6px;
+  }
 }
 
 
 /* MENU */
 
-QMenu{
-    border: 1px solid $color-border;
-}
-
 QMenuBar {
-  background-color: $color-bkg-secondary;
-  border-bottom: 1px solid $color-border;
+  background-color: $color-surface-01;
+  padding: 2px 4px;
+
+  &::item {
+    padding: 4px 8px;
+    border-radius: $input-border-radius;
+    background-color: transparent;
+
+    &:selected {
+      background-color: $hover-item-background;
+      color: $hover-item-color;
+    }
+  }
 }
 
-QMenuBar::item, QMenu::item {
-    padding: 8px 12px;
+QMenu {
+  background-color: $color-surface-02;
+  border: 1px solid $color-surface-04;
+
+  &::item {
+    padding: 6px 24px 6px 10px;
     background-color: transparent;
 
     &:!enabled {
-        color: #646464;
+      color: $color-text-dim;
     }
 
-    &:selected{
+    &:selected {
       background-color: $color-surface-04;
-      color: white;
+      color: $color-text-hl;
     }
-}
+  }
 
-
-QMenu::separator {
-    height: 1px;
-    margin-top: 5px;
-    margin-top: 5px;
+  &::separator {
+    height: 2px;
     background-color: $color-surface-05;
+  }
 }
+
 
 /* TABLES */
 
 QTableView {
-    border: 0;
-    background-color: $color-surface-02;
-    alternate-background-color: $color-surface-03;
-    selection-background-color: $color-surface-06;
-    color: $color-text;
+  border: 0;
+  background-color: $color-surface-02;
+  alternate-background-color: $color-surface-02;
+  selection-background-color: $color-surface-05;
+  selection-color: $color-text-hl;
+  // a notch dimmer than the web: Qt renders light-on-dark text heavier
+  color: #c4c1c6;
+  outline: 0;
 }
 
-QTableView::item:focus {
-  background-color: $color-surface-06;
+// Only padding here: borders or backgrounds on ::item make Qt ignore the
+// model's BackgroundRole, which rundown/browser row colors depend on
+QTableView::item {
+  padding: 0 8px;
 }
 
+QHeaderView {
+  background-color: $color-surface-03;
+  border: 0;
+}
 
 QHeaderView::section {
-    background-color: $color-bkg-secondary;
-    color: $color-text;
-    font-weight: bold;
-    padding: 3px 5px;
-    border-top: 1px solid $color-surface-04;
-    border-right: 1px solid $color-surface-04;
-    border-bottom: 1px solid $color-surface-04;
-    border-bottom: 0;
+  background-color: $color-surface-03;
+  color: $color-text;
+  font-weight: 600;
+  padding: 0 11px;
+  height: 24px;
+  border: 0;
+  border-right: 2px solid $color-surface-02;
+  border-bottom: 2px solid $color-surface-02;
+
+  &:hover {
+    color: $color-text-hl;
+  }
+}
+
+QTableCornerButton::section {
+  background-color: $color-surface-03;
+  border: 0;
 }
 
 
-QTableCornerButton::section{
-    background-color: $color-surface-03;
-}
-
-/* TABS */
-
+/* TABS (styled like the web navbar) */
 
 QTabWidget::pane {
-  //border-top: 1px solid $color-border;
   border: none;
+}
+
+QTabBar {
+  qproperty-drawBase: 0;
 }
 
 QTabBar::close-button {
   image: url(images/cancel-sm.png);
+  subcontrol-position: right;
+  margin: 2px;
+  border-radius: 3px;
+
+  &:hover {
+    background-color: $hover-item-background;
+  }
 }
 
 QTabBar::tab {
-  min-width: 120px;
-  min-height : 30px;
-  padding-top: 3px;
-  padding-bottom: 3px;
-  padding-left: 8px;
-  padding-right: 8px;
+  min-width: 80px;
+  min-height: $input-height;
+  padding: 0 12px;
   background-color: $color-surface-02;
+  color: #b0b0b0;
+  font-weight: 500;
   border: 0;
-  //border: 1px solid $color-border;
-  //border-bottom: 0;
 
   &:first {
-    border-top-left-radius: 8px;
-    border-bottom-left-radius: 8px;
+    border-top-left-radius: $nav-border-radius;
+    border-bottom-left-radius: $nav-border-radius;
   }
 
   &:last {
-    border-top-right-radius: 8px;
-    border-bottom-right-radius: 8px;
+    border-top-right-radius: $nav-border-radius;
+    border-bottom-right-radius: $nav-border-radius;
+  }
+
+  &:only-one {
+    border-radius: $nav-border-radius;
+  }
+
+  &:hover {
+    color: white;
+  }
+
+  &:selected {
+    color: white;
+    background-color: $active-item-background;
   }
 }
 
-QTabBar::tab:selected {
-  background-color: $color-border;
-  border: none;
-  // border: 1px solid $color-border;
-  // border-bottom: 0;
+QTabBar QToolButton {
+  background-color: $color-surface-02;
+  border: 0;
+  min-height: 0;
+  max-height: 1000px;
 }
 
 
@@ -183,66 +286,93 @@ QToolButton,
 QTextEdit,
 QDateTimeEdit,
 QSpinBox {
-  background-color: $color-surface-04;
-  border: 1px solid $color-border;
-  border-radius: 4px;
-  padding-left: 5px;
-  padding-right: 5px;
-  min-height: 30px;
+  background-color: $input-background;
+  color: $color-text;
+  border: 1px solid transparent;
+  border-radius: $input-border-radius;
+  padding: 0 $input-padding;
+  selection-background-color: $color-surface-07;
 
   &:focus {
-    border: 1px solid $color-highlight;
+    border: 1px solid $color-cyan;
   }
 
   &:!enabled {
-    color: #646464;
+    background-color: $color-surface-03;
+    color: $color-surface-08;
   }
 
-  &:not(QTextEdit) {
-    max-height: 30px;
-  }
 }
 
-QTextEdit{
-  min-height: 150px;
+// QSS has no :not(), so heights are set per type (content box: minus border)
+QLineEdit,
+QComboBox,
+QPushButton,
+QToolButton,
+QDateTimeEdit,
+QSpinBox {
+  min-height: $control-height - 2px;
+  max-height: $control-height - 2px;
+}
+
+QLineEdit:read-only {
+  font-style: italic;
+}
+
+QTextEdit {
+  min-height: 120px;
+  padding: $input-padding;
 }
 
 // BUTTONS
 
-QPushButton, QToolButton{
-  &:hover{
+QPushButton,
+QToolButton {
+  padding: 0 12px;
+
+  &:focus {
+    border: 1px solid transparent;
     background-color: $color-surface-06;
   }
 
-  &:checked{
-    background-color: $color-highlight;
-    color: $color-surface-01;
-
-    &:hover{
-      background-color: $color-highlight;
-    }
+  &:hover {
+    background-color: $hover-item-background;
+    color: $hover-item-color;
   }
 
-
-  &:pressed{
-    border: $color-highlight;
+  &:checked {
+    background-color: $active-item-background;
+    color: $active-item-color;
   }
+
+  &:!enabled {
+    background-color: $color-surface-03;
+    color: $color-text-dim;
+  }
+}
+
+// Icon-only buttons, like .nb-button.icon-only
+QToolBar QToolButton {
+  padding: 0 4px;
+  min-width: $control-height - 2px;
 }
 
 QToolButton[popupMode="1"] {
-  padding-right: 20px; 
+  padding-right: 20px;
 }
 
 QToolButton::menu-button {
+  border: 0;
   border-left: 1px solid $color-surface-02;
-  border-top-right-radius: 4px;
-  border-bottom-right-radius: 4px;
+  border-top-right-radius: $input-border-radius;
+  border-bottom-right-radius: $input-border-radius;
   width: 16px;
 }
 
 .ItemButton {
-  border: none ;
-  &:pressed{
+  border: none;
+
+  &:pressed {
     border: none !important;
   }
 }
@@ -251,194 +381,192 @@ QToolButton::menu-button {
 
 QCheckBox {
   color: $color-text;
-  &::indicator{
-    border: 1px solid $color-border;
-    width: 30px;
-    height: 30px;
-    &:checked{
+  spacing: 8px;
+  background-color: transparent;
+
+  &::indicator {
+    background-color: $input-background;
+    border: 1px solid transparent;
+    border-radius: $input-border-radius;
+    width: 18px;
+    height: 18px;
+
+    &:hover {
+      border-color: $color-cyan;
+    }
+
+    &:checked {
       image: url(images/accept.png);
     }
   }
 }
 
 
-QSpinBox:up-button{
-    padding-right: 2px;
-    image: url(images/smallarrow-up.png);
+QSpinBox::up-button {
+  padding-right: 2px;
+  image: url(images/smallarrow-up.png);
 }
 
-QSpinBox:down-button{
-    padding-right: 2px;
-    image: url(images/smallarrow-down.png);
+QSpinBox::down-button {
+  padding-right: 2px;
+  image: url(images/smallarrow-down.png);
 }
-
 
 
 /* Combo box*/
 
+QComboBox {
+  padding-right: 20px;
+}
+
 QComboBox::drop-down {
-  border: 0px;
+  border: 0;
+  width: 20px;
 }
 
 QComboBox::down-arrow {
   image: url(images/smallarrow-down.png);
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
 }
 
 QComboBox QAbstractItemView {
-    border: 1px solid $color-highlight;
-	padding : 5px;
+  background-color: $color-surface-03;
+  border: 0;
+  outline: 0;
 }
 
-QComboBox QAbstractItemView::item, QComboBox:item {
-    background-color: $color-bkg-primary;
-    color: $color-text;
+QComboBox QAbstractItemView::item,
+QComboBox:item {
+  background-color: transparent;
+  color: $color-text;
+  // no padding here: it makes Qt size popup rows to half the screen
+  min-height: 24px;
 }
 
-QComboBox QAbstractItemView::item:selected, QComboBox:item:selected {
-  background-color: $color-bkg-secondary;
-  color: $color-highlight;
+QComboBox QAbstractItemView::item:selected,
+QComboBox:item:selected {
+  background-color: $hover-item-background;
+  color: $hover-item-color;
 }
-
 
 
 QProgressBar {
-  background: $color-bkg-secondary;
+  background: $input-background;
   border: 0;
-  border-radius: 0;
-  max-height: 8px;
+  border-radius: $input-border-radius;
+  max-height: 10px;
   padding: 0;
   margin: 4px;
 
   &::chunk {
-    background: $color-highlight;
+    background: $color-cyan;
+    border-radius: $input-border-radius;
   }
 }
 
 
-
 .FireflyTimecode,
 .TimecodeWindow {
-  font: 12px monospace;
-  font-weight: bold;
-  min-width : 88px;
-  max-width : 88px;
-  text-align: center;
+  min-width: 92px;
+  max-width: 92px;
 }
 
 .ChannelDisplay {
   background-color: transparent;
   color: $color-text;
   margin-right: 10px;
-  font: 16px;
+  font-weight: 500;
 }
 
 .ActionButton {
   min-height: 35px;
+  max-height: 35px;
   min-width: 300px;
 }
 
 /* Slider */
 
 QSlider::groove:horizontal {
-  background: $color-surface-03;
-  height: 16px;
-  margin: 0 0 0 0;
+  background: $input-background;
+  height: 6px;
+  border-radius: 3px;
+  margin: 0;
   max-width: 200px;
 }
 
 QSlider::handle:horizontal {
-  background: $color-surface-04;
-  height: 15px;
-  width: 15px;
-  border-radius: 50%;
+  background: $color-text;
+  width: 14px;
+  height: 14px;
+  margin: -4px 0;
+  border-radius: 7px;
 }
-
 
 
 /* SCROLL BARS */
 
 $scrollbar-width: 12px;
 
-QScrollBar{
-  background: $color-bkg-primary;
+QScrollBar {
+  background: transparent;
+  border: 0;
+
   &:horizontal {
     height: $scrollbar-width;
-    //padding-left: 24px;
-    //padding-right: 24px;
   }
 
   &:vertical {
-    background: $color-bkg-primary;
     width: $scrollbar-width;
-   // padding-top: 24px;
-   // padding-bottom: 24px;
   }
 }
 
-//handle
-QScrollBar::handle:horizontal {
+QScrollBar::handle {
   background: $color-surface-04;
-  min-width: 64px;
-  border-radius: $scrollbar-width / 2;
+  margin: 3px;
+  border-radius: 3px;
+
+  &:hover {
+    background: $color-surface-05;
+  }
+}
+
+QScrollBar::handle:horizontal {
+  min-width: 48px;
 }
 
 QScrollBar::handle:vertical {
-  background: $color-surface-04;
-  min-height: 64px;
-  border-radius: $scrollbar-width / 2;
+  min-height: 48px;
 }
 
-// track background
-QScrollBar::add-page:horizontal,
-QScrollBar::sub-page:horizontal {
+QScrollBar::add-page,
+QScrollBar::sub-page {
   background: none;
 }
 
-QScrollBar::add-page:vertical,
-QScrollBar::sub-page:vertical {
+QScrollBar::add-line,
+QScrollBar::sub-line {
+  width: 0;
+  height: 0;
   background: none;
-}
-
-// corners
-QScrollBar::add-line:horizontal,
-QScrollBar::add-line:vertical {
-	background: None;
-}
-
-QScrollBar::sub-line:horizontal,
-QScrollBar::sub-line:vertical {
-	background: none;
 }
 
 // Calendar
 
 QCalendarWidget {
-
-
-    QToolButton#qt_calendar_prevmonth {
-      // todo
-    }
-    
-    QToolButton#qt_calendar_nextmonth {
-    }
-
   QAbstractItemView:enabled {
-    font-size:20px;  
-    color: rgb(180, 180, 180);  
-    background-color: black;  
-    selection-background-color: rgb(64, 64, 64); 
-    selection-color: rgb(0, 255, 0); 
+    color: $color-text;
+    background-color: $color-surface-02;
+    selection-background-color: $color-surface-05;
+    selection-color: $color-text-hl;
   }
 
-  QWidget#qt_calendar_navigationbar { 
-    padding: 20px;
-    margin-bottom: 20px !important;
+  QWidget#qt_calendar_navigationbar {
+    background-color: $color-surface-02;
+    padding: 4px;
   }
 
-  QAbstractItemView:disabled { 
-    color: rgb(64, 64, 64); 
+  QAbstractItemView:disabled {
+    color: $color-text-muted;
   }
-
-} // QCalendarWidget
+}

@@ -2,7 +2,6 @@ import re
 
 from nxtools import s2tc, tc2s
 from PySide6.QtCore import Qt, QTimer
-from PySide6.QtGui import QFont, QFontDatabase
 from PySide6.QtWidgets import QLineEdit
 
 
@@ -16,12 +15,9 @@ class InputTimecode(QLineEdit):
 
         self.setPlaceholderText("--:--:--:--")
         self.setMaxLength(11)
-        self.setFixedWidth(110)
+        # Noto Sans has tabular digits, so timecodes align without a mono font
+        self.setFixedWidth(92)
         self.setAlignment(Qt.AlignCenter)
-
-        fixed_font = QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont)
-        fixed_font.setStyleHint(QFont.StyleHint.Monospace)
-        self.setFont(fixed_font)
 
         if value:
             self.setText(s2tc(value, self._fps))

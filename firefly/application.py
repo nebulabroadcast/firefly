@@ -5,6 +5,7 @@ import time
 from typing import Any
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication, QMessageBox, QSplashScreen
 
 import firefly
@@ -17,7 +18,7 @@ from firefly.log import log
 from firefly.main_window import FireflyMainWidget, FireflyMainWindow
 from firefly.metadata import clear_cs_cache
 from firefly.objects import asset_cache
-from firefly.qt import app_dir, app_settings, app_skin, pixlib
+from firefly.qt import app_dir, app_settings, app_skin, load_fonts, pixlib
 
 
 def check_login(wnd):
@@ -40,6 +41,14 @@ def check_login(wnd):
 class FireflyApplication(QApplication):
     def __init__(self, **kwargs):
         super().__init__(sys.argv)
+        # Fusion renders stylesheets consistently across platforms;
+        # font matches the Nebula web frontend
+        self.setStyle("Fusion")
+        load_fonts()
+        font = QFont()
+        font.setFamilies(["Noto Sans", "Roboto", "Arial", "sans-serif"])
+        font.setPixelSize(12)
+        self.setFont(font)
         self.app_state = {"name": "firefly", "title": f"Firefly {firefly.__version__}"}
         self.app_state_path = os.path.join(app_dir, f"{app_settings['name']}.appstate")
         self.setStyleSheet(app_skin)

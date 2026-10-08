@@ -90,7 +90,7 @@ class SubclipSelectDialog(QDialog):
                     subclip["title"],
                 )
             )
-            btn.setStyleSheet("font: monospace; text-align: left;")
+            btn.setStyleSheet("text-align: left;")
             btn.clicked.connect(functools.partial(self.on_submit, i))
             layout.addWidget(btn)
 
