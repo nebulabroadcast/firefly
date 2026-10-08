@@ -4,7 +4,7 @@ Firefly
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/nebulabroadcast/firefly?style=for-the-badge)
 ![Maintenance](https://img.shields.io/maintenance/yes/2024?style=for-the-badge)
 ![Last commit](https://img.shields.io/github/last-commit/nebulabroadcast/firefly?style=for-the-badge)
-![Python version](https://img.shields.io/badge/python-3.10-blue?style=for-the-badge)
+![Python version](https://img.shields.io/badge/python-3.10--3.14-blue?style=for-the-badge)
 
 Firefly is a desktop client application for [Nebula](https://github.com/nebulabroadcast/nebula) broadcast automation system.
 
@@ -13,18 +13,23 @@ Installation
 
 ### Running from source (all platforms)
 
- - Install Python 3.10+ and Poetry.
+ - Install [uv](https://docs.astral.sh/uv/) (it installs a suitable Python 3.10 - 3.14 if needed).
  - Clone this repository.
- - Run `poetry install` to install dependencies.
- - Run `poetry run python -m firefly` to start the application.
+ - Run `make run` (or `uv run python -m firefly`) to start the application.
 
-The following packages may be needed on Linux, in case you don't have them already installed,
-run `sudo apt install libmpv1 libxcb-util1` on Ubuntu or `sudo apt install libmpv1 libxcb-util0` on Debian.
+Video preview uses the FFmpeg backend bundled with PySide6, no extra media libraries are needed.
+On Linux under X11, Qt may need `libxcb-cursor0` (`sudo apt install libxcb-cursor0`).
 
-### Windows
+### Binaries (Windows, Linux)
 
-Latest binary release is available on [nebulabroadcast/firefly](https://github.com/nebulabroadcast/firefly/releases)
+Latest binary releases are available on [nebulabroadcast/firefly](https://github.com/nebulabroadcast/firefly/releases)
 GitHub releases page.
+
+### Building binaries
+
+Run `make build` to create a single-file executable with PyInstaller in `dist/`,
+together with the `images`, `fonts` and `skin.css` it needs next to it.
+`make build_windows` / `make build_linux` also pack it into a zip / tarball.
 
 Configuration
 -------------

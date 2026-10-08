@@ -16,16 +16,14 @@ lint: check_version
 	uv run ruff check . --fix
 	uv run mypy .
 
+# skin.css, images and fonts are read from the working directory at runtime,
+# so they ship next to the binary
 build: check_version skin
-	poetry run pyinstaller -y firefly.windows.spec
-	cp -r images dist/images
-	cp -r skin.css dist/skin.css
-	cp -r fonts dist/fonts
-	
+	uv run pyinstaller -y firefly.spec
+	cp -r images fonts skin.css dist/
+
 build_windows: build
-	# make zip
 	cd dist && zip -r ../firefly-$(VERSION)-win.zip firefly.exe images fonts skin.css
 
 build_linux: build
-	# make tar
 	cd dist && tar -czvf ../firefly-$(VERSION)-linux.tar.gz firefly images fonts skin.css
