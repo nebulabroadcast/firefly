@@ -158,7 +158,6 @@ class FireflyMainWindow(QMainWindow):
         self.restore_state()
         self.main_widget = MainWidgetClass(self)
         self.setCentralWidget(self.main_widget)
-        self.show()
 
         self.setWindowIcon(QIcon(pixlib["icon"]))
         title = f"Firefly {firefly.__version__}"

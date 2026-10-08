@@ -13,11 +13,10 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-  "PyQtEnumConverter >=1.0",
   "ruff >=0.6.9",
   "qtsass >=0.3.2",
   "mypy >=1.19.1",
-  "pyinstaller >=5.8.0"
+  "pyinstaller >=5.8.0",
 ]
 
 [tool.ruff]
