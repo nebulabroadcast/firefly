@@ -12,6 +12,8 @@ class AssetPreview(QWidget):
     def __init__(self, parent):
         super().__init__(parent)
         layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(3)  # + the toolbar's 3px margin = one 6px section gap
         self.player = VideoPlayer(self, pixlib)
         self.subclips = FireflySubclipsView(self)
         toolbar = preview_toolbar(self)

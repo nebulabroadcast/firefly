@@ -36,6 +36,13 @@ $nav-border-radius: 8px;
 $section-gap: 6px;
 
 
+// Set on every widget: on GNOME (and other desktops) the platform theme
+// assigns the system font to each widget class, ignoring QApplication.setFont
+* {
+  font-family: "Noto Sans";
+  font-size: 12px;
+}
+
 QMainWindow,
 QDialog,
 QToolBar,
@@ -77,8 +84,10 @@ QToolBar {
   border-radius: $nav-border-radius;
   spacing: $section-gap;
   padding: 4px;
-  margin-top: $section-gap;
-  margin-bottom: $section-gap;
+  // half a section gap on each side: stacked toolbars end up one gap apart.
+  // Must be symmetric - Qt sizes toolbars as if bottom margin == top margin
+  margin-top: $section-gap / 2;
+  margin-bottom: $section-gap / 2;
   qproperty-iconSize: 20px 20px;
 }
 
@@ -176,8 +185,7 @@ QTableView {
   alternate-background-color: $color-surface-02;
   selection-background-color: $color-surface-05;
   selection-color: $color-text-hl;
-  // a notch dimmer than the web: Qt renders light-on-dark text heavier
-  color: #c4c1c6;
+  color: $color-text;
   outline: 0;
 }
 

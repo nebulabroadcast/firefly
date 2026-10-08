@@ -100,6 +100,7 @@ class VideoPlayer(QWidget):
         bottom_bar.addWidget(self.duration_display, 0)
 
         layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
         layout.addLayout(top_bar)
         layout.addWidget(self.video_window)
         layout.addWidget(self.region_bar)

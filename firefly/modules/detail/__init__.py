@@ -1,7 +1,6 @@
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFontDatabase
 from PySide6.QtWidgets import (
-    QHBoxLayout,
     QMessageBox,
     QTabWidget,
     QTextEdit,
@@ -132,16 +131,13 @@ class DetailModule(BaseModule):
     def __init__(self, parent):
         super().__init__(parent)
         self.asset = self._is_loading = self._load_queue = False
-        toolbar_layout = QHBoxLayout()
-
-        self.toolbar = detail_toolbar(self)  # , [self.folder_select, self.duration])
-
-        toolbar_layout.addWidget(self.toolbar)
+        self.toolbar = detail_toolbar(self)
         self.detail_tabs = DetailTabs(self)
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.addLayout(toolbar_layout, 1)
-        layout.addWidget(self.detail_tabs)
+        layout.setSpacing(0)  # toolbars carry their own margins
+        layout.addWidget(self.toolbar, 0)
+        layout.addWidget(self.detail_tabs, 1)
         self.setLayout(layout)
 
     @property
@@ -180,8 +176,7 @@ class DetailModule(BaseModule):
                 self,
                 "Save changes?",
                 f"Following data has been changed in the {self.asset}"
-                 "\n\n"
-                + "\n".join([meta_types[k].title for k in changed]),
+                "\n\n" + "\n".join([meta_types[k].title for k in changed]),
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             )
 
