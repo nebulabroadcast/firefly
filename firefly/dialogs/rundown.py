@@ -27,10 +27,17 @@ class PlaceholderDialog(QDialog):
 
         self.ok = False
 
-        keys = []
-        for k in ["title", "subtitle", "description", "color", "duration"]:  # TODO
-            if k in meta:
-                keys.append(FolderField(name=k, mode="text"))
+        keys = [
+            FolderField(name=k, mode="text")
+            for k in [
+                "title",
+                "subtitle",
+                "description",
+                "color",
+                "duration",
+            ]  # TODO: hardcoded
+            if k in meta
+        ]
 
         self.form = MetadataForm(parent, keys, meta)
 
@@ -97,10 +104,10 @@ class SubclipSelectDialog(QDialog):
         self.setLayout(layout)
 
     def on_submit(self, subclip):
-        self.result = []
+        self.selection = []
 
         if subclip == -1:
-            self.result = [
+            self.selection = [
                 {
                     "mark_in": self.asset["mark_in"],
                     "mark_out": self.asset["mark_out"],
@@ -109,7 +116,7 @@ class SubclipSelectDialog(QDialog):
 
         elif subclip == -2:
             for sdata in self.subclips:
-                self.result.append(
+                self.selection.append(
                     {
                         "mark_in": sdata["mark_in"],
                         "mark_out": sdata["mark_out"],
@@ -118,7 +125,7 @@ class SubclipSelectDialog(QDialog):
                 )
 
         elif subclip >= 0:
-            self.result = [
+            self.selection = [
                 {
                     "mark_in": self.subclips[subclip]["mark_in"],
                     "mark_out": self.subclips[subclip]["mark_out"],

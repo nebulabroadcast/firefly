@@ -67,8 +67,6 @@ class FireflyApplication(QApplication):
             sys.exit(0)
         config.set_site(i)
 
-        assert config.site is not None, "No site selected"
-
         self.app_state_path = os.path.join(
             app_dir, f"ffdata.{config.site.name}.appstate"
         )
@@ -78,7 +76,8 @@ class FireflyApplication(QApplication):
 
         session_id = None
         try:
-            session_id = open(self.auth_key_path).read()
+            with open(self.auth_key_path) as f:
+                session_id = f.read()
         except FileNotFoundError:
             pass
         except Exception:

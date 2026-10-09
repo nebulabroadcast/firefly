@@ -18,7 +18,7 @@ class InputTimecode(QLineEdit):
         self.setMaxLength(11)
         # Noto Sans has tabular digits, so timecodes align without a mono font
         self.setFixedWidth(92)
-        self.setAlignment(Qt.AlignCenter)
+        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         if value:
             self.setText(s2tc(value, self._fps))
@@ -55,7 +55,7 @@ class InputTimecode(QLineEdit):
             return
         text = text.replace(":", "")
         text = text.zfill(8)
-        text = ":".join([text[i : i + 2] for i in range(0, len(text), 2)])  # noqa: E203
+        text = ":".join([text[i : i + 2] for i in range(0, len(text), 2)])
         self.setText(text)
         self._value = tc2s(text, self._fps)
 

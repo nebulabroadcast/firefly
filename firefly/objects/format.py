@@ -80,24 +80,20 @@ class FormatPromoted(CellFormat):
 
 def parse_item_status(obj):
     asset = obj.asset
-    try:
-        obj.id_channel
-    except Exception:
+    if not hasattr(obj, "id_channel"):
         return ObjectStatus.UNKNOWN
     pskey = f"playout_status/{obj.id_channel}"
 
     if asset["status"] == ObjectStatus.OFFLINE:
         return ObjectStatus.OFFLINE
 
-    if pskey not in asset.meta:
+    if pskey not in asset.meta or asset[pskey]["status"] == ObjectStatus.OFFLINE:
         return ObjectStatus.REMOTE
-    elif asset[pskey]["status"] == ObjectStatus.OFFLINE:
-        return ObjectStatus.REMOTE
-    elif asset[pskey]["status"] == ObjectStatus.ONLINE:
+    if asset[pskey]["status"] == ObjectStatus.ONLINE:
         return ObjectStatus.ONLINE
-    elif asset[pskey]["status"] == ObjectStatus.CORRUPTED:
+    if asset[pskey]["status"] == ObjectStatus.CORRUPTED:
         return ObjectStatus.CORRUPTED
-    elif asset[pskey]["status"] == ObjectStatus.CREATING:
+    if asset[pskey]["status"] == ObjectStatus.CREATING:
         return ObjectStatus.CREATING
 
     return ObjectStatus.UNKNOWN
@@ -131,8 +127,9 @@ class FormatStatus(CellFormat):
         if obj.object_type == "asset":
             return STATUS_FG_COLORS[obj["status"]]
 
-        elif obj.object_type == "item" and obj["id_asset"]:
+        if obj.object_type == "item" and obj["id_asset"]:
             return STATUS_FG_COLORS[parse_item_status(obj)]
+        return None
 
 
 class FormatRundownDifference(CellFormat):
@@ -149,6 +146,7 @@ class FormatRundownDifference(CellFormat):
         if obj["broadcast_time"] and obj["scheduled_time"]:
             diff = obj["broadcast_time"] - obj["scheduled_time"]
             return ["#ff0000", "#00ff00"][diff >= 0]
+        return None
 
 
 class FormatRundownScheduled(CellFormat):
@@ -181,9 +179,9 @@ class FormatRunMode(CellFormat):
             return "MANUAL"
         if obj[self.key] == RunMode.RUN_SOFT:
             return "SOFT"
-        elif obj[self.key] == RunMode.RUN_HARD:
+        if obj[self.key] == RunMode.RUN_HARD:
             return "HARD"
-        elif obj[self.key] == RunMode.RUN_SKIP:
+        if obj[self.key] == RunMode.RUN_SKIP:
             return "SKIP"
         if obj.id:
             return "AUTO"
@@ -204,14 +202,14 @@ class FormatDuration(CellFormat):
             if obj.object_type == "asset" and obj["subclips"]:
                 t += "*"
             return t
-        else:
-            return ""
+        return ""
 
     def foreground(self, obj, **kwargs):
         if obj["loop"]:
             return Colors.TEXT_YELLOW
         if obj["mark_in"] or obj["mark_out"]:
             return "#00ccaa"
+        return None
 
     def tooltip(self, obj, **kwargs):
         if not (obj["mark_in"] or obj["mark_out"] or obj["subclips"]):
@@ -266,6 +264,7 @@ class FormatState(CellFormat):
     def tooltip(self, obj, **kwargs):
         if "qc/report" in obj.meta:
             return obj["qc/report"]
+        return None
 
 
 class FormatTitle(CellFormat):
@@ -274,34 +273,36 @@ class FormatTitle(CellFormat):
     def decoration(self, obj, **kwargs):
         if obj.object_type == "event":
             return ["unstar-sm", "star-sm"][int(obj["promoted"])]
-        elif obj["status"] == ObjectStatus.ARCHIVED:
+        if obj["status"] == ObjectStatus.ARCHIVED:
             return "archive-sm"
-        elif obj["status"] == ObjectStatus.TRASHED:
+        if obj["status"] == ObjectStatus.TRASHED:
             return "trash-sm"
 
         if obj.object_type == "item":
             item_role = obj.get("item_role")
             if obj["id_folder"]:
                 return "folder_" + str(obj["id_folder"])
-            elif item_role == "lead_in":
+            if item_role == "lead_in":
                 return "lead-in-sm"
-            elif item_role == "lead_out":
+            if item_role == "lead_out":
                 return "lead-out-sm"
-            elif item_role == "live":
+            if item_role == "live":
                 return "live-sm"
-            elif item_role == "placeholder":
+            if item_role == "placeholder":
                 return "placeholder-sm"
+        return None
 
     def foreground(self, obj, **kwargs):
         if obj.object_type == "asset":
             return STATUS_FG_COLORS[obj["status"]]
+        return None
 
     def font(self, obj, **kwargs):
         if obj.object_type == "event":
             return "bold"
-        elif obj.object_type == "item":
-            if obj.get("is_primary"):
-                return "bold"
+        if obj.object_type == "item" and obj.get("is_primary"):
+            return "bold"
+        return None
 
 
 format_helpers_list = [

@@ -90,6 +90,7 @@ class MetadataForm(QWidget):
             if key_description:
                 label.setToolTip(key_description)
 
+            input_class: Any
             if key_settings.get("mode") == "radio":
                 input_class = InputRadio
             else:

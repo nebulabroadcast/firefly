@@ -1,5 +1,6 @@
 import json
 import time
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QMimeData, Qt, QUrl
 from PySide6.QtWidgets import QApplication
@@ -11,6 +12,9 @@ from firefly.helpers.format import format_time
 from firefly.log import log
 from firefly.objects import Asset, Event, Item, asset_cache
 from firefly.view import FireflyViewModel
+
+if TYPE_CHECKING:
+    from firefly.objects.base import BaseObject
 
 DEFAULT_COLUMNS = [
     "title",
@@ -30,7 +34,7 @@ class RundownModel(FireflyViewModel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.event_ids = []
-        self.load_start_time = 0
+        self.load_start_time = 0.0
 
     @property
     def id_channel(self):
@@ -104,12 +108,10 @@ class RundownModel(FireflyViewModel):
                 item = Item(meta=row)
                 item.id_channel = self.id_channel
                 if row.get("id_asset"):
-                    item._asset = asset_cache.get(row["id_asset"])
-                    item._asset.meta.pop("mark_in", None)
-                    item._asset.meta.pop("mark_out", None)
+                    asset = asset_cache.get(row["id_asset"])
+                    asset.meta.pop("mark_in", None)
+                    asset.meta.pop("mark_out", None)
                     required_assets.append([row["id_asset"], row["asset_mtime"]])
-                else:
-                    item._asset = None
                 self.object_data.append(item)
                 i += 1
             else:
@@ -130,15 +132,12 @@ class RundownModel(FireflyViewModel):
                 self.object_data[row].object_type == "item"
                 and self.object_data[row]["id_asset"] in assets
             ):
-                self.object_data[row]._asset = asset_cache.get(
-                    self.object_data[row]["id_asset"]
-                )
                 self.dataChanged.emit(
                     self.index(row, 0), self.index(row, len(self.header_data) - 1)
                 )
 
     def refresh_items(self, items):
-        for row, obj in enumerate(self.object_data):
+        for row, _obj in enumerate(self.object_data):
             if (
                 self.object_data[row].id in items
                 and self.object_data[row].object_type == "item"
@@ -163,7 +162,7 @@ class RundownModel(FireflyViewModel):
     def supportedDropActions(self):
         return Qt.DropAction.CopyAction | Qt.DropAction.MoveAction
 
-    def mimeData(self, indices):
+    def mime_data(self, indices):
         rows = []
         for index in indices:
             if index.row() in rows:
@@ -180,12 +179,12 @@ class RundownModel(FireflyViewModel):
         ]
 
         try:
-            mimeData = QMimeData()
-            mimeData.setData("application/nx.item", json.dumps(data).encode("ascii"))
-            mimeData.setUrls(urls)
+            mime_data = QMimeData()
+            mime_data.setData("application/nx.item", json.dumps(data).encode("ascii"))
+            mime_data.setUrls(urls)
         except Exception:
-            return
-        return mimeData
+            return None
+        return mime_data
 
     def dropMimeData(self, data, action, row, column, parent):
         if action == Qt.DropAction.IgnoreAction:
@@ -197,31 +196,29 @@ class RundownModel(FireflyViewModel):
         if row < 1:
             return False
 
-        drop_objects = []
+        drop_objects: list[BaseObject] = []
         if data.hasFormat("application/nx.item"):
             d = data.data("application/nx.item").data()
             items = json.loads(d.decode("ascii"))
             if not items or items[0].get("rundown_row", "") in [row, row - 1]:
                 return False
-            else:
-                for obj in items:
-                    if action == Qt.DropAction.CopyAction:
-                        obj["id"] = None
-                    elif not obj.get("id"):
-                        item_role = obj.get("item_role", None)
-                        print("ITEM ROLE", item_role)
-                        if item_role in ["live", "placeholder"]:
-                            dlg = PlaceholderDialog(self.parent(), obj)
-                            dlg.exec()
-                            if not dlg.ok:
-                                return False
-                            for key in dlg.meta:
-                                obj[key] = dlg.meta[key]
-                        elif item_role in ["lead_in", "lead_out"]:
-                            pass
-                        else:
-                            continue
-                    drop_objects.append(Item(meta=obj))
+            for obj in items:
+                if action == Qt.DropAction.CopyAction:
+                    obj["id"] = None
+                elif not obj.get("id"):
+                    item_role = obj.get("item_role", None)
+                    if item_role in ["live", "placeholder"]:
+                        dlg = PlaceholderDialog(self.parent(), obj)
+                        dlg.exec()
+                        if not dlg.ok:
+                            return False
+                        for key in dlg.meta:
+                            obj[key] = dlg.meta[key]
+                    elif item_role in ["lead_in", "lead_out"]:
+                        pass
+                    else:
+                        continue
+                drop_objects.append(Item(meta=obj))
 
         elif data.hasFormat("application/nx.asset"):
             d = data.data("application/nx.asset").data()
@@ -246,9 +243,8 @@ class RundownModel(FireflyViewModel):
             ):
                 break
             p_item = current_object.id
-            if p_item not in [item.id for item in drop_objects]:
-                if p_item:
-                    sorted_items.append({"type": "item", "id": p_item})
+            if p_item not in [item.id for item in drop_objects] and p_item:
+                sorted_items.append({"type": "item", "id": p_item})
             i -= 1
         sorted_items.reverse()
 
@@ -263,14 +259,10 @@ class RundownModel(FireflyViewModel):
                     dlg = SubclipSelectDialog(self.parent(), obj)
                     dlg.exec()
                     if dlg.ok:
-                        for meta in dlg.result:
-                            sorted_items.append(
-                                {
-                                    "type": "asset",
-                                    "id": obj.id,
-                                    "meta": meta,
-                                }
-                            )
+                        sorted_items.extend(
+                            {"type": "asset", "id": obj.id, "meta": meta}
+                            for meta in dlg.selection
+                        )
 
                 else:  # Asset does not have subclips
                     meta = {}
@@ -291,9 +283,8 @@ class RundownModel(FireflyViewModel):
             ):
                 break
             p_item = current_object.id
-            if p_item not in [item.id for item in drop_objects]:
-                if p_item:
-                    sorted_items.append({"type": "item", "id": p_item})
+            if p_item not in [item.id for item in drop_objects] and p_item:
+                sorted_items.append({"type": "item", "id": p_item})
             i += 1
 
         #
@@ -301,7 +292,7 @@ class RundownModel(FireflyViewModel):
         #
 
         if not sorted_items:
-            return
+            return None
         self.parent().setCursor(Qt.CursorShape.BusyCursor)
         QApplication.processEvents()
         api.order(

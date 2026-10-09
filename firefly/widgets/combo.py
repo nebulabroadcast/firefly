@@ -30,7 +30,7 @@ class FireflySelect(QComboBox):
         self.setEnabled(not val)
 
     def auto_options(self, key, id_folder=0):
-        # TODO
+        # TODO: options from the meta type
         self.set_options([])
 
     def set_options(self, options):

@@ -44,7 +44,7 @@ class SchedulerModule(BaseModule):
 
     def focus(self, objects):
         return
-        # TODO
+        # TODO: highlight runs of the focused assets
         if self.action_show_runs.isChecked():
             pass
             # asset_ids = [obj.id for obj in objects if obj.object_type == "asset"]

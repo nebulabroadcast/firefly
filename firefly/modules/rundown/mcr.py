@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
 import firefly
 from firefly.api import api
 from firefly.helpers.timecode import s2tc
+from firefly.log import log
 
 PROGRESS_BAR_RESOLUTION = 1000
 
@@ -75,6 +76,18 @@ class MCRLabel(QLabel):
 
 
 class MCR(QWidget):
+    # playout state, (re)set in on_channel_changed
+    position: float
+    dur: float
+    fps: float
+    current: str
+    cued: str
+    cueing: bool
+    paused: bool
+    first_update: bool
+    request_time: float
+    local_request_time: float
+
     def __init__(self, parent):
         super().__init__(parent)
         # styled as a section panel (see skin); plain QWidgets only paint
@@ -189,12 +202,12 @@ class MCR(QWidget):
         if status["fps"] != self.fps:
             self.fps = status["fps"]
 
-        self.pos = status["position"] + (1 / self.fps)
+        self.position = status["position"] + (1 / self.fps)
         dur = status["duration"]
 
         self.btn_loop.setEnabled(True)
         if status.get("loop") != self.btn_loop.isChecked():
-            print("Loop", status.get("loop"))
+            log.debug("Loop", status.get("loop"))
             self.btn_loop.setChecked(status.get("loop"))
         else:
             self.btn_loop.setEnabled(False)
@@ -210,7 +223,7 @@ class MCR(QWidget):
             self.first_update = False
 
             if status["duration"] == 0:
-                self.pos = 0
+                self.position = 0
                 self.dur = 0
                 self.progress_bar.setValue(0)
                 self.progress_bar.setMaximum(0)
@@ -257,7 +270,7 @@ class MCR(QWidget):
             if hasattr(self, "plugins"):
                 self.plugins.load()
 
-        self.pos = 0
+        self.position = 0
         self.dur = 0
         self.current = "(loading)"
         self.cued = "(loading)"
@@ -281,7 +294,7 @@ class MCR(QWidget):
         adv = now - self.local_request_time
 
         rtime = self.request_time + adv
-        rpos = self.pos
+        rpos = self.position
 
         if not self.paused:
             rpos += adv
@@ -298,7 +311,7 @@ class MCR(QWidget):
         else:
             self.display_rem.set_text(t)
 
-        if self.pos == self.dur == self.progress_bar.value() == 0:
+        if self.position == self.dur == self.progress_bar.value() == 0:
             self.progress_bar.setValue(0)
 
         try:

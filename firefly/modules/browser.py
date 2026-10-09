@@ -77,7 +77,7 @@ class FireflyBrowserView(FireflyView):
             ids = [obj.id for obj in self.selected_objects]
             mtimes = [obj["mtime"] for obj in self.selected_objects]
 
-            asset_cache.request(list(zip(ids, mtimes)))
+            asset_cache.request(list(zip(ids, mtimes, strict=True)))
             asset = asset_cache[ids[0]]
             if not asset:
                 asset_cache.wait()
@@ -97,10 +97,7 @@ class FireflyBrowserView(FireflyView):
 
         order_by = self.model().header_data[index]
         if order_by == old_order_by:
-            if old_order_dir == "asc":
-                order_dir = "desc"
-            else:
-                order_dir = "asc"
+            order_dir = "desc" if old_order_dir == "asc" else "asc"
         else:
             order_dir = "asc"
         self.parent().search_query["order_by"] = order_by
@@ -256,7 +253,7 @@ class BrowserTab(QWidget):
     def load_view_menu(self):
         i = 1
         for view in firefly.settings.views:
-            # TODO
+            # TODO: view separators
             # if view.get("separator", False):
             #     self.action_search.addSeparator()
             action = QAction(view.name, self)
@@ -310,7 +307,7 @@ class BrowserTab(QWidget):
                     w = default_sizes[h]
                 elif h in ["title", "subtitle"]:
                     w = 300
-                elif h in ["qc/state"]:
+                elif h == "qc/state":
                     w = 20
                 else:
                     w = 120
@@ -342,15 +339,15 @@ class BrowserTab(QWidget):
         menu = QMenu(self)
         objs = self.view.selected_objects
 
-        states = set([obj["status"] for obj in objs])
+        states = {obj["status"] for obj in objs}
 
-        if states == set([ObjectStatus.TRASHED]):
+        if states == {ObjectStatus.TRASHED}:
             action_untrash = QAction("Untrash", self)
             action_untrash.setStatusTip("Take selected asset(s) from trash")
             action_untrash.triggered.connect(self.on_untrash)
             menu.addAction(action_untrash)
 
-        if states == set([ObjectStatus.ARCHIVED]):
+        if states == {ObjectStatus.ARCHIVED}:
             action_unarchive = QAction("Unarchive", self)
             action_unarchive.setStatusTip("Take selected asset(s) from archive")
             action_unarchive.triggered.connect(self.on_unarchive)
@@ -412,9 +409,8 @@ class BrowserTab(QWidget):
 
     def on_batch_ops(self):
         objs = self.view.selected_objects
-        if objs:
-            if show_batch_ops_dialog(self, objs):
-                self.load()
+        if objs and show_batch_ops_dialog(self, objs):
+            self.load()
 
     def on_reset(self):
         objects = [
@@ -428,7 +424,8 @@ class BrowserTab(QWidget):
 
         response = api.ops(
             operations=[
-                {"id": id, "data": {"status": ObjectStatus.RESET}} for id in objects
+                {"id": id_object, "data": {"status": ObjectStatus.RESET}}
+                for id_object in objects
             ]
         )
         if not response:
@@ -452,8 +449,8 @@ class BrowserTab(QWidget):
         if ret == QMessageBox.StandardButton.Yes:
             response = api.ops(
                 operations=[
-                    {"id": id, "data": {"status": ObjectStatus.TRASHED}}
-                    for id in objects
+                    {"id": id_object, "data": {"status": ObjectStatus.TRASHED}}
+                    for id_object in objects
                 ]
             )
         else:
@@ -467,13 +464,14 @@ class BrowserTab(QWidget):
         objects = [
             obj.id
             for obj in self.view.selected_objects
-            if obj["status"] in [ObjectStatus.TRASHED]
+            if obj["status"] == ObjectStatus.TRASHED
         ]
         if not objects:
             return
         response = api.ops(
             operations=[
-                {"id": id, "data": {"status": ObjectStatus.OFFLINE}} for id in objects
+                {"id": id_object, "data": {"status": ObjectStatus.OFFLINE}}
+                for id_object in objects
             ]
         )
         if not response:
@@ -498,8 +496,8 @@ class BrowserTab(QWidget):
         if ret == QMessageBox.StandardButton.Yes:
             response = api.ops(
                 operations=[
-                    {"id": id, "data": {"status": ObjectStatus.ARCHIVED}}
-                    for id in objects
+                    {"id": id_object, "data": {"status": ObjectStatus.ARCHIVED}}
+                    for id_object in objects
                 ]
             )
         else:
@@ -513,14 +511,14 @@ class BrowserTab(QWidget):
         objects = [
             obj.id
             for obj in self.view.selected_objects
-            if obj["status"] in [ObjectStatus.ARCHIVED]
+            if obj["status"] == ObjectStatus.ARCHIVED
         ]
         if not objects:
             return
         response = api.ops(
             operations=[
-                {"id": id, "data": {"status": ObjectStatus.RETRIEVING}}
-                for id in objects
+                {"id": id_object, "data": {"status": ObjectStatus.RETRIEVING}}
+                for id_object in objects
             ]
         )
         if not response:
@@ -529,7 +527,7 @@ class BrowserTab(QWidget):
         self.refresh_assets(*objects, request_data=True)
 
     def on_choose_columns(self):
-        # TODO
+        # TODO: column chooser (dialogs/columns_select.py)
         log.error("Not implemented")
 
     def on_copy_result(self):
@@ -566,12 +564,12 @@ class BrowserModule(BaseModule):
         self.tabs.tabCloseRequested.connect(self.close_tab)
         self.tabs.currentChanged.connect(self.on_tab_switch)
 
-        self.layout = QVBoxLayout(self)
-        self.layout.setSpacing(0)
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.layout.addWidget(self.tabs)
+        self.main_layout = QVBoxLayout(self)
+        self.main_layout.setSpacing(0)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.main_layout.addWidget(self.tabs)
 
-        self.setLayout(self.layout)
+        self.setLayout(self.main_layout)
 
         tabscfg = self.app_state.get("browser_tabs", [])
         created_tabs = 0
@@ -621,35 +619,26 @@ class BrowserModule(BaseModule):
 
     @property
     def browsers(self):
-        r = []
-        for i in range(0, self.tabs.count()):
-            r.append(self.tabs.widget(i))
-        return r
+        return [self.tabs.widget(i) for i in range(self.tabs.count())]
 
     def close_tab(self, idx=False):
         if self.tabs.count() == 1:
             return
         if not idx:
             idx = self.tabs.currentIndex()
-        w = self.tabs.widget(idx)
-        w.deleteLater()
+        if w := self.tabs.widget(idx):
+            w.deleteLater()
         self.tabs.removeTab(idx)
         self.redraw_tabs()
 
     def prev_tab(self):
         cur = self.tabs.currentIndex()
-        if cur == 0:
-            n = self.tabs.count() - 1
-        else:
-            n = cur - 1
+        n = self.tabs.count() - 1 if cur == 0 else cur - 1
         self.tabs.setCurrentIndex(n)
 
     def next_tab(self):
         cur = self.tabs.currentIndex()
-        if cur == self.tabs.count() - 1:
-            n = 0
-        else:
-            n = cur + 1
+        n = 0 if cur == self.tabs.count() - 1 else cur + 1
         self.tabs.setCurrentIndex(n)
 
     def on_tab_switch(self):

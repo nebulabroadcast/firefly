@@ -40,11 +40,7 @@ class FireflyUser:
         if self[key] == value:
             return True
 
-        if isinstance(self[key], list):
-            if value in self[key]:
-                return True
-
-        return False
+        return bool(isinstance(self[key], list) and value in self[key])
 
 
 user = FireflyUser()

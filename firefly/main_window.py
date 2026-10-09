@@ -119,7 +119,7 @@ class FireflyMainWidget(QWidget):
     def switch_tab(self, module, perform_on_switch_tab=True):
         self.perform_on_switch_tab = perform_on_switch_tab
         for i in range(self.tabs.count()):
-            if (type(module) == int and module == i) or self.tabs.widget(i) == module:
+            if (type(module) is int and module == i) or self.tabs.widget(i) == module:
                 self.tabs.setCurrentIndex(i)
 
     def on_switch_tab(self, index=None):
@@ -145,7 +145,7 @@ class FireflyMainWidget(QWidget):
 
 
 class FireflyMainWindow(QMainWindow):
-    def __init__(self, parent, MainWidgetClass):
+    def __init__(self, parent, main_widget_class):
         super().__init__()
 
         self.subscribers = []
@@ -156,7 +156,7 @@ class FireflyMainWindow(QMainWindow):
         self.setStyleSheet(app_skin)
         self.app = parent
         self.restore_state()
-        self.main_widget = MainWidgetClass(self)
+        self.main_widget = main_widget_class(self)
         self.setCentralWidget(self.main_widget)
 
         self.setWindowIcon(QIcon(pixlib["icon"]))
@@ -223,10 +223,6 @@ class FireflyMainWindow(QMainWindow):
         if hasattr(self.main_widget, "on_close"):
             self.main_widget.on_close()
 
-    #
-    #
-    #
-
     def load_window_state(self):
         self.window_state = self.app_state.get("window_state", {})
         self.showMaximized()
@@ -263,7 +259,7 @@ class FireflyMainWindow(QMainWindow):
         return self.main_widget.jobs
 
     def focus(self, obj):
-        if type(obj) == list:
+        if type(obj) is list:
             obj = obj[0]
         if obj.object_type == "item":
             obj = obj.asset
@@ -364,9 +360,8 @@ class FireflyMainWindow(QMainWindow):
                 self.rundown.load()
             if self.scheduler:
                 self.scheduler.load()
-            if self.detail:
-                if self.detail.asset:
-                    self.detail.focus(self.detail.asset, force=True)
+            if self.detail and self.detail.asset:
+                self.detail.focus(self.detail.asset, force=True)
 
     def load_settings(self):
         log.info("[MAIN WINDOW] Reloading system settings")

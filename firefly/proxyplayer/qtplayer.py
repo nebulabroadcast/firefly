@@ -134,12 +134,12 @@ class VideoPlayer(QWidget):
         """Round a position (seconds) down to the start of its frame."""
         return math.floor(position * self.fps + 1e-6) / self.fps
 
-    def load(self, path, mark_in=0, mark_out=0, markers={}):
+    def load(self, path, mark_in=0, mark_out=0, markers=None):
         if self.player.playbackState() != QMediaPlayer.PlaybackState.StoppedState:
             self.player.stop()
 
         self.loaded = False
-        self.markers = markers
+        self.markers = markers or {}
         self.position = 0
         self.duration = 0
 
@@ -170,7 +170,7 @@ class VideoPlayer(QWidget):
             self.seek(self.duration)
 
     def on_error(self, error, message):
-        log.error(f"Video player: {message}")
+        log.warning(f"Video player: {message}")
 
     def on_position_change(self, value):
         self.position = self.snap(value / 1000)

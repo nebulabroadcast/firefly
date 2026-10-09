@@ -32,17 +32,16 @@ class Logger:
             return
         if level < LogLevel.INFO and not config.debug:
             return
-        print(
+        print(  # noqa: T201 - this is the log output
             f"{level.name.upper():<8}",
             " ".join([str(arg) for arg in args]),
             file=sys.stderr,
             flush=True,
         )
 
-        if level >= LogLevel.ERROR:
-            if self.main_window:
-                msg = " ".join([str(arg) for arg in args])
-                QMessageBox.critical(None, "Error", msg)
+        if level >= LogLevel.ERROR and self.main_window:
+            msg = " ".join([str(arg) for arg in args])
+            QMessageBox.critical(None, "Error", msg)
 
         self.status(*args)
 

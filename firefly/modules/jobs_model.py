@@ -28,29 +28,28 @@ def job_format(data, key):
         if not data.get(key):
             return ""
         return format_time(data[key])
-    elif key == "title":
+    if key == "title":
         return asset_cache[data["id_asset"]]["title"]
-    elif key == "action":
+    if key == "action":
         return data["action_name"]
-    elif key == "service":
+    if key == "service":
         return data.get("service_name", "")
-    elif key == "message":
+    if key == "message":
         return data.get("message", "")
-    elif key == "id":
+    if key == "id":
         return str(data["id"])
-    elif key == "progress":
+    if key == "progress":
         if data["status"] == 1:
             return f"{data['progress']:.02f}%"
-        else:
-            return {
-                0: "Pending",
-                1: "In progress",
-                2: "Completed",
-                3: "Failed",
-                4: "Aborted",
-                5: "Restarted",
-                6: "Skipped",
-            }[data["status"]]
+        return {
+            0: "Pending",
+            1: "In progress",
+            2: "Completed",
+            3: "Failed",
+            4: "Aborted",
+            5: "Restarted",
+            6: "Skipped",
+        }[data["status"]]
     return "-"
 
 
@@ -114,11 +113,10 @@ class JobsModel(FireflyViewModel):
 
         if role == Qt.ItemDataRole.DisplayRole:
             return job_format(obj, key)
-        elif role == Qt.ItemDataRole.ToolTipRole:
+        if role == Qt.ItemDataRole.ToolTipRole:
             return f"{obj['message']}\n\n{asset_cache[obj['id_asset']]}"
-        elif role == Qt.ItemDataRole.ForegroundRole:
-            if key == "progress":
-                return colors[obj["status"]]
+        if role == Qt.ItemDataRole.ForegroundRole and key == "progress":
+            return colors[obj["status"]]
 
         return None
 

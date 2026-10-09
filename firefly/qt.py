@@ -11,6 +11,7 @@ from PySide6.QtGui import (
 )
 
 import firefly
+from firefly.log import log
 
 app_dir = os.getcwd()
 
@@ -49,9 +50,10 @@ app_skin = ""
 skin_path = os.path.join(app_dir, "skin.css")
 if os.path.exists(skin_path):
     try:
-        app_skin = open(skin_path).read()
+        with open(skin_path) as f:
+            app_skin = f.read()
     except Exception:
-        print("Unable to read stylesheet")
+        log.error("Unable to read stylesheet")
 
 
 def load_fonts():
@@ -63,7 +65,7 @@ def load_fonts():
         if not fname.endswith(".ttf"):
             continue
         if QFontDatabase.addApplicationFont(os.path.join(fonts_dir, fname)) == -1:
-            print(f"Unable to load font {fname}")
+            log.warning(f"Unable to load font {fname}")
 
 
 class FontLib:
@@ -73,20 +75,22 @@ class FontLib:
     def load(self):
         # SemiBold rather than Bold: Qt renders bold text on dark backgrounds
         # much heavier than browsers do
+        normal, semibold = QFont.Weight.Normal, QFont.Weight.DemiBold
+        # name: (weight, italic, underline, strikeout)
         styles = {
-            "bold": {"weight": QFont.Weight.DemiBold},
-            "italic": {"italic": True},
-            "bolditalic": {"weight": QFont.Weight.DemiBold, "italic": True},
-            "underline": {"underline": True},
-            "boldunderline": {"weight": QFont.Weight.DemiBold, "underline": True},
-            "strikeout": {"strikeout": True},
+            "bold": (semibold, False, False, False),
+            "italic": (normal, True, False, False),
+            "bolditalic": (semibold, True, False, False),
+            "underline": (normal, False, True, False),
+            "boldunderline": (semibold, False, True, False),
+            "strikeout": (normal, False, False, True),
         }
-        for name, style in styles.items():
+        for name, (weight, italic, underline, strikeout) in styles.items():
             font = QFont()
-            font.setWeight(style.get("weight", QFont.Weight.Normal))
-            font.setItalic(style.get("italic", False))
-            font.setUnderline(style.get("underline", False))
-            font.setStrikeOut(style.get("strikeout", False))
+            font.setWeight(weight)
+            font.setItalic(italic)
+            font.setUnderline(underline)
+            font.setStrikeOut(strikeout)
             self.data[name] = font
 
     def __getitem__(self, key):
@@ -188,7 +192,7 @@ def get_pix(name):
         id_folder = int(name.lstrip("folder_"))
         icn = QPixmap(12, 12)
         try:
-            color = firefly.settings.get_folder(id_folder).color
+            color: str | int = firefly.settings.get_folder(id_folder).color
         except KeyError:
             color = 0xAAAAAA
         icn.fill(QColor(color))
@@ -201,7 +205,7 @@ def get_pix(name):
     return None
 
 
-class PixLib(dict):
+class PixLib(dict[str, QPixmap | None]):
     def __call__(self, key):
         return self[key]
 

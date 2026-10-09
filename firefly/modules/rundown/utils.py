@@ -87,28 +87,30 @@ class ItemButton(QToolButton):
         self.pressed.connect(self.startDrag)
         self.setIcon(QIcon(pixlib[self.button_config["icon"]]))
         self.setToolTip(self.button_config["tooltip"])
-        self.setFocusPolicy(Qt.NoFocus)
+        self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
     def startDrag(self):
-        self.setAttribute(Qt.WA_UnderMouse, False)
+        self.setAttribute(Qt.WidgetAttribute.WA_UnderMouse, False)
         item_data = {}
         for key in self.button_config:
             if key not in ["tooltip", "icon"]:
                 item_data[key] = self.button_config[key]
         drag = QDrag(self)
-        mimeData = QMimeData()
-        mimeData.setData("application/nx.item", json.dumps([item_data]).encode("utf-8"))
-        drag.setMimeData(mimeData)
+        mime_data = QMimeData()
+        mime_data.setData(
+            "application/nx.item", json.dumps([item_data]).encode("utf-8")
+        )
+        drag.setMimeData(mime_data)
         if drag.exec(Qt.DropAction.CopyAction):
             QApplication.processEvents()
 
-            pass  # nejak to rozumne ukonc
+            # nejak to rozumne ukonc
 
 
 def rundown_toolbar(wnd):
     action_find = QAction("Search rundown", wnd)
     action_find.setShortcut("Ctrl+F")
-    action_find.triggered.connect(wnd.find)
+    action_find.triggered.connect(wnd.on_find)
     wnd.addAction(action_find)
 
     action_find_next = QAction("Search rundown", wnd)

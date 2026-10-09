@@ -1,4 +1,5 @@
 import functools
+from typing import Any
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QCheckBox, QDialog, QVBoxLayout
@@ -15,8 +16,8 @@ class SendToDialog(QDialog):
         self.setWindowTitle(title)
 
         layout = QVBoxLayout()
-        for id_action, title in actions:
-            btn_send = ActionButton(title)
+        for id_action, action_title in actions:
+            btn_send = ActionButton(action_title)
             btn_send.clicked.connect(functools.partial(self.on_send, id_action))
             layout.addWidget(btn_send, 1)
 
@@ -41,7 +42,7 @@ class SendToDialog(QDialog):
         QApplication.processEvents()
 
 
-def show_send_to_dialog(parent=None, objects: list | None = None):
+def show_send_to_dialog(parent=None, objects: list[Any] | None = None):
     if not objects:
         return
 
@@ -56,10 +57,7 @@ def show_send_to_dialog(parent=None, objects: list | None = None):
 
     # Build dialog title
 
-    if len(objects) == 1:
-        what = objects[0]["title"]
-    else:
-        what = f"{len(objects)} objects"
+    what = objects[0]["title"] if len(objects) == 1 else f"{len(objects)} objects"
     title = f"Send {what} to..."
 
     # Get a list of actions
@@ -70,9 +68,7 @@ def show_send_to_dialog(parent=None, objects: list | None = None):
         log.error(response.message)
         return
 
-    actions = []
-    for action in response["actions"]:
-        actions.append((action["id"], action["name"]))
+    actions = [(action["id"], action["name"]) for action in response["actions"]]
 
     if not actions:
         log.error("No actions available")

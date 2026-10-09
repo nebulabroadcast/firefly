@@ -1,6 +1,6 @@
 import os
 import re
-from xml.etree import ElementTree
+import xml.etree.ElementTree as ET
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFontMetrics
@@ -25,7 +25,7 @@ def text_shorten(text, font, target_width):
     r = exps.pop(0)
     text = text[::-1]
     while fm.boundingRect(text).width() > target_width:
-        text, n = re.subn(r, "", text, 1)
+        text, n = re.subn(r, "", text, count=1)
         if n == 0:
             r = exps.pop(0)
     return text[::-1]
@@ -35,7 +35,7 @@ def dump_template(calendar):
     result = """<?xml version="1.0" encoding="utf-8" standalone="yes"?>\n"""
     result += "<template>\n"
 
-    DAY_NAMES = [
+    day_names = [
         "Monday",
         "Tuesday",
         "Wednesday",
@@ -44,16 +44,16 @@ def dump_template(calendar):
         "Saturday",
         "Sunday",
     ]
-    days = [[], [], [], [], [], [], []]
+    days: list[list[Event]] = [[] for _ in range(7)]
     for event in calendar.events:
         week_offset = event["start"] - calendar.week_start_time
-        day = int(week_offset / (3600 * 24))
-        if day < 0 or day > 6:
+        day_index = int(week_offset / (3600 * 24))
+        if day_index < 0 or day_index > 6:
             continue
-        days[day].append(event)
+        days[day_index].append(event)
 
     for i, day in enumerate(days):
-        result += f"    <!-- {DAY_NAMES[i]} -->\n"
+        result += f"    <!-- {day_names[i]} -->\n"
         result += "    <day>\n"
         for event in day:
             clock = format_time(event["start"], "%H:%M")
@@ -113,8 +113,9 @@ def import_template(scheduler, day_offset=0):
 
     QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
     try:
-        feed = open(file_path, "rb").read().decode("utf-8")
-        data = ElementTree.XML(feed)
+        with open(file_path, "rb") as f:
+            feed = f.read().decode("utf-8")
+        data = ET.XML(feed)
     except Exception:
         QApplication.restoreOverrideCursor()
         log.traceback()

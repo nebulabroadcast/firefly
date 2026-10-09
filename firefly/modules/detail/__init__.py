@@ -1,3 +1,5 @@
+from typing import Any
+
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFontDatabase
 from PySide6.QtWidgets import (
@@ -34,7 +36,7 @@ class MetaList(QTextEdit):
 
 class DetailTabExtended(MetaList):
     def load(self, asset, **kwargs):
-        self.tag_groups = {
+        self.tag_groups: dict[str, list[str]] = {
             "core": [],
             "other": [],
         }
@@ -64,7 +66,7 @@ class DetailTabExtended(MetaList):
 
 class DetailTabTechnical(MetaList):
     def load(self, asset, **kwargs):
-        self.tag_groups = {"File": [], "Format": [], "QC": []}
+        self.tag_groups: dict[str, list[str]] = {"File": [], "Format": [], "QC": []}
         for tag in sorted(meta_types):
             if tag.startswith("file") or tag in ["id_storage", "path", "origin"]:
                 self.tag_groups["File"].append(tag)
@@ -104,7 +106,7 @@ class DetailTabs(QTabWidget):
 
         self.currentChanged.connect(self.on_switch)
         self.setCurrentIndex(0)
-        self.tabs = [self.tab_editor, self.tab_extended, self.tab_technical]
+        self.tabs: list[Any] = [self.tab_editor, self.tab_extended, self.tab_technical]
         self.tabs.append(self.tab_preview)
 
     def on_switch(self, *args):
@@ -130,7 +132,9 @@ class DetailTabs(QTabWidget):
 class DetailModule(BaseModule):
     def __init__(self, parent):
         super().__init__(parent)
-        self.asset = self._is_loading = self._load_queue = False
+        self.asset: Asset | None = None
+        self._is_loading = False
+        self._load_queue: list[Asset] = []
         self.toolbar = detail_toolbar(self)
         self.detail_tabs = DetailTabs(self)
         layout = QVBoxLayout()
@@ -152,8 +156,7 @@ class DetailModule(BaseModule):
         self.main_window.main_widget.tabs.setTabText(0, title)
 
     def save_state(self):
-        state = {}
-        return state
+        return {}
 
     def load_state(self, state):
         pass
@@ -192,9 +195,8 @@ class DetailModule(BaseModule):
         if self._is_loading:
             self._load_queue = [asset]
             return
-        else:
-            self._load_queue = False
-            self._is_loading = True
+        self._load_queue = []
+        self._is_loading = True
 
         if not silent:
             self.check_changed()
@@ -237,9 +239,9 @@ class DetailModule(BaseModule):
     def on_folder_changed(self, new_folder: int):
         data = {key: self.form[key] for key in self.form.changed}
         self.detail_tabs.load(self.asset, id_folder=new_folder)
-        for key in data:
+        for key, value in data.items():
             if key in self.form.inputs:
-                self.form[key] = data[key]
+                self.form[key] = value
             else:
                 pass  # TODO: Delete from metadata? How?
 
@@ -255,8 +257,10 @@ class DetailModule(BaseModule):
         self.detail_tabs.setCurrentIndex(0)
 
     def clone_asset(self):
+        if not self.asset:
+            return
         new_asset = Asset()
-        if self.asset and self.asset["id_folder"]:
+        if self.asset["id_folder"]:
             new_asset["id_folder"] = self.asset["id_folder"]
             for key in self.form.inputs:
                 new_asset[key] = self.form[key]
@@ -264,13 +268,13 @@ class DetailModule(BaseModule):
             new_asset["id_folder"] = firefly.settings.folders[0].id
         new_asset["media_type"] = self.asset["media_type"]
         new_asset["content_type"] = self.asset["content_type"]
-        self.asset = False
+        self.asset = None
         self.focus(new_asset)
         self.main_window.show_detail()
         self.detail_tabs.setCurrentIndex(0)
 
     def on_apply(self):
-        if not self.form:
+        if not self.form or not self.asset:
             return
         data = {}
 
@@ -281,7 +285,7 @@ class DetailModule(BaseModule):
             ):
                 data["id_folder"] = self.folder_select.get_value()
             if (
-                self.asset["True"] != self.duration.get_value()
+                self.asset["duration"] != self.duration.get_value()
                 and self.duration.isEnabled()
             ):
                 data["duration"] = self.duration.get_value()
@@ -317,6 +321,8 @@ class DetailModule(BaseModule):
             self.focus(asset_cache[self.asset.id], silent=True)
 
     def on_set_qc(self, state):
+        if not self.asset:
+            return
         # state_name = {0: "New", 3: "Rejected", 4: "Approved"}[state]
         # report = (
         #     f"{format_time(time.time())} : {firefly.user} "
@@ -347,9 +353,7 @@ class DetailModule(BaseModule):
 
     def refresh_assets(self, *objects):
         self.setCursor(Qt.CursorShape.ArrowCursor)
-        try:
-            current_id = self.asset.id
-        except AttributeError:
+        if self.asset is None:
             return
-        if current_id in objects:
+        if self.asset.id in objects:
             self.focus(asset_cache[self.asset.id], silent=True)

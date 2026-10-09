@@ -5,7 +5,7 @@ import firefly
 ABOUT_TEXT = """
 <b>Firefly - Nebula broadcast automation system client application</b>
 <br><br>
-Named after American space Western drama television series which ran from 2002–2003,
+Named after American space Western drama television series which ran from 2002-2003,
 created by writer and director Joss Whedon
 <br><br>
 Firefly is free software;

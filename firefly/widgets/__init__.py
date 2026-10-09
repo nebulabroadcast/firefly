@@ -2,7 +2,13 @@ from PySide6.QtWidgets import QLabel, QLineEdit, QPushButton, QSizePolicy, QWidg
 
 from .combo import FireflySelect
 
-assert FireflySelect
+__all__ = [
+    "ActionButton",
+    "ChannelDisplay",
+    "FireflySelect",
+    "FireflyString",
+    "ToolBarStretcher",
+]
 
 
 class ChannelDisplay(QLabel):

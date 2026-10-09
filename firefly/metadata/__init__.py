@@ -8,7 +8,7 @@ from firefly.helpers.format import unaccent
 
 from .utils import CachedObject, filter_match
 
-TYPE_DEFAULTS = {
+TYPE_DEFAULTS: dict[str | int, Any] = {
     -1: None,
     "string": "",
     "text": "",
@@ -26,11 +26,11 @@ TYPE_DEFAULTS = {
 
 
 class ClassificationScheme(metaclass=CachedObject):
-    def __init__(self, urn, filter=None):
+    def __init__(self, urn, cs_filter=None):
         self.urn = urn
         self.csdata = dict(firefly.settings.cs.get(urn, []))
-        if filter is not None:
-            self.valid_keys = [r for r in self.csdata if filter_match(filter, r)]
+        if cs_filter is not None:
+            self.valid_keys = [r for r in self.csdata if filter_match(cs_filter, r)]
         else:
             self.valid_keys = list(self.csdata.keys())
 
@@ -71,17 +71,14 @@ class MetaType(BaseModel):
     def csdata(self):
         cs = self.cs or "urn:special-nonexistent-cs"
         _filter = self.filter
-        if type(_filter) == list:
+        if type(_filter) is list:
             _filter = tuple(_filter)
         return ClassificationScheme(cs, _filter)
 
     # @functools.cached_property
     @property
     def cslist(self):
-        if self.order is None:
-            order = "value"
-        else:
-            order = self.order
+        order = "value" if self.order is None else self.order
 
         items = [
             {

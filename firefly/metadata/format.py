@@ -18,13 +18,13 @@ def format_cs_values(metatype: "MetaType", values: list[str]) -> str:
 
 def format_meta(
     parent,
-    object: "BaseObject",
+    obj: "BaseObject",
     key: str,
     **kwargs: dict[str, Any],
 ) -> str:
     """Return a human-readable string representation of a metadata value."""
 
-    if not (value := object.get(key)):
+    if not (value := obj.get(key)):
         return ""
 
     match key:

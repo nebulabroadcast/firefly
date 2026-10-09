@@ -15,8 +15,8 @@ from PySide6.QtWidgets import QCheckBox
 
 
 class InputSwitch(QCheckBox):
-    _transparent_pen = QPen(Qt.transparent)
-    _light_grey_pen = QPen(Qt.lightGray)
+    _transparent_pen = QPen(Qt.GlobalColor.transparent)
+    _light_grey_pen = QPen(Qt.GlobalColor.lightGray)
 
     def __init__(self, parent=None, value: bool = False, **kwargs):
         super().__init__(parent)
@@ -26,9 +26,9 @@ class InputSwitch(QCheckBox):
         self.setChecked(value)
         self.setMaximumSize(50, 30)
 
-        bar_color = Qt.gray
+        bar_color = Qt.GlobalColor.gray
         checked_color = "#00B0FF"
-        handle_color = Qt.white
+        handle_color = Qt.GlobalColor.white
         pulse_unchecked_color = "#44999999"
         pulse_checked_color = "#4400B0EE"
 
@@ -49,7 +49,7 @@ class InputSwitch(QCheckBox):
         self._pulse_radius = 0
 
         self.animation = QPropertyAnimation(self, b"handle_position", self)
-        self.animation.setEasingCurve(QEasingCurve.InOutCubic)
+        self.animation.setEasingCurve(QEasingCurve.Type.InOutCubic)
         self.animation.setDuration(200)  # time in ms
 
         self.pulse_anim = QPropertyAnimation(self, b"pulse_radius", self)
@@ -83,23 +83,23 @@ class InputSwitch(QCheckBox):
 
     def paintEvent(self, e: QPaintEvent):
 
-        contRect = self.contentsRect()
-        handleRadius = round(0.24 * contRect.height())
+        cont_rect = self.contentsRect()
+        handle_radius = round(0.24 * cont_rect.height())
 
         p = QPainter(self)
-        p.setRenderHint(QPainter.Antialiasing)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
 
         p.setPen(self._transparent_pen)
-        barRect = QRectF(
-            0, 0, contRect.width() - handleRadius, 0.40 * contRect.height()
+        bar_rect = QRectF(
+            0, 0, cont_rect.width() - handle_radius, 0.40 * cont_rect.height()
         )
-        barRect.moveCenter(contRect.center())
-        rounding = barRect.height() / 2
+        bar_rect.moveCenter(cont_rect.center())
+        rounding = bar_rect.height() / 2
 
         # the handle will move along this line
-        trailLength = contRect.width() - 2 * handleRadius
+        trail_length = cont_rect.width() - 2 * handle_radius
 
-        xPos = contRect.x() + handleRadius + trailLength * self._handle_position
+        x_pos = cont_rect.x() + handle_radius + trail_length * self._handle_position
 
         if self.pulse_anim.state() == QPropertyAnimation.Running:
             p.setBrush(
@@ -108,23 +108,25 @@ class InputSwitch(QCheckBox):
                 else self._pulse_unchecked_animation
             )
             p.drawEllipse(
-                QPointF(xPos, barRect.center().y()),
+                QPointF(x_pos, bar_rect.center().y()),
                 self._pulse_radius,
                 self._pulse_radius,
             )
 
         if self.isChecked():
             p.setBrush(self._bar_checked_brush)
-            p.drawRoundedRect(barRect, rounding, rounding)
+            p.drawRoundedRect(bar_rect, rounding, rounding)
             p.setBrush(self._handle_checked_brush)
 
         else:
             p.setBrush(self._bar_brush)
-            p.drawRoundedRect(barRect, rounding, rounding)
+            p.drawRoundedRect(bar_rect, rounding, rounding)
             p.setPen(self._light_grey_pen)
             p.setBrush(self._handle_brush)
 
-        p.drawEllipse(QPointF(xPos, barRect.center().y()), handleRadius, handleRadius)
+        p.drawEllipse(
+            QPointF(x_pos, bar_rect.center().y()), handle_radius, handle_radius
+        )
 
         p.end()
 
@@ -132,7 +134,7 @@ class InputSwitch(QCheckBox):
     def handle_position(self):
         return self._handle_position
 
-    @handle_position.setter
+    @handle_position.setter  # type: ignore[no-redef]
     def handle_position(self, pos):
         """change the property
         we need to trigger QWidget.update() method, either by:
@@ -146,7 +148,7 @@ class InputSwitch(QCheckBox):
     def pulse_radius(self):
         return self._pulse_radius
 
-    @pulse_radius.setter
+    @pulse_radius.setter  # type: ignore[no-redef]
     def pulse_radius(self, pos):
         self._pulse_radius = pos
         self.update()

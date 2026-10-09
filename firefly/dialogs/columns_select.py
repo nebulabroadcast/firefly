@@ -1,11 +1,13 @@
-# TODO
+# TODO: unfinished, not used anywhere yet (see BrowserTab.on_choose_columns)
 
 from PySide6.QtWidgets import QAbstractItemView, QDialog, QHBoxLayout, QListWidget
 
 
 class ColumnsSelectDialog(QDialog):
-    def __init__(self, parent, available=[], current=[]):
+    def __init__(self, parent, available=None, current=None):
         super().__init__(parent)
+        available = available or []
+        current = current or []
         self.list_available = QListWidget(self)
         self.list_available.setDragDropMode(QAbstractItemView.DragDropMode.DragDrop)
         self.list_current = QListWidget(self)

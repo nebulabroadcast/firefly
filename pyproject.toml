@@ -22,53 +22,70 @@ dev = [
 [tool.ruff]
 fix = true
 line-length = 88
+# vendored python-mpv, kept only as a fallback player (to be removed)
+extend-exclude = ["firefly/proxyplayer/mpv.py"]
 
 [tool.ruff.format]
 indent-style = "space"
 line-ending = "auto"
 
-
+# Same base profile as nebula/backend
 [tool.ruff.lint]
-select = [
-    "E",   # pycodestyle errors
-    "W",   # pycodestyle warnings
-    "F",   # pyflakes
-    "I",   # isort
-    "C",   # flake8-comprehensions
-    "ISC", # flake8-implicit-str-concat
-    "C4",  # flake8-comprehensions
-    "UP",  # pyupgrade
-]
+select = ["ALL"]
 
 ignore = [
-    "ISC001", # incompatible with formatting
-    "E721",  # do not compare types, i'll fix this later :)
-    "C901",  # too complex. C'mon - this is a complex project
+  "BLE",     # blind exceptions. I don't like them either, but they are useful in some cases
+  "COM812",  # OK: messes with formatter
+  "D",       # docstrings. Naaah.
+  "EM",      # OK: String literals in exception messages (why not?)
+  "FBT",     # Boolean positional argument (WTF?)
+  "FIX002",  # TODOs
+  "ISC001",  # OK: Incompatible with formatting
+  "PLR2004", # OK: Magic numbers (just a few)
+  "PTH",     # path-like objects
+  "S101",    # OK: I like asserts. They make mypy happy
+  "S104",    # OK: bind to all interfaces (We need this)
+  "S110",    # OK: except: pass
+  "S608",    # sql injections. let's wait for template strings
+  "SIM105",  # OK: contextlib.suppress is ugly
+  "TD002",   # Author name in TODOs
+  "TD003",   # Issue link in TODOs
+  "TRY003",  # OK: Avoid specicying long messages outside of exceptions
+  "ANN",     # Any
+  "ERA",     # Commented out code
+  "RUF012",  # ClassVar
+  "CPY001",  # Copyright header
+  "PLR0917", # Too many positional arguments in function call
+  # Firefly specific
+  "N802",    # Qt overrides are camelCase (mousePressEvent, rowCount, ...)
+  "ARG",     # Qt slots and virtual overrides have fixed signatures
+  "C901",    # complexity: refactoring needs tests first
+  "PLR0911", # too many returns: as above
+  "PLR0912", # too many branches: as above
+  "PLR0915", # too many statements: as above
+  "DTZ",     # naive datetimes: broadcast schedules use local time on purpose
+  "PERF203", # try/except in loops: zero-cost since Python 3.11
 ]
-
 
 [tool.mypy]
-plugins = [
-  "pydantic.mypy"
-]
-
+plugins = ["pydantic.mypy"]
 check_untyped_defs = true
 disallow_any_generics = true
-exclude = "tests/|venv/|tool/|test_"
 explicit_package_bases = true
 no_implicit_reexport = true
 strict_optional = true
 warn_redundant_casts = true
 warn_unused_ignores = true
-# follow_imports = "silent"
-# strict = true
-# disallow_untyped_defs = false
+exclude = "tests/|.venv/|build/|dist/"
 
 [[tool.mypy.overrides]]
-module = [
-  "user_agents",
-  "tomllib",
-  "codenamize",
-  "aiocache"
-]
+# vendored python-mpv, kept only as a fallback player (to be removed)
+module = ["firefly.proxyplayer.mpv"]
+ignore_errors = true
+follow_imports = "skip"
+
+[[tool.mypy.overrides]]
+# PySide6 stubs flag hundreds of issues in untyped Qt code; revisit later
+module = ["PySide6.*"]
+follow_imports = "skip"
 ignore_missing_imports = true
