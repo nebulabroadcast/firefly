@@ -10,16 +10,16 @@ EMPTY_EVENT_DATA = '[{"id" : 0, "title" : "Empty event"}]'.encode("ascii")
 
 class EmptyEventButton(QToolButton):
     def __init__(self, parent):
-        super(EmptyEventButton, self).__init__()
+        super().__init__()
         self.pressed.connect(self.startDrag)
         self.setIcon(QIcon(pixlib["empty-event"]))
         self.setToolTip("Drag this to scheduler to create empty event.")
 
     def startDrag(self):
         drag = QDrag(self)
-        mimeData = QMimeData()
-        mimeData.setData("application/nx.event", EMPTY_EVENT_DATA)
-        drag.setMimeData(mimeData)
+        mime_data = QMimeData()
+        mime_data.setData("application/nx.event", EMPTY_EVENT_DATA)
+        drag.setMimeData(mime_data)
         if drag.exec(Qt.DropAction.CopyAction):
             pass  # nejak to rozumne ukoncit
 
@@ -44,7 +44,7 @@ def scheduler_toolbar(wnd):
     action_week_next.triggered.connect(wnd.on_week_next)
     toolbar.addAction(action_week_next)
 
-    # TODO
+    # TODO: show runs toggle
     #    toolbar.addSeparator()
     #
     #    wnd.action_show_runs = QAction(QIcon(pixlib["show-runs"]), '&Show runs', wnd)

@@ -1,4 +1,5 @@
 import re
+from typing import Any
 
 
 def shorten(instr, nlen):
@@ -13,12 +14,8 @@ def shorten(instr, nlen):
 def filter_match(f, r):
     """Match filter with OR."""
     if type(f) in [list, tuple]:
-        for fl in f:
-            if re.match(fl, r):
-                return True
-        return False
-    else:
-        return re.match(f, r)
+        return any(re.match(fl, r) for fl in f)
+    return re.match(f, r)
 
 
 def tree_indent(data):
@@ -41,7 +38,7 @@ def tree_indent(data):
         role = row.get("role", "option")
         if role in ["label", "hidden"]:
             continue
-        elif has_children and row.get("has_children"):
+        if has_children and row.get("has_children"):
             data[i]["role"] = "header"
         else:
             data[i]["role"] = "option"
@@ -53,7 +50,7 @@ def tree_indent(data):
 
 
 class CachedObject(type):
-    _cache = None
+    _cache: dict[tuple[Any, ...], Any] | None = None
 
     @classmethod
     def clear_cache(cls):
@@ -66,11 +63,3 @@ class CachedObject(type):
         if key not in cls._cache:
             cls._cache[key] = super().__call__(*args)
         return cls._cache[key]
-
-
-# Moved to metadata, but this stub needs to live here so older firefly
-# doesn't break.
-def clear_cs_cache():
-    from . import metadata
-
-    metadata.clear_cs_cache()

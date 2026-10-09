@@ -11,7 +11,7 @@ from firefly.log import log
 
 class PlayoutPlugin(QWidget):
     def __init__(self, parent, data):
-        super(PlayoutPlugin, self).__init__(parent)
+        super().__init__(parent)
 
         self.id_channel = parent.id_channel
         self.name = data["name"]
@@ -22,7 +22,7 @@ class PlayoutPlugin(QWidget):
         button_layout = QHBoxLayout()
         layout = QFormLayout()
 
-        for i, slot in enumerate(data.get("slots", [])):
+        for _i, slot in enumerate(data.get("slots", [])):
             slot_type = slot["type"]
             slot_name = slot["name"]
             slot_title = slot.get("title", slot_name)
@@ -39,7 +39,6 @@ class PlayoutPlugin(QWidget):
                 self.slots[slot_name] = InputText(self)
             elif slot_type == "select":
                 options = slot.get("options", [])
-                print(options)
                 if not slot["options"]:
                     continue
                 self.slots[slot_name] = InputCombo(self, options=options)
@@ -75,7 +74,7 @@ class PlayoutPlugin(QWidget):
 
 class PlayoutPlugins(QTabWidget):
     def __init__(self, parent):
-        super(PlayoutPlugins, self).__init__(parent)
+        super().__init__(parent)
         self.plugins = []
 
     @property
@@ -90,7 +89,8 @@ class PlayoutPlugins(QTabWidget):
         for idx in reversed(range(self.count())):
             widget = self.widget(idx)
             self.removeTab(idx)
-            widget.deleteLater()
+            if widget:
+                widget.deleteLater()
 
         response = api.playout(action="plugin_list", id_channel=self.id_channel)
         if not response:

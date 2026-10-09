@@ -3,8 +3,4 @@ from .bin import Bin
 from .event import Event
 from .item import Item
 
-assert Asset
-assert asset_cache
-assert Item
-assert Bin
-assert Event
+__all__ = ["Asset", "Bin", "Event", "Item", "asset_cache"]

@@ -1,5 +1,6 @@
 import pprint
 import time
+from typing import Any
 
 from firefly.enum import Colors, ObjectStatus, RunMode
 from firefly.metadata import MetaTypes
@@ -12,28 +13,28 @@ from .format import STATUS_FG_COLORS, format_helpers
 class BaseObject:
     """Base object properties."""
 
-    required = []
-    defaults = {}
+    required: list[str] = []
+    defaults: dict[str, Any] = {}
 
-    def __init__(self, id=False, **kwargs):
+    def __init__(self, id_object=False, **kwargs):
         """Object constructor."""
         self.text_changed = self.meta_changed = False
         self.is_new = True
         self.meta = {}
         meta = kwargs.get("meta", {})
-        if id:
-            assert type(id) == int, f"{self.object_type} ID must be integer"
-        assert (
-            meta is not None
-        ), f"Unable to load {self.object_type}. Meta must not be 'None'"
+        if id_object:
+            assert type(id_object) is int, f"{self.object_type} ID must be integer"
+        assert meta is not None, (
+            f"Unable to load {self.object_type}. Meta must not be 'None'"
+        )
         assert hasattr(meta, "keys"), "Incorrect meta!"
         for key in meta:
             self.meta[key] = meta[key]
         if "id" in self.meta:
             self.is_new = False
         elif not self.meta:
-            if id:
-                self.load(id)
+            if id_object:
+                self.load(id_object)
                 self.is_new = False
             else:
                 self.new()
@@ -79,13 +80,13 @@ class BaseObject:
     def __getitem__(self, key):
         key = key.lower().strip()
         if key == "_duration":
-            return self.duration  # noqa
+            return self.duration
         if key not in self.meta_types:
             return self.meta.get(key, None)
-        else:
-            mtype = self.meta_types[key]
-            if mtype:
-                return self.meta.get(key, self.meta_types[key].default)
+        mtype = self.meta_types[key]
+        if mtype:
+            return self.meta.get(key, self.meta_types[key].default)
+        return None
 
     def __setitem__(self, key, value):
         """Set a metadata value
@@ -103,18 +104,17 @@ class BaseObject:
             self.meta[key] = value
 
         self.meta_changed = True
-        if key in self.meta_types:
-            if self.meta_types[key].fulltext:
-                self.text_changed = True
+        if key in self.meta_types and self.meta_types[key].fulltext:
+            self.text_changed = True
 
     def update(self, data):
-        for key in data.keys():
+        for key in data:
             self[key] = data[key]
 
     def new(self):
         pass
 
-    def load(self, id):
+    def load(self, id_object):
         pass
 
     # def save(self, **kwargs):
@@ -150,8 +150,12 @@ class BaseObject:
             result += f" ({title})"
         return result
 
+    @property
+    def duration(self) -> float:
+        return self.meta.get("duration", 0)
+
     def __len__(self):
-        return not self.is_new
+        return int(not self.is_new)
 
     def show(self, key, **kwargs):
         return format_meta(self.meta_types, self, key, **kwargs)
@@ -176,30 +180,29 @@ class BaseObject:
             if (
                 self["status"] == ObjectStatus.AIRED
                 and model
-                and model.cued_item != self.id
-                and model.current_item != self.id
+                and self.id not in {model.cued_item, model.current_item}
             ):
                 return STATUS_FG_COLORS[ObjectStatus.AIRED]
             if self["run_mode"] == RunMode.RUN_SKIP:
                 return Colors.TEXT_FADED
         if key in format_helpers:
             return format_helpers[key].foreground(self, **kwargs)
+        return None
 
     def format_background(self, key, **kwargs):
         model = kwargs.get("model")
-        if self.object_type == "event":
-            if model.__class__.__name__ == "RundownModel":
-                return "#000000"
+        if self.object_type == "event" and model.__class__.__name__ == "RundownModel":
+            return "#000000"
         if model and self.object_type == "item":
             if not self.id:
                 return "#111140"
             if model.cued_item == self.id:
                 return "#059005"
-            elif model.current_item == self.id:
+            if model.current_item == self.id:
                 return "#900505"
-            elif self.object_type == "item" and self["item_role"] == "live":
+            if self.object_type == "item" and self["item_role"] == "live":
                 return Colors.LIVE_BACKGROUND
-            elif not self["id_asset"]:
+            if not self["id_asset"]:
                 return "#303030"
         return None
 
@@ -216,7 +219,9 @@ class BaseObject:
                 return "bold"
         if key in format_helpers:
             return format_helpers[key].font(self, **kwargs)
+        return None
 
     def format_tooltip(self, key, **kwargs):
         if key in format_helpers:
             return format_helpers[key].tooltip(self, **kwargs)
+        return None

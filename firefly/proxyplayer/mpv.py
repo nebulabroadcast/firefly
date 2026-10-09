@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # vim: ts=4 sw=4 et
 #
 # Python MPV library module
@@ -83,7 +82,7 @@ class PropertyUnavailableError(AttributeError):
     pass
 
 
-class ErrorCode(object):
+class ErrorCode:
     """For documentation on these, see mpv's libmpv/client.h."""
 
     SUCCESS = 0
@@ -115,7 +114,7 @@ class ErrorCode(object):
         # INVALID_PARAMETER when setting a property-mapped option to an invalid value.
         -9: lambda *a: TypeError(
             "Tried to get/set mpv property using wrong format, or passed invalid value",
-            *a
+            *a,
         ),
         -10: lambda *a: PropertyUnavailableError("mpv property is not available", *a),
         -11: lambda *a: RuntimeError(
@@ -314,9 +313,7 @@ class MpvNode(Structure):
                 return v.byte_array.contents.bytes_value()
             else:
                 raise TypeError(
-                    "Unknown MPV node format {}. Please submit a bug report.".format(
-                        fmt
-                    )
+                    f"Unknown MPV node format {fmt}. Please submit a bug report."
                 )
 
 
@@ -447,8 +444,8 @@ def bytes_free_errcheck(res, func, *args):
 def notnull_errcheck(res, func, *args):
     if res is None:
         raise RuntimeError(
-            "Underspecified error in MPV calling {} with args {!r}: NULL returned."
-            "Please consult your local debugger.".format(func.__name__, args)
+            f"Underspecified error in MPV calling {func.__name__} with args {args!r}: NULL returned."
+            "Please consult your local debugger."
         )
     return res
 
@@ -549,9 +546,7 @@ def _mpv_coax_proptype(value, proptype=str):
         return str(proptype(value)).encode("utf-8")
     else:
         raise TypeError(
-            "Cannot coax value of type {} into property type {}".format(
-                type(value), proptype
-            )
+            f"Cannot coax value of type {type(value)} into property type {proptype}"
         )
 
 
@@ -635,7 +630,7 @@ def _event_loop(
             if eid == MpvEventID.SHUTDOWN:
                 _mpv_detach_destroy(event_handle)
                 return
-        except Exception as e:
+        except Exception:
             traceback.print_exc()
 
 
@@ -688,7 +683,7 @@ class _DecoderPropertyProxy(_PropertyProxy):
         setattr(self.mpv, _py_to_mpv(name), value)
 
 
-class MPV(object):
+class MPV:
     """See man mpv(1) for the details of the implemented commands. All mpv properties can be accessed as
     ``my_mpv.some_property`` and all mpv options can be accessed as ``my_mpv['some-option']``.
 
@@ -710,7 +705,7 @@ class MPV(object):
         log_handler=None,
         start_event_thread=True,
         loglevel=None,
-        **extra_mpv_opts
+        **extra_mpv_opts,
     ):
         """Create an MPV instance.
 
@@ -906,7 +901,7 @@ class MPV(object):
     @staticmethod
     def _encode_options(options):
         return ",".join(
-            "{}={}".format(str(key), str(val)) for key, val in options.items()
+            f"{str(key)}={str(val)}" for key, val in options.items()
         )
 
     def loadfile(self, filename, mode="replace", **options):
@@ -1159,7 +1154,7 @@ class MPV(object):
 
     @staticmethod
     def _binding_name(callback_or_cmd):
-        return "py_kb_{:016x}".format(hash(callback_or_cmd) & 0xFFFFFFFFFFFFFFFF)
+        return f"py_kb_{hash(callback_or_cmd) & 0xFFFFFFFFFFFFFFFF:016x}"
 
     def on_key_press(self, keydef, mode="force"):
         """Function decorator to register a simplified key binding. The callback is called whenever the key given is
@@ -1254,14 +1249,14 @@ class MPV(object):
             self.command(
                 "define-section",
                 binding_name,
-                "{} script-binding py_event_handler/{}".format(keydef, binding_name),
+                f"{keydef} script-binding py_event_handler/{binding_name}",
                 mode,
             )
         elif isinstance(callback_or_cmd, str):
             self.command(
                 "define-section",
                 binding_name,
-                "{} {}".format(keydef, callback_or_cmd),
+                f"{keydef} {callback_or_cmd}",
                 mode,
             )
         else:
@@ -1316,7 +1311,7 @@ class MPV(object):
                 raise TypeError(
                     "_get_property only supports NODE and OSD_STRING formats."
                 )
-        except PropertyUnavailableError as ex:
+        except PropertyUnavailableError:
             return None
 
     def _set_property(self, name, value):

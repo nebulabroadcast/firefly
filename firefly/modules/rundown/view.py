@@ -1,6 +1,5 @@
 from functools import partial
 
-from nxtools import s2time
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QAbstractItemView, QApplication, QMenu, QMessageBox
@@ -12,6 +11,7 @@ from firefly.dialogs.rundown import PlaceholderDialog, show_trim_dialog
 from firefly.dialogs.send_to import show_send_to_dialog
 from firefly.dialogs.split_item import show_split_dialog
 from firefly.enum import RunMode
+from firefly.helpers.timecode import s2time
 from firefly.log import log
 from firefly.view import FireflyView
 
@@ -20,7 +20,7 @@ from .model import RundownModel
 
 class RundownView(FireflyView):
     def __init__(self, parent):
-        super(RundownView, self).__init__(parent)
+        super().__init__(parent)
         self.setAcceptDrops(True)
         self.setDropIndicatorShown(True)
         self.activated.connect(self.on_activate)
@@ -98,21 +98,20 @@ class RundownView(FireflyView):
         FireflyView.keyPressEvent(self, event)
 
     def contextMenuEvent(self, event):
-        obj_set = list(set([itm.object_type for itm in self.selected_objects]))
+        obj_set = list({itm.object_type for itm in self.selected_objects})
         menu = QMenu(self)
 
         if len(obj_set) == 1:
             if len(self.selected_objects) == 1:
-                if self.selected_objects[0]["item_role"] == "placeholder":
-                    if solvers := self.playout_config.solvers:
-                        solver_menu = menu.addMenu("Solve using...")
-                        for solver in solvers:
-                            action_solve = QAction(solver.capitalize(), self)
-                            action_solve.setStatusTip(f"Solve using {solver}")
-                            action_solve.triggered.connect(
-                                partial(self.on_solve, solver)
-                            )
-                            solver_menu.addAction(action_solve)
+                if self.selected_objects[0]["item_role"] == "placeholder" and (
+                    solvers := self.playout_config.solvers
+                ):
+                    solver_menu = menu.addMenu("Solve using...")
+                    for solver in solvers:
+                        action_solve = QAction(solver.capitalize(), self)
+                        action_solve.setStatusTip(f"Solve using {solver}")
+                        action_solve.triggered.connect(partial(self.on_solve, solver))
+                        solver_menu.addAction(action_solve)
 
                 if obj_set[0] == "item" and self.selected_objects[0]["id_asset"]:
                     action_trim = QAction("Trim item", self)
@@ -134,7 +133,6 @@ class RundownView(FireflyView):
                 self.selected_objects[0]["id_asset"]
                 or self.selected_objects[0]["item_role"] == "live"
             ):
-
                 mode_menu = menu.addMenu("Run mode")
 
                 action_mode_auto = QAction("&Auto", self)
@@ -267,7 +265,6 @@ class RundownView(FireflyView):
         mode = not self.selected_objects[0]["loop"]
         QApplication.processEvents()
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
-        print("loop:", mode)
 
         response = api.ops(
             operations=[
@@ -338,7 +335,7 @@ class RundownView(FireflyView):
 
     def on_set_primary(self):
         item = self.selected_objects[0]
-        asset = item._asset
+        asset = item.asset
         if not asset:
             return
 
@@ -364,28 +361,24 @@ class RundownView(FireflyView):
 
     def on_delete(self):
         items = list(
-            set(
-                [
-                    obj.id
-                    for obj in self.selected_objects
-                    if obj.object_type == "item" and obj.id
-                ]
-            )
+            {
+                obj.id
+                for obj in self.selected_objects
+                if obj.object_type == "item" and obj.id
+            }
         )
         events = list(
-            set(
-                [
-                    obj.id
-                    for obj in self.selected_objects
-                    if obj.object_type == "event" and obj.id
-                ]
-            )
+            {
+                obj.id
+                for obj in self.selected_objects
+                if obj.object_type == "event" and obj.id
+            }
         )
 
         if items and not self.parent().can_edit:
             log.error("You are not allowed to modify this rundown items")
             return
-        elif events and not self.parent().can_schedule:
+        if events and not self.parent().can_schedule:
             log.error("You are not allowed to modify this rundown blocks")
             return
 
@@ -425,13 +418,11 @@ class RundownView(FireflyView):
         self.parent().main_window.scheduler.refresh_events(events)
 
     def on_send_to(self):
-        objs = set(
-            [
-                obj
-                for obj in self.selected_objects
-                if obj.object_type == "item" and obj["id_asset"]
-            ]
-        )
+        objs = {
+            obj
+            for obj in self.selected_objects
+            if obj.object_type == "item" and obj["id_asset"]
+        }
         show_send_to_dialog(self, list(objs))
         self.model().load()
 
@@ -442,7 +433,7 @@ class RundownView(FireflyView):
             if obj.object_type == "item" and obj["item_role"] in ["live", "placeholder"]
         ]
         if not objs:
-            return
+            return None
         obj = objs[0]
         dlg = PlaceholderDialog(self, obj.meta)
         dlg.exec()
@@ -453,12 +444,13 @@ class RundownView(FireflyView):
             if dlg.meta[key] != obj[key]:
                 data[key] = dlg.meta[key]
         if not data:
-            return
+            return None
         response = api.set(object_type=obj.object_type, id=obj.id, data=data)
         if not response:
             log.error(response.message)
-            return
+            return None
         self.model().load()
+        return None
 
     def on_edit_event(self):
         objs = [obj for obj in self.selected_objects if obj.object_type == "event"]
@@ -470,7 +462,6 @@ class RundownView(FireflyView):
         obj = self.model().object_data[mi.row()]
         can_mcr = firefly.user.can("mcr", self.id_channel)
         if obj.object_type == "item":
-
             if obj.id:
                 if obj["item_role"] == "placeholder":
                     self.on_edit_item()
@@ -495,7 +486,7 @@ class RundownView(FireflyView):
         self.clearSelection()
 
     def dragMoveEvent(self, event):
-        super(RundownView, self).dragMoveEvent(event)
+        super().dragMoveEvent(event)
         if event.mimeData().hasFormat("application/nx.item"):
             if event.keyboardModifiers() & Qt.KeyboardModifier.AltModifier:
                 event.setDropAction(Qt.DropAction.CopyAction)

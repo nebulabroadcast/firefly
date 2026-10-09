@@ -1,3 +1,5 @@
+from typing import Any
+
 from PySide6.QtWidgets import QLineEdit
 
 import firefly
@@ -10,7 +12,7 @@ class InputList(QLineEdit):
 
         self._value = value
         self._original_value = value
-        self._options = []
+        self._options: list[dict[str, Any]] = []
 
         self.setReadOnly(True)
 
@@ -26,9 +28,10 @@ class InputList(QLineEdit):
             _filter = kwargs.get("filter")
 
             for opt_value, csmeta in firefly.settings.cs.get(urn, {}).items():
-                if _filter := kwargs.get("filter"):
-                    if not filter_match(_filter, opt_value):
-                        continue
+                if (_filter := kwargs.get("filter")) and not filter_match(
+                    _filter, opt_value
+                ):
+                    continue
 
                 if csmeta.get("role") in ["hidden", "header"]:
                     continue
@@ -41,16 +44,13 @@ class InputList(QLineEdit):
                     }
                 )
 
-    def set_value(self, value: str) -> None:
+    def set_value(self, value: list[str] | None) -> None:
         if value:
-            result = []
-            for opt in self._options:
-                if opt["value"] in value:
-                    result.append(opt["title"])
+            result = [opt["title"] for opt in self._options if opt["value"] in value]
             self.setText(", ".join(result))
         else:
             self.setText("")
         self._value = value
 
     def get_value(self):
-        self._value
+        return self._value

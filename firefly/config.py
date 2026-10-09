@@ -1,7 +1,8 @@
 import json
+import sys
+import uuid
 
-from nxtools import get_guid
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, PrivateAttr
 
 
 class SiteConfiguration(BaseModel):
@@ -16,7 +17,7 @@ class SiteConfiguration(BaseModel):
 class FireflyConfig(BaseModel):
     """Firefly configuration model."""
 
-    client_id: str = Field(default_factory=get_guid, title="Client ID")
+    client_id: str = Field(default_factory=lambda: str(uuid.uuid1()), title="Client ID")
     debug: bool = Field(False, title="Debug mode")
 
     sites: list[SiteConfiguration] = Field(
@@ -24,14 +25,18 @@ class FireflyConfig(BaseModel):
         title="Available sites",
     )
 
-    site: SiteConfiguration | None = Field(
-        None,
-        title="Current site",
-    )
+    _site: SiteConfiguration | None = PrivateAttr(None)
 
-    def set_site(self, index):
+    @property
+    def site(self) -> SiteConfiguration:
+        """Current site. Selected at startup, before anything connects."""
+        if self._site is None:
+            raise RuntimeError("No site selected")
+        return self._site
+
+    def set_site(self, index: int) -> None:
         """Set current site."""
-        self.site = self.sites[index]
+        self._site = self.sites[index]
 
 
 def get_config() -> FireflyConfig:
@@ -39,10 +44,10 @@ def get_config() -> FireflyConfig:
 
     try:
         with open("settings.json") as f:
-            config = FireflyConfig(**json.load(f))
-            return config
+            return FireflyConfig(**json.load(f))
     except Exception as e:
-        print(f"Failed to load configuration: {e}")
+        # logging is not available yet: it depends on the configuration
+        print(f"Failed to load configuration: {e}", file=sys.stderr)  # noqa: T201
 
     # Default configuration
     sites = [

@@ -11,7 +11,6 @@ from PySide6.QtWidgets import (
 import firefly
 from firefly.api import api
 from firefly.components.form import MetadataForm
-from firefly.enum import MetaClass
 from firefly.log import log
 from firefly.metadata import meta_types
 
@@ -20,28 +19,23 @@ ERR = "** ERROR **"
 
 class BatchOpsDialog(QDialog):
     def __init__(self, parent, objects):
-        super(BatchOpsDialog, self).__init__(parent)
+        super().__init__(parent)
         self.objects = sorted(objects, key=lambda obj: obj.id)
         self.setWindowTitle(f"Batch modify: {len(self.objects)} assets")
         id_folder = self.objects[0]["id_folder"]
-        self.fields = firefly.settings.get_folder(id_folder)
-        self.form = MetadataForm(self, self.fields)
+        self.fields = firefly.settings.get_folder(id_folder).fields
+        self.form = MetadataForm(self, self.fields, {})
 
-        if self.form:
-            for key, conf in self.fields:
-                if meta_types[key]["class"] in [MetaClass.SELECT, MetaClass.LIST]:
-                    self.form.inputs[key].auto_data(
-                        meta_types[key], id_folder=id_folder
-                    )
-
-                values = []
-                for obj in self.objects:
-                    val = obj[key]
-                    if val not in values:
-                        values.append(val)
-                if len(values) == 1:
-                    self.form[key] = values[0]
-            self.form.set_defaults()
+        # pre-fill the values all selected assets share
+        for field in self.fields:
+            values = []
+            for obj in self.objects:
+                val = obj[field.name]
+                if val not in values:
+                    values.append(val)
+            if len(values) == 1:
+                self.form[field.name] = values[0]
+        self.form.set_defaults()
 
         self.scroll_area = QScrollArea(self)
         self.scroll_area.setFrameStyle(QFrame.Shape.NoFrame)
@@ -76,9 +70,7 @@ class BatchOpsDialog(QDialog):
             self,
             "Save changes?",
             "{}".format(
-                "\n".join(
-                    " - {}".format(meta_types[k].alias) for k in self.form.changed
-                )
+                "\n".join(f" - {meta_types[k].title}" for k in self.form.changed)
             ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
@@ -106,3 +98,4 @@ def show_batch_ops_dialog(parent=None, objects=None):
         dlg = BatchOpsDialog(parent, objects)
         dlg.exec()
         return dlg.response
+    return None

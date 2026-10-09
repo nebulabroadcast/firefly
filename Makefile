@@ -1,30 +1,29 @@
 .PHONY=skin
-VERSION=$(shell poetry run python -c 'import firefly; print(firefly.__version__)')
+VERSION=$(shell uv run python -c 'import firefly; print(firefly.__version__)')
 
 run: skin
-	poetry run python -m firefly
+	uv run python -m firefly
 
 skin:
-	poetry run qtsass -o skin.css skin.scss
+	uv run qtsass -o skin.css skin.scss
 
 check_version:
-	sed -i "s/version = \".*\"/version = \"$(VERSION)\"/" pyproject.toml
+	uv version $(VERSION)
 
 lint: check_version
-	poetry run isort firefly
-	poetry run black firefly
-	poetry run flake8 firefly
-	poetry run mypy firefly
+	uv run ruff check . --select=I --fix
+	uv run ruff format .
+	uv run ruff check . --fix
+	uv run mypy .
 
+# skin.css, images and fonts are read from the working directory at runtime,
+# so they ship next to the binary
 build: check_version skin
-	poetry run pyinstaller -y firefly.windows.spec
-	cp -r images dist/images
-	cp -r skin.css dist/skin.css
-	
+	uv run pyinstaller -y firefly.spec
+	cp -r images fonts skin.css dist/
+
 build_windows: build
-	# make zip
-	cd dist && zip -r ../firefly-$(VERSION)-win.zip firefly.exe images skin.css
+	cd dist && zip -r ../firefly-$(VERSION)-win.zip firefly.exe images fonts skin.css
 
 build_linux: build
-	# make tar
-	cd dist && tar -czvf ../firefly-$(VERSION)-linux.tar.gz firefly images skin.css
+	cd dist && tar -czvf ../firefly-$(VERSION)-linux.tar.gz firefly images fonts skin.css

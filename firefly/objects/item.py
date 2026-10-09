@@ -3,6 +3,7 @@ from .base import BaseObject
 
 
 class Item(BaseObject):
+    id_channel: int  # set by the rundown model; checked with hasattr()
     object_type_id = 1
     required = ["id_bin", "id_asset", "position"]
 
@@ -11,10 +12,9 @@ class Item(BaseObject):
         if key not in self.meta:
             if key == "id_asset":
                 return None
-            elif self.asset:
+            if self.asset:
                 return self.asset[key]
-            else:
-                return self.meta_types[key].default
+            return self.meta_types[key].default
         return self.meta[key]
 
     @property

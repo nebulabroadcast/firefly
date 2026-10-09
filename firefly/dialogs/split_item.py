@@ -94,10 +94,10 @@ class SplitItemDialog(QDialog):
 
     def get_timecodes(self):
         """Return the list of timecodes entered by the user"""
-        timecodes = []
-        for i in range(self.timecode_list.count()):
-            timecodes.append(self.timecode_list.item(i).data(Qt.UserRole))
-        return timecodes
+        return [
+            self.timecode_list.item(i).data(Qt.ItemDataRole.UserRole)
+            for i in range(self.timecode_list.count())
+        ]
 
     def split_item(self):
         regions = []

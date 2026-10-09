@@ -1,4 +1,5 @@
 import functools
+from typing import Any
 
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QIcon
@@ -14,6 +15,9 @@ try:
 except OSError:
     has_mpv = False
     log.warning("Unable to load MPV libraries. Video preview will not be available.")
+except Exception:
+    log.traceback("Error loading MPV libraries. Video preview will not be available.")
+    has_mpv = False
 
 
 class DummyPlayer:
@@ -41,7 +45,7 @@ class DummyPlayer:
 
 class VideoPlayer(QWidget):
     def __init__(self, parent=None, pixlib=None):
-        super(VideoPlayer, self).__init__(parent)
+        super().__init__(parent)
 
         self.pixlib = pixlib
 
@@ -49,6 +53,7 @@ class VideoPlayer(QWidget):
 
         self.video_window = QWidget(self)
         self.video_window.setStyleSheet("background-color: #161616;")
+        self.player: Any
         if not has_mpv:
             self.player = DummyPlayer()
         else:
@@ -161,9 +166,9 @@ class VideoPlayer(QWidget):
     def frame_dur(self):
         return 1 / self.fps
 
-    def load(self, path, mark_in=0, mark_out=0, markers={}):
+    def load(self, path, mark_in=0, mark_out=0, markers=None):
         self.loaded = False
-        self.markers = markers
+        self.markers = markers or {}
         self.player["pause"] = True
         self.player.play(path)
         self.prev_mark_in = -1

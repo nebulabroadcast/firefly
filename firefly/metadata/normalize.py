@@ -25,9 +25,7 @@ def is_serializable(value: Any) -> bool:
 
     This is used to check if a value can be stored in the database.
     """
-    if type(value) in (str, int, float, bool, dict, list, tuple):
-        return True
-    return False
+    return type(value) in (str, int, float, bool, dict, list, tuple)
 
 
 def parse_bool(value: Any) -> bool:
@@ -51,7 +49,7 @@ def normalize_meta(parent, key: str, value: Any) -> Any:
         return int(value or 0)
 
     # If there's no matching metatype, just return the value
-    if key not in settings.metatypes.keys():
+    if key not in settings.metatypes:
         if not is_serializable(value):
             raise ValueError(f"Value {value} of undefined key {key} is not supported.")
         return value
@@ -90,13 +88,12 @@ def normalize_meta(parent, key: str, value: Any) -> Any:
             if not value:
                 return []
             if not isinstance(value, list):
-                raise ValueError("List is already a list")
+                raise TypeError("Expected a list")
             return [str(v) for v in value]
 
         case "color":
             if isinstance(value, str):
-                if value.startswith("#"):
-                    value = value[1:]
+                value = value.removeprefix("#")
                 return int(value, 16)
             return int(value)
 

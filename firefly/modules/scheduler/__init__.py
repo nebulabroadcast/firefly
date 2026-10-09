@@ -11,14 +11,14 @@ from .utils import import_template
 
 class SchedulerModule(BaseModule):
     def __init__(self, parent):
-        super(SchedulerModule, self).__init__(parent)
+        super().__init__(parent)
         toolbar = scheduler_toolbar(self)
         self.date, self.week_number = get_this_monday()
         self.calendar = SchedulerCalendar(self)
 
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(2)
+        layout.setSpacing(6)  # section gap, same as the web frontend
         layout.addWidget(toolbar, 0)
         layout.addWidget(self.calendar, 1)
 
@@ -30,8 +30,7 @@ class SchedulerModule(BaseModule):
     def load(self):
         self.calendar.load()
         header = (
-            f"Week from {self.date} ({self.week_number})"
-            f" - {self.playout_config.name}"
+            f"Week from {self.date} ({self.week_number}) - {self.playout_config.name}"
         )
         self.channel_display.setText(header)
 
@@ -45,7 +44,7 @@ class SchedulerModule(BaseModule):
 
     def focus(self, objects):
         return
-        # TODO
+        # TODO: highlight runs of the focused assets
         if self.action_show_runs.isChecked():
             pass
             # asset_ids = [obj.id for obj in objects if obj.object_type == "asset"]

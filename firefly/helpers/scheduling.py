@@ -28,13 +28,11 @@ def get_this_monday(day_start: tuple[int, int] | None = None) -> tuple[str, int]
 
 
 def can_append(asset: "Asset", conditions: "AcceptModel") -> bool:
-    if conditions.folders:
-        if asset["id_folder"] not in conditions.folders:
-            return False
-    if conditions.media_types:
-        if asset["media_type"] not in conditions.media_types:
-            return False
-    if conditions.content_types:
-        if asset["content_type"] not in conditions.content_types:
-            return False
-    return True
+    if conditions.folders and asset["id_folder"] not in conditions.folders:
+        return False
+    if conditions.media_types and asset["media_type"] not in conditions.media_types:
+        return False
+    return not (
+        conditions.content_types
+        and asset["content_type"] not in conditions.content_types
+    )

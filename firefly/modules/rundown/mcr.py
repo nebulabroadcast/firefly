@@ -1,8 +1,7 @@
 import math
 import time
 
-from nxtools import s2tc
-from PySide6.QtCore import QTimer
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtWidgets import (
     QApplication,
     QGridLayout,
@@ -16,13 +15,15 @@ from PySide6.QtWidgets import (
 
 import firefly
 from firefly.api import api
+from firefly.helpers.timecode import s2tc
+from firefly.log import log
 
 PROGRESS_BAR_RESOLUTION = 1000
 
 
 class MCRButton(QPushButton):
     def __init__(self, title, parent=None, on_click=False, checkable=False):
-        super(MCRButton, self).__init__(parent)
+        super().__init__(parent)
         self.setText(title)
         self.setCheckable(checkable)
         if title == "Freeze":
@@ -32,24 +33,20 @@ class MCRButton(QPushButton):
             bg_col = "#109410"
             self.setToolTip("Start cued clip")
         else:
-            bg_col = "#565656"
+            bg_col = "transparent"
         self.setStyleSheet(
             f"""
             MCRButton {{
-                font-size:14px;
-                color: #eeeeee;
                 width: 80px;
-                height:30px;
-                border: 2px solid {bg_col};
-                text-transform: uppercase;
+                border: 1px solid {bg_col};
             }}
 
             MCRButton:checked {{
-                border: 2px solid #00a5c3;
+                border: 1px solid #0ed3fe;
             }}
 
             MCRButton:pressed {{
-                border: 2px solid #00a5c3;
+                border: 1px solid #0ed3fe;
             }}"""
         )
 
@@ -58,16 +55,17 @@ class MCRButton(QPushButton):
 
 
 class MCRLabel(QLabel):
-    def __init__(self, head, default, parent=None, tcolor="#eeeeee"):
-        super(MCRLabel, self).__init__(parent)
+    def __init__(self, head, default, parent=None, tcolor="#eeeeee", mono=False):
+        super().__init__(parent)
         self.head = head
+        font_family = '"Noto Sans Mono", monospace' if mono else '"Noto Sans"'
         self.setStyleSheet(
             f"""
-                background-color: #161616;
-                padding:5px;
-                margin:3px;
-                font:16px;
-                font-weight: bold;
+                background-color: #19161f;
+                padding: 4px 8px;
+                font-family: {font_family};
+                font-size: 14px;
+                font-weight: 600;
                 color : {tcolor};
             """
         )
@@ -78,8 +76,24 @@ class MCRLabel(QLabel):
 
 
 class MCR(QWidget):
+    # playout state, (re)set in on_channel_changed
+    position: float
+    dur: float
+    fps: float
+    current: str
+    cued: str
+    cueing: bool
+    paused: bool
+    first_update: bool
+    request_time: float
+    local_request_time: float
+
     def __init__(self, parent):
-        super(MCR, self).__init__(parent)
+        super().__init__(parent)
+        # styled as a section panel (see skin); plain QWidgets only paint
+        # a stylesheet background with WA_StyledBackground
+        self.setProperty("section", True)
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)
 
         self.progress_bar = QProgressBar(self)
         self.progress_bar.setTextVisible(False)
@@ -113,18 +127,20 @@ class MCR(QWidget):
         btns_layout.addWidget(self.btn_cue_forward, 0)
         btns_layout.addStretch(1)
 
-        self.display_clock = MCRLabel("CLK", "--:--:--:--")
-        self.display_pos = MCRLabel("POS", "--:--:--:--")
+        self.display_clock = MCRLabel("CLK", "--:--:--:--", mono=True)
+        self.display_pos = MCRLabel("POS", "--:--:--:--", mono=True)
 
         self.display_current = MCRLabel("CUR", "(no clip)", tcolor="#cc0000")
         self.display_cued = MCRLabel("NXT", "(no clip)", tcolor="#00cc00")
 
-        self.display_rem = MCRLabel("REM", "(unknown)")
-        self.display_dur = MCRLabel("DUR", "--:--:--:--")
+        self.display_rem = MCRLabel("REM", "(unknown)", mono=True)
+        self.display_dur = MCRLabel("DUR", "--:--:--:--", mono=True)
 
+        # gaps and padding follow the web frontend's playout controls section
         info_layout = QGridLayout()
         info_layout.setContentsMargins(0, 0, 0, 0)
-        info_layout.setSpacing(2)
+        info_layout.setHorizontalSpacing(12)
+        info_layout.setVerticalSpacing(8)
 
         info_layout.addWidget(self.display_clock, 0, 0)
         info_layout.addWidget(self.display_pos, 1, 0)
@@ -138,6 +154,8 @@ class MCR(QWidget):
         info_layout.setColumnStretch(1, 1)
 
         layout = QVBoxLayout()
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(8)
         layout.addLayout(info_layout, 0)
         layout.addWidget(self.progress_bar, 0)
         layout.addLayout(btns_layout, 0)
@@ -184,12 +202,12 @@ class MCR(QWidget):
         if status["fps"] != self.fps:
             self.fps = status["fps"]
 
-        self.pos = status["position"] + (1 / self.fps)
+        self.position = status["position"] + (1 / self.fps)
         dur = status["duration"]
 
         self.btn_loop.setEnabled(True)
         if status.get("loop") != self.btn_loop.isChecked():
-            print("Loop", status.get("loop"))
+            log.debug("Loop", status.get("loop"))
             self.btn_loop.setChecked(status.get("loop"))
         else:
             self.btn_loop.setEnabled(False)
@@ -205,7 +223,7 @@ class MCR(QWidget):
             self.first_update = False
 
             if status["duration"] == 0:
-                self.pos = 0
+                self.position = 0
                 self.dur = 0
                 self.progress_bar.setValue(0)
                 self.progress_bar.setMaximum(0)
@@ -231,11 +249,11 @@ class MCR(QWidget):
             self.request_display_resize = True
 
     def show(self, *args, **kwargs):
-        super(MCR, self).show(*args, **kwargs)
+        super().show(*args, **kwargs)
         self.display_timer.start(40)
 
     def hide(self, *args, **kwargs):
-        super(MCR, self).hide(*args, **kwargs)
+        super().hide(*args, **kwargs)
         self.display_timer.stop()
 
     def on_channel_changed(self):
@@ -252,7 +270,7 @@ class MCR(QWidget):
             if hasattr(self, "plugins"):
                 self.plugins.load()
 
-        self.pos = 0
+        self.position = 0
         self.dur = 0
         self.current = "(loading)"
         self.cued = "(loading)"
@@ -276,7 +294,7 @@ class MCR(QWidget):
         adv = now - self.local_request_time
 
         rtime = self.request_time + adv
-        rpos = self.pos
+        rpos = self.position
 
         if not self.paused:
             rpos += adv
@@ -293,7 +311,7 @@ class MCR(QWidget):
         else:
             self.display_rem.set_text(t)
 
-        if self.pos == self.dur == self.progress_bar.value() == 0:
+        if self.position == self.dur == self.progress_bar.value() == 0:
             self.progress_bar.setValue(0)
 
         try:

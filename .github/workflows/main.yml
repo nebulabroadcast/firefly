@@ -1,56 +1,98 @@
-name: Build windows binary
+name: Build binaries
 
 on:
   push:
     branches: [ "main" ]
+  pull_request:
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win
+          # oldest supported runner: the binary needs glibc >= the build host's
+          - os: ubuntu-22.04
+            platform: linux
+
+    runs-on: ${{ matrix.os }}
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
-      
-      - name: Setup python
-        uses: actions/setup-python@v4
+        uses: actions/checkout@v4
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v6
         with:
-          python-version: '3.11'
+          python-version: "3.13"
+          enable-cache: true
 
-      - name: Download libmpv
-        run: |
-          $url = 'https://repo.imm.cz/mpv-1.dll'
-          $path = './mpv-1.dll'
-          Invoke-WebRequest -Uri $url -OutFile $path
+      - name: Install dependencies
+        run: uv sync --frozen
 
-      - name: Build exe with pyinstaller
+      - name: Build
         shell: bash
-        run: |
-          python -m pip install --upgrade pip
-          pip uninstall pyside6 shiboken6 poetry -y
-          pip install poetry==1.3.2
-          poetry install --no-interaction --no-ansi
-          make build
+        run: make build
 
       - name: Get the version
-        id: get_version
-        uses: SebRollen/toml-action@v1.0.1
-        with:
-          file: 'pyproject.toml'
-          field: 'tool.poetry.version'
+        id: version
+        shell: bash
+        run: echo "value=$(uv version --short)" >> "$GITHUB_OUTPUT"
 
-      - name: Create zip
-        uses: thedoctor0/zip-release@0.7.1
+      - name: Package (Windows)
+        if: matrix.platform == 'win'
+        shell: pwsh
+        run: >
+          Compress-Archive
+          -Path dist/firefly.exe, dist/images, dist/fonts, dist/skin.css
+          -DestinationPath firefly-${{ steps.version.outputs.value }}-win.zip
+
+      - name: Package (Linux)
+        if: matrix.platform == 'linux'
+        run: >
+          tar -czf firefly-${{ steps.version.outputs.value }}-linux.tar.gz
+          -C dist firefly images fonts skin.css
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
         with:
-          type: 'zip'
-          directory: dist
-          filename: firefly-${{ steps.get_version.outputs.value }}-win.zip
+          name: firefly-${{ matrix.platform }}
+          path: firefly-${{ steps.version.outputs.value }}-*
+          if-no-files-found: error
+
+  release:
+    needs: build
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Get the version
+        id: version
+        run: echo "value=$(uv version --short)" >> "$GITHUB_OUTPUT"
+
+      - name: Download packages
+        uses: actions/download-artifact@v4
+        with:
+          path: packages
+          merge-multiple: true
 
       - uses: ncipollo/release-action@v1
         with:
-          artifacts: dist/firefly-${{ steps.get_version.outputs.value }}-win.zip
-          tag: v${{ steps.get_version.outputs.value }}
-          name: Firefly ${{ steps.get_version.outputs.value }}
-          body: Firefly version ${{ steps.get_version.outputs.value }}
+          artifacts: packages/*
+          tag: v${{ steps.version.outputs.value }}
+          name: Firefly ${{ steps.version.outputs.value }}
+          body: Firefly version ${{ steps.version.outputs.value }}
           allowUpdates: true
           draft: true
           prerelease: false

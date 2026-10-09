@@ -53,8 +53,7 @@ class BrowserModel(FireflyViewModel):
         else:
             page_count = current_page
 
-        if current_page > page_count:
-            current_page = page_count
+        current_page = min(current_page, page_count)
 
         # Replace object data
 
@@ -77,10 +76,10 @@ class BrowserModel(FireflyViewModel):
         if orientation == Qt.Orientation.Horizontal:
             if role == Qt.ItemDataRole.DisplayRole:
                 return format_header(self.header_data[col])
-            elif role == Qt.ItemDataRole.ToolTipRole:
+            if role == Qt.ItemDataRole.ToolTipRole:
                 desc = format_description(self.header_data[col])
                 return f"<p>{desc}</p>" if desc else None
-            elif role == Qt.ItemDataRole.DecorationRole:
+            if role == Qt.ItemDataRole.DecorationRole:
                 sq = self.parent().parent().search_query
                 if self.header_data[col] == sq["order_by"]:
                     return pixlib[
@@ -91,16 +90,15 @@ class BrowserModel(FireflyViewModel):
         return None
 
     def flags(self, index):
-        flags = super(BrowserModel, self).flags(index)
-        if index.isValid():
-            if self.object_data[index.row()].id:
-                flags |= Qt.ItemFlag.ItemIsDragEnabled
+        flags = super().flags(index)
+        if index.isValid() and self.object_data[index.row()].id:
+            flags |= Qt.ItemFlag.ItemIsDragEnabled
         return flags
 
     def mimeTypes(self):
         return ["application/nx.asset"]
 
-    def mimeData(self, indices):
+    def mime_data(self, indices):
         rows = []
         for index in indices:
             if index.row() in rows:
@@ -115,17 +113,14 @@ class BrowserModel(FireflyViewModel):
             for row in rows
             if self.object_data[row].file_path
         ]
-        if paths:
-            urls = [QUrl.fromLocalFile(path) for path in paths]
-        else:
-            urls = None
+        urls = [QUrl.fromLocalFile(path) for path in paths] if paths else None
 
         try:
-            mimeData = QMimeData()
-            mimeData.setData("application/nx.asset", json.dumps(data).encode("ascii"))
+            mime_data = QMimeData()
+            mime_data.setData("application/nx.asset", json.dumps(data).encode("ascii"))
             if urls:
-                mimeData.setUrls(urls)
-            return mimeData
+                mime_data.setUrls(urls)
         except Exception:
             log.traceback()
-            return
+            return None
+        return mime_data

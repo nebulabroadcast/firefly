@@ -10,7 +10,7 @@ from firefly.widgets import ActionButton
 
 class SiteSelectDialog(QDialog):
     def __init__(self, parent):
-        super(SiteSelectDialog, self).__init__(parent)
+        super().__init__(parent)
         self.setWindowTitle("Multiple sites are cofigured")
         self.setStyleSheet(app_skin)
         self.setModal(True)

@@ -89,10 +89,10 @@ class ServiceState(enum.IntEnum):
 
 
 class Colors(enum.Enum):
-    TEXT_NORMAL = "#f0f0f0"
-    TEXT_FADED = "#a0a0a0"
-    TEXT_FADED2 = "#707070"
-    TEXT_HIGHLIGHT = "#ffffff"
+    TEXT_NORMAL = "#d7d4d5"
+    TEXT_FADED = "#9c9c9c"
+    TEXT_FADED2 = "#6b6b6b"
+    TEXT_HIGHLIGHT = "#fbfbfb"
     TEXT_GREEN = "#15f015"
     TEXT_YELLOW = "#e0f015"
     TEXT_RED = "#f01515"

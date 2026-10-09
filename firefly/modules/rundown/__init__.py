@@ -17,7 +17,7 @@ from .view import RundownView
 
 class RundownModule(BaseModule):
     def __init__(self, parent):
-        super(RundownModule, self).__init__(parent)
+        super().__init__(parent)
         self.start_time = 0
         self.current_item = False
         self.cued_item = False
@@ -31,12 +31,13 @@ class RundownModule(BaseModule):
 
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(2)
+        layout.setSpacing(6)  # section gap, same as the web frontend
         layout.addWidget(self.toolbar, 0)
 
         self.view = RundownView(self)
 
-        self.mcr = self.plugins = False
+        self.mcr: MCR | None = None
+        self.plugins: PlayoutPlugins | None = None
 
         if firefly.user.can("mcr", anyval=True):
             self.mcr = MCR(self)
@@ -79,15 +80,12 @@ class RundownModule(BaseModule):
         event = kwargs.get("event", False)
         go_to_now = kwargs.get("go_to_now", False)
         # Save current selection
-        selection = []
-        for idx in self.view.selectionModel().selectedIndexes():
-            if self.view.model().object_data[idx.row()].id:
-                selection.append(
-                    [
-                        self.view.model().object_data[idx.row()].object_type,
-                        self.view.model().object_data[idx.row()].id,
-                    ]
-                )
+        object_data = self.view.model().object_data
+        selection = [
+            [object_data[idx.row()].object_type, object_data[idx.row()].id]
+            for idx in self.view.selectionModel().selectedIndexes()
+            if object_data[idx.row()].id
+        ]
 
         do_update_header = kwargs.get("do_update_header", False)
         if "id_channel" in kwargs and kwargs["id_channel"] != self.id_channel:
@@ -163,9 +161,9 @@ class RundownModule(BaseModule):
             s = " color='green'"
         else:
             s = ""
-        t = t.strftime("%A %Y-%m-%d")
-        self.parent().setWindowTitle(f"Rundown {t}")
-        self.channel_display.setText(f"<font{s}>{t}</font> - {ch}")
+        day = t.strftime("%A %Y-%m-%d")
+        self.parent().setWindowTitle(f"Rundown {day}")
+        self.channel_display.setText(f"<font{s}>{day}</font> - {ch}")
         log.debug(f"[RUNDOWN] Header update ({ch})")
 
     #
@@ -227,7 +225,7 @@ class RundownModule(BaseModule):
             self.load()
 
     def toggle_plugins(self):
-        if not self.mcr:
+        if not self.plugins:
             return
         if self.plugins.isVisible():
             self.plugins.hide()
@@ -240,7 +238,7 @@ class RundownModule(BaseModule):
     # Search rundown
     #
 
-    def find(self):
+    def on_find(self):
         text, result = QInputDialog.getText(
             self, "Rundown search", "Search query:", text=self.last_search
         )
@@ -253,15 +251,14 @@ class RundownModule(BaseModule):
         if self.last_search:
             self.do_find(self.last_search)
         else:
-            self.find()
+            self.on_find()
 
     def do_find(self, search_string, start_row=-1):
         self.last_search = search_string
         search_string = search_string.lower()
         if start_row == -1:
             for idx in self.view.selectionModel().selectedIndexes():
-                if idx.row() > start_row:
-                    start_row = idx.row()
+                start_row = max(start_row, idx.row())
         start_row += 1
         for i, row in enumerate(self.view.model().object_data[start_row:]):
             for key in ["title", "id/main"]:
@@ -277,7 +274,7 @@ class RundownModule(BaseModule):
                     selection.select(i1, i2)
                     self.view.selectionModel().select(
                         selection,
-                        QItemSelectionModel.SelectionFlag.SelectionFlag.ClearAndSelect,
+                        QItemSelectionModel.SelectionFlag.ClearAndSelect,
                     )
                     break
             else:
@@ -317,7 +314,7 @@ class RundownModule(BaseModule):
                 self.current_item = message.data["current_item"]
                 self.cued_item = message.data["cued_item"]
 
-                if self.mcr.isVisible():
+                if self.mcr and self.mcr.isVisible():
                     for obj in model.object_data:
                         if obj.object_type == "item" and obj.id == self.cued_item:
                             self.load()
