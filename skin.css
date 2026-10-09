@@ -33,8 +33,7 @@ QToolBar {
   border-radius: 8px;
   spacing: 6px;
   padding: 4px;
-  margin-top: 3px;
-  margin-bottom: 3px;
+  margin: 0;
   qproperty-iconSize: 20px 20px; }
 
 QToolBar QPushButton[nav="true"] {
@@ -126,7 +125,12 @@ QTableCornerButton::section {
 
 /* TABS (styled like the web navbar) */
 QTabWidget::pane {
-  border: none; }
+  border: none;
+  padding-top: 6px; }
+
+QWidget[section="true"] {
+  background-color: #1f1e26;
+  border-radius: 5px; }
 
 QTabBar {
   qproperty-drawBase: 0; }

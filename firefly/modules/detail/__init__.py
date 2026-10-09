@@ -135,7 +135,7 @@ class DetailModule(BaseModule):
         self.detail_tabs = DetailTabs(self)
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)  # toolbars carry their own margins
+        layout.setSpacing(0)  # the tabs pane adds the section gap (see skin)
         layout.addWidget(self.toolbar, 0)
         layout.addWidget(self.detail_tabs, 1)
         self.setLayout(layout)

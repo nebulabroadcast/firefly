@@ -84,10 +84,8 @@ QToolBar {
   border-radius: $nav-border-radius;
   spacing: $section-gap;
   padding: 4px;
-  // half a section gap on each side: stacked toolbars end up one gap apart.
-  // Must be symmetric - Qt sizes toolbars as if bottom margin == top margin
-  margin-top: $section-gap / 2;
-  margin-bottom: $section-gap / 2;
+  // no margins: module layouts space their parts by $section-gap (6px)
+  margin: 0;
   qproperty-iconSize: 20px 20px;
 }
 
@@ -225,6 +223,14 @@ QTableCornerButton::section {
 
 QTabWidget::pane {
   border: none;
+  // one section gap between a tab bar and the tab content
+  padding-top: $section-gap;
+}
+
+// Equivalent of the web frontend's <section>: a panel grouping related controls
+QWidget[section="true"] {
+  background-color: $color-surface-02;
+  border-radius: 5px;
 }
 
 QTabBar {

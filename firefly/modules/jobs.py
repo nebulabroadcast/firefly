@@ -57,6 +57,7 @@ class JobsModule(BaseModule):
 
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(6)  # section gap, same as the web frontend
         layout.addWidget(toolbar, 0)
         layout.addWidget(self.view, 1)
         self.setLayout(layout)

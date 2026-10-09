@@ -232,6 +232,7 @@ class BrowserTab(QWidget):
 
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(6)  # section gap, same as the web frontend
         layout.addLayout(search_layout, 0)
         layout.addWidget(self.view, 1)
         layout.addWidget(self.pager, 0)

@@ -1,7 +1,7 @@
 import math
 import time
 
-from PySide6.QtCore import QTimer
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtWidgets import (
     QApplication,
     QGridLayout,
@@ -60,9 +60,8 @@ class MCRLabel(QLabel):
         font_family = '"Noto Sans Mono", monospace' if mono else '"Noto Sans"'
         self.setStyleSheet(
             f"""
-                background-color: #24202e;
+                background-color: #19161f;
                 padding: 4px 8px;
-                margin: 3px;
                 font-family: {font_family};
                 font-size: 14px;
                 font-weight: 600;
@@ -78,6 +77,10 @@ class MCRLabel(QLabel):
 class MCR(QWidget):
     def __init__(self, parent):
         super().__init__(parent)
+        # styled as a section panel (see skin); plain QWidgets only paint
+        # a stylesheet background with WA_StyledBackground
+        self.setProperty("section", True)
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)
 
         self.progress_bar = QProgressBar(self)
         self.progress_bar.setTextVisible(False)
@@ -120,9 +123,11 @@ class MCR(QWidget):
         self.display_rem = MCRLabel("REM", "(unknown)", mono=True)
         self.display_dur = MCRLabel("DUR", "--:--:--:--", mono=True)
 
+        # gaps and padding follow the web frontend's playout controls section
         info_layout = QGridLayout()
         info_layout.setContentsMargins(0, 0, 0, 0)
-        info_layout.setSpacing(2)
+        info_layout.setHorizontalSpacing(12)
+        info_layout.setVerticalSpacing(8)
 
         info_layout.addWidget(self.display_clock, 0, 0)
         info_layout.addWidget(self.display_pos, 1, 0)
@@ -136,6 +141,8 @@ class MCR(QWidget):
         info_layout.setColumnStretch(1, 1)
 
         layout = QVBoxLayout()
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(8)
         layout.addLayout(info_layout, 0)
         layout.addWidget(self.progress_bar, 0)
         layout.addLayout(btns_layout, 0)
