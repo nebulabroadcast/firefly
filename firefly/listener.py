@@ -40,7 +40,7 @@ class SeismicListener(QThread):
         self.should_run = True
         self.active = False
         self.last_msg = time.time()
-        self.queue = queue.Queue()
+        self.queue: queue.Queue[SeismicMessage] = queue.Queue()
         self.start()
 
     def run(self):
@@ -88,9 +88,9 @@ class SeismicListener(QThread):
 
         self.last_msg = time.time()
 
-        if initiator := message.data.get("initiator"):
-            if message.data and initiator == config.client_id:
-                return
+        initiator = message.data.get("initiator")
+        if initiator and initiator == config.client_id:
+            return
 
         self.queue.put(message)
 

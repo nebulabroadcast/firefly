@@ -13,7 +13,7 @@ format_list = format_select
 
 class FireflySelect(QComboBox):
     def __init__(self, parent, options=None, **kwargs):
-        super(FireflySelect, self).__init__(parent)
+        super().__init__(parent)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.cdata = []
         if options is not None:
@@ -22,7 +22,7 @@ class FireflySelect(QComboBox):
 
     def wheelEvent(self, event):
         if self.hasFocus():
-            super(FireflySelect, self).wheelEvent(event)
+            super().wheelEvent(event)
         else:
             event.ignore()
 
@@ -30,7 +30,7 @@ class FireflySelect(QComboBox):
         self.setEnabled(not val)
 
     def auto_options(self, key, id_folder=0):
-        # TODO
+        # TODO: options from the meta type
         self.set_options([])
 
     def set_options(self, options):

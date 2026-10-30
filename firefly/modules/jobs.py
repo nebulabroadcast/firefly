@@ -25,13 +25,14 @@ class SearchWidget(QLineEdit):
 
 class JobsModule(BaseModule):
     def __init__(self, parent):
-        super(JobsModule, self).__init__(parent)
+        super().__init__(parent)
 
         self.view = FireflyJobsView(self)
 
         toolbar = QToolBar()
 
         btn_active = QPushButton("ACTIVE")
+        btn_active.setProperty("nav", True)
         btn_active.setCheckable(True)
         btn_active.setChecked(True)
         btn_active.setAutoExclusive(True)
@@ -39,12 +40,14 @@ class JobsModule(BaseModule):
         toolbar.addWidget(btn_active)
 
         btn_finished = QPushButton("FINISHED")
+        btn_finished.setProperty("nav", True)
         btn_finished.setCheckable(True)
         btn_finished.setAutoExclusive(True)
         btn_finished.clicked.connect(functools.partial(self.set_view, "finished"))
         toolbar.addWidget(btn_finished)
 
         btn_failed = QPushButton("FAILED")
+        btn_failed.setProperty("nav", True)
         btn_failed.setCheckable(True)
         btn_failed.setAutoExclusive(True)
         btn_failed.clicked.connect(functools.partial(self.set_view, "failed"))
@@ -54,6 +57,7 @@ class JobsModule(BaseModule):
 
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(6)  # section gap, same as the web frontend
         layout.addWidget(toolbar, 0)
         layout.addWidget(self.view, 1)
         self.setLayout(layout)

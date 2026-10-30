@@ -5,10 +5,10 @@ from pydantic import BaseModel, Field
 from firefly.enum import ContentType, MediaType
 
 
-def find_by_id(array: list[Any], id: int) -> Any:
+def find_by_id(array: list[Any], id_object: int) -> Any:
     for item in array:
         assert hasattr(item, "id")
-        if item.id == id:
+        if item.id == id_object:
             return item
     return None
 
@@ -82,7 +82,7 @@ class PlayoutChannelSettings(SettingsModel):
 class StorageSettings(SettingsModel):
     id: int = Field(...)
     name: str = Field(...)
-    paht: str | None = Field(None)
+    path: str | None = Field(None)
 
 
 class Settings(SettingsModel):
@@ -108,6 +108,6 @@ class Settings(SettingsModel):
 
     def update(self, data: dict[str, Any]) -> None:
         new_settings = Settings(**data)
-        for key in new_settings.dict().keys():
-            if key in self.dict().keys():
+        for key in new_settings.dict():
+            if key in self.dict():
                 setattr(self, key, getattr(new_settings, key))

@@ -1,6 +1,8 @@
 import json
 import os
 import time
+from collections.abc import Sequence
+from typing import Any
 
 from PySide6.QtWidgets import QApplication
 
@@ -66,7 +68,7 @@ CACHE_LIMIT = 1000
 class AssetCache:
     def __init__(self):
         self.data = {}
-        self.api = None
+        self.api: Any = None
         self.handler = None
         self.busy = False
 
@@ -84,17 +86,17 @@ class AssetCache:
         key = int(key)
         return self.data.get(key, Asset(meta={"title": "Loading...", "id": key}))
 
-    def request(self, requested: list[tuple[int, int]], handler=None):
+    def request(self, requested: Sequence[Sequence[Any]], handler=None):
         self.busy = True
         to_update = []
-        for id, mtime in requested:
-            id = int(id)
-            if id not in self.data:
-                to_update.append(id)
-            elif not mtime:
-                to_update.append(id)
-            elif self.data[id]["mtime"] < mtime:
-                to_update.append(id)
+        for requested_id, mtime in requested:
+            id_asset = int(requested_id)
+            if (
+                id_asset not in self.data
+                or not mtime
+                or self.data[id_asset]["mtime"] < mtime
+            ):
+                to_update.append(id_asset)
         if not to_update:
             return True
 
@@ -104,7 +106,9 @@ class AssetCache:
             log.debug(f"Requesting data for asset(s) ID: {ids}")
         else:
             log.debug(f"Requesting data for {asset_count} assets")
+        assert self.api is not None, "asset_cache.api is set by the main window"
         self.api.get(self.on_response, ids=to_update)
+        return None
 
     def on_response(self, response):
         if response.is_error:
@@ -139,7 +143,8 @@ class AssetCache:
             return
         start_time = time.time()
         try:
-            data = json.load(open(self.cache_path))
+            with open(self.cache_path) as f:
+                data = json.load(f)
         except Exception:
             log.traceback(f"Corrupted cache file '{self.cache_path}'")
             return

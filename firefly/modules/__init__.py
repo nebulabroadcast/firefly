@@ -2,8 +2,8 @@ __all__ = [
     "BrowserModule",
     "DetailModule",
     "JobsModule",
-    "SchedulerModule",
     "RundownModule",
+    "SchedulerModule",
 ]
 
 

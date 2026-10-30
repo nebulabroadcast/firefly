@@ -32,7 +32,7 @@ def preview_toolbar(wnd):
     action_save_marks.triggered.connect(wnd.save_marks)
     toolbar.addAction(action_save_marks)
 
-    # TODO
+    # TODO: restore marks action
     # action_restore_marks = QAction(QIcon(pix_lib["restore-marks"]), 'Restore', wnd)
     # action_restore_marks.setStatusTip('Restore marks')
     # action_restore_marks.triggered.connect(wnd.restore_marks)

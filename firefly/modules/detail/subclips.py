@@ -1,10 +1,10 @@
 import copy
 
-from nxtools import s2tc
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QInputDialog, QMenu
 
+from firefly.helpers.timecode import s2tc
 from firefly.log import log
 from firefly.metadata import meta_types
 from firefly.view import FireflyView, FireflyViewModel
@@ -32,7 +32,7 @@ colw = {
 
 class SubclipsModel(FireflyViewModel):
     def __init__(self, *args, **kwargs):
-        super(SubclipsModel, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.header_data = DEFAULT_HEADER_DATA
 
     def headerData(
@@ -70,7 +70,7 @@ class SubclipsModel(FireflyViewModel):
 
 class FireflySubclipsView(FireflyView):
     def __init__(self, parent):
-        super(FireflySubclipsView, self).__init__(parent)
+        super().__init__(parent)
         self.model = SubclipsModel(self)
         self.setModel(self.model)
         self.activated.connect(self.on_activate)

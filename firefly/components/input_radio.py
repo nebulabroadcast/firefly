@@ -1,4 +1,5 @@
 import functools
+from typing import Any
 
 from PySide6.QtWidgets import QHBoxLayout, QPushButton, QWidget
 
@@ -12,7 +13,7 @@ class InputRadio(QWidget):
 
         self._value = value
         self._original_value = value
-        self._options = []
+        self._options: list[dict[str, Any]] = []
 
         self._layout = QHBoxLayout()
         self._layout.setContentsMargins(0, 0, 0, 0)
@@ -26,9 +27,10 @@ class InputRadio(QWidget):
             _filter = kwargs.get("filter")
 
             for opt_value, csmeta in firefly.settings.cs.get(urn, {}).items():
-                if _filter := kwargs.get("filter"):
-                    if not filter_match(_filter, opt_value):
-                        continue
+                if (_filter := kwargs.get("filter")) and not filter_match(
+                    _filter, opt_value
+                ):
+                    continue
 
                 if csmeta.get("role") in ["hidden", "header"]:
                     continue
@@ -43,13 +45,13 @@ class InputRadio(QWidget):
         elif options := kwargs.get("options"):
             self._options = options
 
-        self._current_index = None
-        self._buttons = []
+        self._current_index: int | None = None
+        self._buttons: list[QPushButton] = []
         self.setLayout(self._layout)
         self.build_options()
 
     def clear(self):
-        for i, button in enumerate(self._buttons):
+        for _i, button in enumerate(self._buttons):
             button.deleteLater()
             self._layout.removeWidget(button)
         self._current_index = None
@@ -58,8 +60,7 @@ class InputRadio(QWidget):
     def build_options(self):
         self.clear()
         self._current_index = None
-        i = 0
-        for row in self._options:
+        for i, row in enumerate(self._options):
             title = row.get("title", row["value"])
             description = row.get("description")
             self._buttons.append(QPushButton(title))
@@ -72,13 +73,12 @@ class InputRadio(QWidget):
             if self._value == row["value"]:
                 self._current_index = i
                 self._buttons[-1].setChecked(True)
-            i += 1
 
     def switch(self, index: int) -> None:
         self._current_index = index
         self._value = self._options[index]["value"]
 
-    def set_value(self, value: str) -> None:
+    def set_value(self, value: str | None) -> None:
         if value == self._value:
             return
 

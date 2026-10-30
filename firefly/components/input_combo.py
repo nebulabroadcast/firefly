@@ -24,9 +24,10 @@ class InputCombo(QComboBox):
             _filter = kwargs.get("filter")
 
             for opt_value, csmeta in firefly.settings.cs.get(urn, {}).items():
-                if _filter := kwargs.get("filter"):
-                    if not filter_match(_filter, opt_value):
-                        continue
+                if (_filter := kwargs.get("filter")) and not filter_match(
+                    _filter, opt_value
+                ):
+                    continue
 
                 if csmeta.get("role") in ["hidden", "header"]:
                     continue

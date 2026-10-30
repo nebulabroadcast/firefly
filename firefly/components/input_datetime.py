@@ -18,7 +18,7 @@ class ClickableLineEdit(QLineEdit):
 
 class DateTimeEdit(QDateTimeEdit):
     def keyPressEvent(self, event: QKeyEvent):
-        if event.key() == Qt.Key_Return:
+        if event.key() == Qt.Key.Key_Return:
             self.editingFinished.emit()
             event.ignore()
         else:
@@ -29,6 +29,7 @@ class InputDatetime(QWidget):
     def __init__(self, parent, value=None, **kwargs):
         super().__init__(parent)
         self._original_value = int(value) if value else None
+        self._value: int | None = None
         self._read_only = False
         self.required = kwargs.get("required", False)
 
@@ -54,7 +55,7 @@ class InputDatetime(QWidget):
             self.clear_button.clicked.connect(self.clear_value)
             layout.addWidget(self.clear_button, 0)
         else:
-            self.clear_button = None
+            self.clear_button = None  # type: ignore[assignment]
 
         self.setLayout(layout)
         self.set_value(value)

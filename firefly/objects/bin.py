@@ -8,9 +8,4 @@ class Bin(BaseObject):
 
     @property
     def duration(self):
-        if "duration" not in self.meta:
-            duration = 0
-            for item in self.items:
-                duration += item.duration
-            self["duration"] = duration
-        return self["duration"]
+        return self.meta.get("duration", 0)

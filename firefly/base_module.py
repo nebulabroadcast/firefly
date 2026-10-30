@@ -5,7 +5,7 @@ import firefly
 
 class BaseModule(QWidget):
     def __init__(self, parent):
-        super(BaseModule, self).__init__(parent)
+        super().__init__(parent)
         self.main_window = self.parent().parent()
         self._playout_config = None
         self._id_channel = None

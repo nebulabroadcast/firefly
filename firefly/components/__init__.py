@@ -1,3 +1,3 @@
 from .input_timecode import InputTimecode
 
-assert InputTimecode
+__all__ = ["InputTimecode"]

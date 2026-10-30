@@ -1,10 +1,11 @@
 import os
-
-from nxtools import PLATFORM
+import sys
 
 import firefly
 from firefly.config import config
 from firefly.log import log
+
+PLATFORM = "windows" if sys.platform == "win32" else "unix"
 
 if PLATFORM == "windows":
     import ctypes
@@ -16,7 +17,7 @@ if PLATFORM == "windows":
         return list(
             itertools.compress(
                 string.ascii_uppercase,
-                map(lambda x: ord(x) - ord("0"), bin(drive_bitmask)[:1:-1]),
+                (ord(x) - ord("0") for x in bin(drive_bitmask)[:1:-1]),
             )
         )
 
@@ -35,12 +36,14 @@ def load_filesystem(handler=False):
             if not os.path.exists(storage_ident):
                 continue
 
-            for line in open(storage_ident).read().split("\n"):
+            with open(storage_ident) as f:
+                lines = f.read().split("\n")
+            for line in lines:
                 try:
-                    site, id_storage = line.split(":")
-                    id_storage = int(id_storage)
-                except Exception:
-                    continue
+                    site, storage_id_str = line.split(":")
+                    id_storage = int(storage_id_str)
+                except ValueError:
+                    continue  # not a 'site:id_storage' line
 
                 if site != config.site.name:
                     continue

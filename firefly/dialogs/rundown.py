@@ -1,6 +1,5 @@
 import functools
 
-from nxtools import s2tc
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QApplication,
@@ -12,6 +11,7 @@ from PySide6.QtWidgets import (
 
 from firefly.api import api
 from firefly.components.form import MetadataForm
+from firefly.helpers.timecode import s2tc
 from firefly.log import log
 from firefly.settings import FolderField
 
@@ -22,15 +22,22 @@ from firefly.settings import FolderField
 
 class PlaceholderDialog(QDialog):
     def __init__(self, parent, meta):
-        super(PlaceholderDialog, self).__init__(parent)
+        super().__init__(parent)
         self.setWindowTitle("Rundown placeholder")
 
         self.ok = False
 
-        keys = []
-        for k in ["title", "subtitle", "description", "color", "duration"]:  # TODO
-            if k in meta:
-                keys.append(FolderField(name=k, mode="text"))
+        keys = [
+            FolderField(name=k, mode="text")
+            for k in [
+                "title",
+                "subtitle",
+                "description",
+                "color",
+                "duration",
+            ]  # TODO: hardcoded
+            if k in meta
+        ]
 
         self.form = MetadataForm(parent, keys, meta)
 
@@ -64,7 +71,7 @@ class PlaceholderDialog(QDialog):
 
 class SubclipSelectDialog(QDialog):
     def __init__(self, parent, asset):
-        super(SubclipSelectDialog, self).__init__(parent)
+        super().__init__(parent)
         self.setModal(True)
         self.setWindowTitle(f"Select {asset} subclip to use")
         self.ok = False
@@ -90,17 +97,17 @@ class SubclipSelectDialog(QDialog):
                     subclip["title"],
                 )
             )
-            btn.setStyleSheet("font: monospace; text-align: left;")
+            btn.setStyleSheet("text-align: left;")
             btn.clicked.connect(functools.partial(self.on_submit, i))
             layout.addWidget(btn)
 
         self.setLayout(layout)
 
     def on_submit(self, subclip):
-        self.result = []
+        self.selection = []
 
         if subclip == -1:
-            self.result = [
+            self.selection = [
                 {
                     "mark_in": self.asset["mark_in"],
                     "mark_out": self.asset["mark_out"],
@@ -109,7 +116,7 @@ class SubclipSelectDialog(QDialog):
 
         elif subclip == -2:
             for sdata in self.subclips:
-                self.result.append(
+                self.selection.append(
                     {
                         "mark_in": sdata["mark_in"],
                         "mark_out": sdata["mark_out"],
@@ -118,7 +125,7 @@ class SubclipSelectDialog(QDialog):
                 )
 
         elif subclip >= 0:
-            self.result = [
+            self.selection = [
                 {
                     "mark_in": self.subclips[subclip]["mark_in"],
                     "mark_out": self.subclips[subclip]["mark_out"],
@@ -133,8 +140,8 @@ class SubclipSelectDialog(QDialog):
 
 class TrimDialog(QDialog):
     def __init__(self, parent, item):
-        super(TrimDialog, self).__init__(parent)
-        self.setWindowTitle("Trim {}".format(item))
+        super().__init__(parent)
+        self.setWindowTitle(f"Trim {item}")
 
         self.ok = False
         self.item = item

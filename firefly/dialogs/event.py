@@ -19,7 +19,7 @@ default_fields = [
 
 class EventDialog(QDialog):
     def __init__(self, parent, **kwargs):
-        super(EventDialog, self).__init__(parent)
+        super().__init__(parent)
         self.setWindowTitle("Scheduler")
         self.kwargs = kwargs
         self.setStyleSheet(app_skin)
@@ -29,7 +29,7 @@ class EventDialog(QDialog):
             if (value := kwargs.get(key)) is not None:
                 self.event[key] = value
 
-        self.result = None
+        self.response = None
         self.can_edit = firefly.user.can("scheduler_edit", self.event["id_channel"])
         self.date = kwargs.get("date")
 
@@ -75,7 +75,7 @@ class EventDialog(QDialog):
             return
 
         if not self.form["start"]:
-            firefly.log.error("Event must have a start time")
+            log.error("Event must have a start time")
             return
 
         for key in self.form.changed:
@@ -96,11 +96,11 @@ class EventDialog(QDialog):
         if not response:
             log.error("Scheduler dialog response", response.message)
 
-        self.result = response
+        self.response = response
         self.close()
 
 
 def show_event_dialog(parent=None, **kwargs):
     dlg = EventDialog(parent, **kwargs)
     dlg.exec()
-    return dlg.result
+    return dlg.response

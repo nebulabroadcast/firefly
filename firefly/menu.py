@@ -1,4 +1,5 @@
 from functools import partial
+from typing import Any
 
 from PySide6.QtGui import QAction, QActionGroup
 
@@ -8,7 +9,7 @@ from firefly.dialogs.about import show_about_dialog
 
 # FAKE DICT for the settings originally stored in config,
 # but should be eventually moved to the settings
-fake_config = {}
+fake_config: dict[str, Any] = {}
 
 
 def create_menu(wnd):

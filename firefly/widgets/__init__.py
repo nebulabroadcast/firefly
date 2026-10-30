@@ -2,7 +2,13 @@ from PySide6.QtWidgets import QLabel, QLineEdit, QPushButton, QSizePolicy, QWidg
 
 from .combo import FireflySelect
 
-assert FireflySelect
+__all__ = [
+    "ActionButton",
+    "ChannelDisplay",
+    "FireflySelect",
+    "FireflyString",
+    "ToolBarStretcher",
+]
 
 
 class ChannelDisplay(QLabel):
@@ -11,7 +17,7 @@ class ChannelDisplay(QLabel):
 
 class ToolBarStretcher(QWidget):
     def __init__(self, parent):
-        super(ToolBarStretcher, self).__init__(parent)
+        super().__init__(parent)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
 
@@ -21,7 +27,7 @@ class ActionButton(QPushButton):
 
 class FireflyString(QLineEdit):
     def __init__(self, parent, **kwargs):
-        super(FireflyString, self).__init__(parent)
+        super().__init__(parent)
         self.default = self.get_value()
 
     def set_value(self, value):

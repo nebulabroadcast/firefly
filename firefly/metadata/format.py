@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING, Any
 
-from nxtools import format_filesize, format_time, s2tc
-
 from firefly import settings
 from firefly.enum import ContentType, MediaType, ObjectStatus, QCState
+from firefly.helpers.format import format_filesize, format_time
+from firefly.helpers.timecode import s2tc
 
 if TYPE_CHECKING:
     from firefly.metadata import MetaType
@@ -18,13 +18,13 @@ def format_cs_values(metatype: "MetaType", values: list[str]) -> str:
 
 def format_meta(
     parent,
-    object: "BaseObject",
+    obj: "BaseObject",
     key: str,
     **kwargs: dict[str, Any],
 ) -> str:
     """Return a human-readable string representation of a metadata value."""
 
-    if not (value := object.get(key)):
+    if not (value := obj.get(key)):
         return ""
 
     match key:

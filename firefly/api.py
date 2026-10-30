@@ -89,18 +89,18 @@ class NebulaAPI:
                 r = NebulaResponse(400, "Unable to send request")
                 if callback == -1:
                     return r
-                else:
-                    callback(r)
-            return
+                callback(r)
+            return None
 
         if callback == -1:
             while not query.isFinished():
                 time.sleep(0.0001)
                 QApplication.processEvents()
             return self.handler(query, -1)
+        return None
 
     def handler(self, response, callback):
-        status = response.attribute(QNetworkRequest.HttpStatusCodeAttribute)
+        status = response.attribute(QNetworkRequest.Attribute.HttpStatusCodeAttribute)
         bytes_string = response.readAll()
         data = str(bytes_string, "utf-8")
 
@@ -112,7 +112,7 @@ class NebulaAPI:
                 payload = json.loads(data)
             except Exception:
                 log.traceback("Unable to parse JSON")
-                print(data)
+                log.debug(data)
                 return NebulaResponse(500, f"Unable to parse response from {url}")
         else:
             payload = {}

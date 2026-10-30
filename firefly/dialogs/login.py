@@ -24,7 +24,7 @@ class LoginDialog(QDialog):
         layout.addRow("Password", self.password)
         layout.addRow("", self.btn_login)
 
-        self.result = False
+        self.token: str | None = None
 
     def handleLogin(self):
         response = api.login(
@@ -33,7 +33,7 @@ class LoginDialog(QDialog):
         )
         if response and response.get("access_token", False):
             config.site.token = response["access_token"]
-            self.result = config.site.token
+            self.token = config.site.token
             self.close()
         else:
             QMessageBox.critical(self, "Error", response.message)
@@ -42,4 +42,4 @@ class LoginDialog(QDialog):
 def show_login_dialog(parent=None):
     dlg = LoginDialog(parent)
     dlg.exec()
-    return dlg.result
+    return dlg.token
