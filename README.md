@@ -2,9 +2,9 @@ Firefly
 =======
 
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/nebulabroadcast/firefly?style=for-the-badge)
-![Maintenance](https://img.shields.io/maintenance/yes/2024?style=for-the-badge)
+![Maintenance](https://img.shields.io/maintenance/yes/2026?style=for-the-badge)
 ![Last commit](https://img.shields.io/github/last-commit/nebulabroadcast/firefly?style=for-the-badge)
-![Python version](https://img.shields.io/badge/python-3.10--3.14-blue?style=for-the-badge)
+![Python version](https://img.shields.io/badge/python-3.13--3.14-blue?style=for-the-badge)
 
 Firefly is a desktop client application for [Nebula](https://github.com/nebulabroadcast/nebula) broadcast automation system.
 
@@ -13,7 +13,7 @@ Installation
 
 ### Running from source (all platforms)
 
- - Install [uv](https://docs.astral.sh/uv/) (it installs a suitable Python 3.10 - 3.14 if needed).
+ - Install [uv](https://docs.astral.sh/uv/) (it installs a suitable Python 3.13 - 3.14 if needed).
  - Clone this repository.
  - Run `make run` (or `uv run python -m firefly`) to start the application.
 
